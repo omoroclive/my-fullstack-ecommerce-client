@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.form-checkbox:checked {
+  border-color: #dc2626; /* Match red color theme */
+}
+
+a {
+  transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+  color: #9b1c1c; /* Darker red for hover */
+}
+
+.admin-layout {
+  display: flex;
+  height: 100vh;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+main {
+  flex-grow: 1;
+  padding: 1rem;
+  background-color: #f3f4f6;
+  overflow-y: auto;
+}
+
+/* General container for the page */
+.order-container {
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Card style for each order */
+.order-card {
+  background-color: #f9f9f9;
+  padding: 20px;
+  margin-bottom: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  color: #333;
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+h2 {
+  color: gray;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+/* Table styling for better visual appeal */
+.order-table, .address-table, .products-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: gray;
+  color: #fff;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+h3 {
+  font-size: 1.25rem;
+  margin-top: 20px;
+  color: #555;
+}
+
+/* Status buttons */
+.status-btn {
+  background-color: gray;
+  color: white;
+  padding: 10px 15px;
+  margin: 10px 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.status-btn:hover {
+  background-color: #0056b3;
+}
+
+
+.hero-slider .slick-dots li button:before {
+  color: white; /* Customize dots color */
+}
+
+.hero-slider .slick-prev,
+.hero-slider .slick-next {
+  z-index: 10;
+  color: black;
+}
+
+.hero-slider {
+  display: flex;
+  flex-direction: column; /* Ensure it’s a column if needed */
+}
+
+.hero-slider .slick-slide {
+  display: flex;
+  flex-direction: row; /* Set items side-by-side */
+  flex-wrap: wrap;
+  grid-row: 1; /* Ensure all items are in the same row */
+}
+
+.hero-slider .slick-slide > div {
+  flex: 1; /* Equal distribution for the left and right sides */
+}
+
+
+.bg-lightgray {
+  background-color: #f4f4f4;
+}
+
+
+
+   

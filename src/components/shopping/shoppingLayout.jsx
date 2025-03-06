@@ -1,7 +1,7 @@
 import React from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "./shoppingHeader"; // Ensure the correct import
-import HeroSlider from "./heroSlider";
+import HeroSlider from "./HeroSlider";
 
 function ShoppingLayout() {
   const location = useLocation();

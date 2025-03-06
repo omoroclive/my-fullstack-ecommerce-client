@@ -7,6 +7,8 @@ import filterReducer from './filter/filterSlice';
 import orderReducer from './order/orderSlice'; 
 import inventoryReducer from './inventory/inventorySlice';
 import expensesReducer from './expenses/expenseSlice';
+import facebookReducer from './socialLogin/faceBookSlice';
+import productsReducer from './product/productsSlice';
 
 
 const store = configureStore({
@@ -19,6 +21,9 @@ const store = configureStore({
     orders: orderReducer, 
     inventory: inventoryReducer,
     expenses: expensesReducer,
+    facebook:facebookReducer,
+    products:productsReducer
+    
     
   }
 });

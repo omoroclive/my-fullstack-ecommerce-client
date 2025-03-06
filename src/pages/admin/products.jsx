@@ -11,6 +11,8 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
+import RecentlySearch from "../../pages/account/RecentlySearched";
+import Footer from "../../components/Footer";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -146,7 +148,7 @@ const Products = () => {
                 <IconButton
                   color="primary"
                   onClick={() =>
-                    navigate(`/admin/dashboard/edit/${product._id}`)
+                    navigate(`/admin/dashboard/edit-product/${product._id}`)
                   }
                 >
                   <EditIcon />
@@ -184,6 +186,8 @@ const Products = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+      <RecentlySearch />
+      <Footer />
     </div>
   );
 };

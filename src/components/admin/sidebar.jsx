@@ -45,6 +45,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { text: "Suppliers", icon: <LocalShippingIcon />, route: "/admin/dashboard/suppliers" },
     { text: "Invoices", icon: <DescriptionIcon />, route: "/admin/dashboard/invoices" },
     { text: "Inventory", icon: <InventoryIcon />, route: "/admin/dashboard/inventory" },
+    {text:  "DataVisualization", icon: <DashboardIcon />, route: "/admin/dashboard/data-visualization"},
     { text: "Settings", icon: <SettingsIcon />, route: "/admin/dashboard/settings" },
   ];
 

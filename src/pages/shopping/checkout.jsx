@@ -17,6 +17,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import mpesaLogo from "../../assets/images/mpesaLogo.jpg";
 import paypalLogo from "../../assets/images/paypalLogo.jpg";
+import Footer from "../../components/Footer";
+import Payment from "./payment";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -135,8 +137,8 @@ const Checkout = () => {
           country: address.country,
         },
         products: cartItems.map((item) => ({
-          product: item.id,
-          name: item.title,
+          product: item._id || item.id,
+          name: item.title || item.name,
           quantity: item.quantity,
           price: item.price,
           image: item.image,
@@ -146,12 +148,14 @@ const Checkout = () => {
       };
 
       // Log the data to the console before sending it
-      console.log("Sending the following order details to the server:", orderDetails);
+      //console.log("Sending the following order details to the server:", orderDetails);
 
       // Send order details to the server
       await axios.post("http://localhost:3000/api/orders", orderDetails, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      
 
       setSnackbar({
         open: true,
@@ -322,6 +326,7 @@ const Checkout = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      <Payment/>
     </Box>
   );
 };

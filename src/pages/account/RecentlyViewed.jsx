@@ -17,14 +17,14 @@ const RecentlyViewed = () => {
 
   return (
     <Box className="p-6">
-      <Typography variant="h4" className="mb-6 font-bold">
-        Recently Viewed Products
+      <Typography variant="h4" className="mt-6 font-bold">
+        Recently Viewed 
       </Typography>
       <Grid container spacing={4}>
         {recentlyViewed.map((product) => (
           <Grid item xs={12} sm={6} md={4} key={product.id}>
             <Box
-              className="border border-gray-200 rounded-lg p-4 transition hover:shadow-lg cursor-pointer"
+              className="border border-gray-200 mt-6 rounded-lg p-4 transition hover:shadow-lg cursor-pointer"
               onClick={() => navigate(`/products/${product.id}`)}
             >
               <img

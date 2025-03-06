@@ -4,27 +4,36 @@ import axios from "axios";
 import { CircularProgress, Typography, Button } from "@mui/material";
 
 const Shop = () => {
-  const { brand } = useParams(); // Get brand from URL
+  const { brand, category } = useParams(); // Get brand and category from URL
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchProductsByBrand = async () => {
+    const fetchProducts = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) {
           throw new Error("No token found. Please log in.");
         }
 
-        const response = await axios.get(`http://localhost:3000/api/products?brand=${brand}`, {
+        console.log("Brand:", brand); // Debugging
+        console.log("Category:", category); // Debugging
+
+        let queryParams = [];
+        if (brand) queryParams.push(`brand=${encodeURIComponent(brand)}`);
+        if (category) queryParams.push(`category=${encodeURIComponent(category)}`);
+
+        const queryString = queryParams.length ? `?${queryParams.join("&")}` : "";
+
+        const response = await axios.get(`http://localhost:3000/api/products${queryString}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         console.log("API Response:", response.data); // Debugging
 
-        setProducts(response.data.products);
+        setProducts(response.data.products || []); // Ensure fallback to empty array
       } catch (error) {
         setError(error.response?.data?.message || "Failed to fetch products");
       } finally {
@@ -32,13 +41,20 @@ const Shop = () => {
       }
     };
 
-    fetchProductsByBrand();
-  }, [brand]);
+    fetchProducts();
+  }, [brand, category]);
+
+  // Adjusted title to display only brand or category independently
+  const pageTitle = brand
+    ? `${brand.charAt(0).toUpperCase() + brand.slice(1)} Products`
+    : category
+    ? `${category.charAt(0).toUpperCase() + category.slice(1)} Collection`
+    : "All Products";
 
   return (
     <div className="p-4">
       <Typography variant="h4" className="font-bold text-center mb-4">
-        {brand.charAt(0).toUpperCase() + brand.slice(1)} Products
+        {pageTitle}
       </Typography>
 
       {isLoading ? (
@@ -47,7 +63,7 @@ const Shop = () => {
         <p className="text-red-500">{error}</p>
       ) : products.length === 0 ? (
         <Typography variant="body1" className="text-center">
-          No products found for {brand}.
+          No products found for {brand || category}. Please check the brand or category name.
         </Typography>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -90,3 +106,9 @@ const Shop = () => {
 };
 
 export default Shop;
+
+
+
+
+
+

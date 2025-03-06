@@ -1,9 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  items: [], // Array to store cart items
-  totalQuantity: 0, // Total number of items in the cart
-  totalAmount: 0, // Total price of all items
+  items: [],
+  totalQuantity: 0,
+  totalAmount: 0,
 };
 
 const cartSlice = createSlice({
@@ -11,46 +11,54 @@ const cartSlice = createSlice({
   initialState,
   reducers: {
     addToCart: (state, action) => {
-      const existingItem = state.items.find(
-        (item) => item.id === action.payload.id
-      );
+      const newItem = action.payload;
+      // Use _id instead of id since that's what's coming from your MongoDB backend
+      const existingItem = state.items.find(item => item._id === newItem._id);
 
       if (existingItem) {
-        existingItem.quantity += action.payload.quantity;
-        existingItem.totalPrice += action.payload.price * action.payload.quantity;
+        // Update existing item
+        existingItem.quantity += newItem.quantity;
+        existingItem.totalPrice = existingItem.price * existingItem.quantity;
       } else {
+        // Add new item
         state.items.push({
-          ...action.payload,
-          totalPrice: action.payload.price * action.payload.quantity,
+          _id: newItem._id,
+          title: newItem.title,
+          price: newItem.price,
+          image: newItem.image,
+          quantity: newItem.quantity,
+          totalPrice: newItem.price * newItem.quantity,
         });
       }
 
-      state.totalQuantity += action.payload.quantity;
-      state.totalAmount += action.payload.price * action.payload.quantity;
+      // Recalculate totals
+      state.totalQuantity = state.items.reduce((total, item) => total + item.quantity, 0);
+      state.totalAmount = state.items.reduce((total, item) => total + item.totalPrice, 0);
     },
 
     removeFromCart: (state, action) => {
       const id = action.payload;
-      const existingItem = state.items.find((item) => item.id === id);
+      const existingItem = state.items.find(item => item._id === id);
 
       if (existingItem) {
-        state.totalQuantity -= existingItem.quantity;
-        state.totalAmount -= existingItem.totalPrice;
-        state.items = state.items.filter((item) => item.id !== id);
+        state.items = state.items.filter(item => item._id !== id);
+        // Recalculate totals
+        state.totalQuantity = state.items.reduce((total, item) => total + item.quantity, 0);
+        state.totalAmount = state.items.reduce((total, item) => total + item.totalPrice, 0);
       }
     },
 
     updateQuantity: (state, action) => {
       const { id, quantity } = action.payload;
-      const existingItem = state.items.find((item) => item.id === id);
+      const existingItem = state.items.find(item => item._id === id);
 
       if (existingItem) {
-        const quantityDiff = quantity - existingItem.quantity;
-        state.totalQuantity += quantityDiff;
-        state.totalAmount += quantityDiff * existingItem.price;
-
         existingItem.quantity = quantity;
         existingItem.totalPrice = quantity * existingItem.price;
+        
+        // Recalculate totals
+        state.totalQuantity = state.items.reduce((total, item) => total + item.quantity, 0);
+        state.totalAmount = state.items.reduce((total, item) => total + item.totalPrice, 0);
       }
     },
 
@@ -62,7 +70,6 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addToCart, removeFromCart, updateQuantity, clearCart } =
-  cartSlice.actions;
+export const { addToCart, removeFromCart, updateQuantity, clearCart } = cartSlice.actions;
 
 export default cartSlice.reducer;

@@ -1,6 +1,13 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
-const ProductGrid = ({ products, navigate }) => {
+const ProductGrid = ({ products }) => {
+  const navigate = useNavigate(); 
+
+  if (!products || products.length === 0) {
+    return <p>No products available.</p>;
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {products.map((product) => (
@@ -11,13 +18,13 @@ const ProductGrid = ({ products, navigate }) => {
         >
           {/* Product Image */}
           <img
-            src={product.images[0]?.url || "/placeholder.png"}
+            src={product.images?.[0]?.url || "/placeholder.png"}
             alt={product.title}
-            className="w-full h-64 object-cover rounded-t-lg" // Full-width image with increased height
+            className="w-full h-64 object-cover rounded-t-lg"
           />
-          <div className="p-4 text-center"> {/* Center align the title and price */}
+          <div className="p-4 text-center">
             <h2 className="text-lg font-semibold mb-2">{product.title}</h2>
-            <p className="text-black font-bold">${product.price}</p> {/* Price color changed to black */}
+            <p className="text-black font-bold">${product.price}</p>
           </div>
         </div>
       ))}
@@ -26,4 +33,3 @@ const ProductGrid = ({ products, navigate }) => {
 };
 
 export default ProductGrid;
-

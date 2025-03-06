@@ -1,16 +1,21 @@
 import React, { useState } from "react";
-import { TextField, Button, Select, MenuItem, CircularProgress } from "@mui/material";
+import { TextField, Button, Select, MenuItem, IconButton, InputAdornment } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
 
 function CommonForm({ formControls, onSubmit, submitButtonText = "Submit" }) {
   const [formValues, setFormValues] = useState(
     Object.fromEntries(formControls.map((control) => [control.name, ""]))
   );
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (name) => (event) => {
-    const value =
-      event.target.type === "file" ? event.target.files : event.target.value;
+    const value = event.target.type === "file" ? event.target.files : event.target.value;
     setFormValues({ ...formValues, [name]: value });
+  };
+
+  const handleTogglePassword = () => {
+    setShowPassword((prev) => !prev);
   };
 
   const renderInputsByComponentType = (control) => {
@@ -22,12 +27,25 @@ function CommonForm({ formControls, onSubmit, submitButtonText = "Submit" }) {
             key={control.name}
             label={control.label}
             placeholder={control.placeholder}
-            type={control.type}
+            type={control.type === "password" ? (showPassword ? "text" : "password") : control.type}
             variant="outlined"
             fullWidth
             value={formValues[control.name]}
             onChange={handleChange(control.name)}
             style={{ marginBottom: "16px" }}
+            InputProps={
+              control.type === "password"
+                ? {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={handleTogglePassword} edge="end">
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }
+                : {}
+            }
           />
         );
       case "textarea":
@@ -111,15 +129,8 @@ function CommonForm({ formControls, onSubmit, submitButtonText = "Submit" }) {
           {submitButtonText}
         </Button>
       </div>
-
-      {/* Spinner Example (if required elsewhere) */}
-      {/* Replace with a condition or a loading state as needed */}
-      <div className="flex justify-center mt-4">
-        <CircularProgress style={{ color: "#FF6F00" }} />
-      </div>
     </form>
   );
 }
 
 export default CommonForm;
-

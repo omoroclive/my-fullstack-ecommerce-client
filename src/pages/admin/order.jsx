@@ -1,17 +1,46 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchOrders, updateOrderStatus } from '../../store/order/orderSlice'; 
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOrders, updateOrderStatus } from "../../store/order/orderSlice";
+import { Snackbar, MenuItem, Select } from "@mui/material";
+import MuiAlert from "@mui/material/Alert";
+
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 const Order = () => {
   const dispatch = useDispatch();
-  const { orders, loading, error } = useSelector(state => state.orders);
-  
+  const { orders, loading, error } = useSelector((state) => state.orders);
+
+  // Snackbar state
+  const [open, setOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+
   useEffect(() => {
     dispatch(fetchOrders());
   }, [dispatch]);
 
-  const handleStatusChange = (orderId, status) => {
-    dispatch(updateOrderStatus({ orderId, status }));
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      const payload = { orderId, orderStatus: newStatus };
+      console.log("Updating order status with payload:", payload);
+
+      const updatedOrder = await dispatch(updateOrderStatus(payload)).unwrap();
+
+      setSnackbarMessage(`Order ${updatedOrder._id} status updated to ${updatedOrder.orderStatus}`);
+      setSnackbarSeverity("success");
+      setOpen(true);
+    } catch (error) {
+      setSnackbarMessage(`Failed to update order: ${error.message}`);
+      setSnackbarSeverity("error");
+      setOpen(true);
+    }
+  };
+
+  // Close the snackbar
+  const handleCloseSnackbar = () => {
+    setOpen(false);
   };
 
   if (loading) return <div>Loading...</div>;
@@ -19,11 +48,11 @@ const Order = () => {
 
   return (
     <div className="order-container">
-      <h1 className='text-center'>Order Details</h1>
+      <h1 className="text-center">Order Details</h1>
       {orders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
-        orders.map(order => (
+        orders.map((order) => (
           <div key={order._id} className="order-card">
             <h2>Order ID: {order._id}</h2>
             <table className="order-table">
@@ -96,25 +125,33 @@ const Order = () => {
 
             <div className="order-status">
               <h3>Order Status</h3>
-              <p>Status: {order.status || 'Pending'}</p>
-              <button 
-                className="status-btn" 
-                onClick={() => handleStatusChange(order._id, 'Shipped')}
+              <p>Status: {order.orderStatus || "Pending"}</p>
+              <Select
+                value={order.orderStatus || "Processing"}
+                onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                disabled={order.orderStatus === "Delivered" || order.orderStatus === "Cancelled"}
+                displayEmpty
+                className="status-select"
               >
-                Mark as Shipped
-              </button>
-              <button 
-                className="status-btn" 
-                onClick={() => handleStatusChange(order._id, 'Delivered')}
-              >
-                Mark as Delivered
-              </button>
+                <MenuItem value="Processing">Processing</MenuItem>
+                <MenuItem value="Shipped" disabled={order.orderStatus === "Shipped" || order.orderStatus === "Delivered"}>Shipped</MenuItem>
+                <MenuItem value="Delivered" disabled={order.orderStatus === "Delivered"}>Delivered</MenuItem>
+                <MenuItem value="Cancelled" disabled={order.orderStatus === "Cancelled"}>Cancelled</MenuItem>
+              </Select>
             </div>
           </div>
         ))
       )}
+
+      {/* Snackbar for status update */}
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
 
 export default Order;
+

@@ -42,11 +42,11 @@ function Register() {
           <input type="checkbox" className="form-checkbox text-red-600" required />
           <span>
             I agree to the{" "}
-            <a href="/terms" className="text-red-600 font-medium hover:underline">
-              Oasis Terms & Conditions
+            <a href="/auth/terms" className="text-red-600 font-medium hover:underline">
+              Smartshop Terms & Conditions
             </a>{" "}
             and{" "}
-            <a href="/privacy" className="text-red-600 font-medium hover:underline">
+            <a href="/auth/privacy" className="text-red-600 font-medium hover:underline">
               Privacy Policy
             </a>.
           </span>

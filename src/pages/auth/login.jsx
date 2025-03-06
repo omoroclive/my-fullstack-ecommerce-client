@@ -32,6 +32,16 @@ function Login() {
   };
 
   useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const token = query.get("token");
+
+    if (token) {
+      localStorage.setItem("accessToken", token);
+      navigate("/shop/home");
+    }
+  }, [navigate]);
+
+  useEffect(() => {
     if (isAuthenticated && user?.role) {
       navigate(user.role === "admin" ? "/admin/dashboard" : "/shop/home");
     }
@@ -83,6 +93,7 @@ function Login() {
           variant="outlined"
           fullWidth
           startIcon={<img src={googleLogo} alt="Google Logo" className="w-6 h-6" />}
+          onClick={() => (window.location.href = "http://localhost:3000/auth/google")}
         >
           Login with Google
         </Button>
@@ -105,7 +116,6 @@ function Login() {
           >
             Register here
           </Link>
-          
         </p>
       </div>
     </div>

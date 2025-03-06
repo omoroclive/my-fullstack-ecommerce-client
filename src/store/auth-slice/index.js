@@ -51,15 +51,19 @@ const authSlice = createSlice({
     logout: (state) => {
       state.isAuthenticated = false;
       state.user = null;
-      localStorage.removeItem("token"); // Clear token from localStorage
+      localStorage.removeItem("token");
     },
     setUser: (state, action) => {
       state.isAuthenticated = true;
       state.user = action.payload.user;
     },
+    loginUserSuccess: (state, action) => {  // ✅ Now inside reducers
+      state.isAuthenticated = true;
+      state.user = action.payload.user;
+      localStorage.setItem("token", action.payload.token);
+    },
   },
   extraReducers: (builder) => {
-    // Handle registerUser
     builder
       .addCase(registerUser.pending, (state) => {
         state.isLoading = true;
@@ -75,7 +79,6 @@ const authSlice = createSlice({
         state.error = action.payload;
       });
 
-    // Handle loginUser
     builder
       .addCase(loginUser.pending, (state) => {
         state.isLoading = true;
@@ -83,9 +86,9 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user; // Access user directly
+        state.user = action.payload.user;
         state.isAuthenticated = true;
-        localStorage.setItem("token", action.payload.token); // Store the token in localStorage
+        localStorage.setItem("token", action.payload.token);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -93,6 +96,7 @@ const authSlice = createSlice({
       });
   },
 });
+
 
 // Check for stored token during app initialization
 export const initializeAuthState = () => (dispatch) => {
@@ -115,6 +119,6 @@ export const initializeAuthState = () => (dispatch) => {
 };
 
 // Actions
-export const { logout, setUser } = authSlice.actions;
+export const { logout, setUser, loginUserSuccess } = authSlice.actions;
 
 export default authSlice.reducer;

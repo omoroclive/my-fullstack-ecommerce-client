@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import Navbar from "./shoppingHeader";
+import Navbar from "./shoppingHeader"; // Ensure the correct import
 import HeroSlider from "./heroSlider";
 
 function ShoppingLayout() {
@@ -8,8 +8,8 @@ function ShoppingLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Common Navbar */}
-      <Navbar />
+      {/* Common Navbar (Includes Search) */}
+      <Navbar />  
 
       {/* Conditional Hero Section */}
       {location.pathname === "/shop/home" && (
@@ -27,5 +27,3 @@ function ShoppingLayout() {
 }
 
 export default ShoppingLayout;
-
-

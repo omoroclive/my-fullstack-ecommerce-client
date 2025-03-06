@@ -5,6 +5,7 @@ import TuneIcon from "@mui/icons-material/Tune";
 import { useNavigate } from "react-router-dom";
 import FilterDrawer from "./FilterDrawer";
 import ProductGrid from "./ProductGrid";
+import RecentlyViewed from "../../pages/account/RecentlyViewed";
 
 const Shopping = () => {
   const [products, setProducts] = useState([]);
@@ -106,6 +107,7 @@ const Shopping = () => {
           No products found. Try a different search or filter.
         </p>
       )}
+      <RecentlyViewed />
     </div>
   );
 };

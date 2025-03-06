@@ -6,25 +6,25 @@ import { useNavigate } from "react-router-dom";
 const AccountManagement = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false); // For delete confirmation dialog
-  const [isSuccessMessage, setIsSuccessMessage] = useState(null); // Success message for feedback
-  const [isDarkMode, setIsDarkMode] = useState(false); // Dark mode state
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSuccessMessage, setIsSuccessMessage] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
 
-  const API_BASE_URL = "http://localhost:3000"; // Directly use raw API URL
+  const API_BASE_URL = "http://localhost:3000";
 
-  // Fetch user preferences (including dark mode) on component mount
+  // Fetch user preferences including dark mode
   useEffect(() => {
     const fetchUserPreferences = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("No token found. Please log in.");
 
-        const response = await axios.get(`${API_BASE_URL}/api/user/me`, {
+        const response = await axios.get(`${API_BASE_URL}/api/account`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        setIsDarkMode(response.data.isDarkMode); // Set dark mode state from server
+        setIsDarkMode(response.data.isDarkMode); 
       } catch (error) {
         console.error("Error fetching user preferences:", error);
       }
@@ -39,8 +39,8 @@ const AccountManagement = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please log in.");
 
-      const response = await axios.post(
-        `${API_BASE_URL}/api/account/change-password`,
+      await axios.post(
+        `${API_BASE_URL}/auth/change-password`,
         { currentPassword, newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -86,24 +86,19 @@ const AccountManagement = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setIsDarkMode(response.data.isDarkMode); // Update dark mode state
+      setIsDarkMode(response.data.isDarkMode);
     } catch (error) {
       console.error("Error toggling dark mode:", error);
     }
   };
 
   return (
-    <div className={`p-6 max-w-3xl mx-auto rounded-lg shadow-lg ${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}>
+    <div className={`p-6 max-w-3xl mx-auto rounded-lg shadow-lg transition-all duration-300 ${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}>
       <h1 className="text-2xl font-bold mb-6 text-center">Account Management</h1>
 
       {/* Dark Mode Toggle Button */}
       <section className="mb-8">
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleToggleDarkMode}
-          className="w-full"
-        >
+        <Button variant="contained" color="primary" onClick={handleToggleDarkMode} className="w-full">
           {isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
         </Button>
       </section>
@@ -119,7 +114,7 @@ const AccountManagement = () => {
           margin="normal"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
-          className={isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100"}
+          className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100"}`}
         />
         <TextField
           label="New Password"
@@ -129,14 +124,9 @@ const AccountManagement = () => {
           margin="normal"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
-          className={isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100"}
+          className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100"}`}
         />
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleChangePassword}
-          className="mt-4 w-full"
-        >
+        <Button variant="contained" color="primary" onClick={handleChangePassword} className="mt-4 w-full">
           Update Password
         </Button>
         {isSuccessMessage && <p className="text-green-500 mt-2 text-center">{isSuccessMessage}</p>}
@@ -145,25 +135,14 @@ const AccountManagement = () => {
       {/* Delete Account Section */}
       <section>
         <h2 className="text-xl font-semibold mb-4 text-red-600">Delete Account</h2>
-        <p className="mb-4">
-          Deleting your account is irreversible. All your data will be permanently deleted.
-        </p>
-        <Button
-          variant="outlined"
-          color="secondary"
-          onClick={() => setIsDialogOpen(true)}
-          className="w-full"
-        >
+        <p className="mb-4">Deleting your account is irreversible. All your data will be permanently deleted.</p>
+        <Button variant="outlined" color="secondary" onClick={() => setIsDialogOpen(true)} className="w-full">
           Delete Account
         </Button>
       </section>
 
       {/* Delete Account Confirmation Dialog */}
-      <Dialog
-        open={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        className={isDarkMode ? "dark:bg-gray-800" : ""}
-      >
+      <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)} className={isDarkMode ? "dark:bg-gray-800" : ""}>
         <DialogTitle className={isDarkMode ? "text-white" : ""}>{"Delete Your Account?"}</DialogTitle>
         <DialogContent>
           <DialogContentText className={isDarkMode ? "text-gray-300" : ""}>
@@ -174,14 +153,7 @@ const AccountManagement = () => {
           <Button onClick={() => setIsDialogOpen(false)} color="primary">
             Cancel
           </Button>
-          <Button
-            onClick={() => {
-              handleDeleteAccount();
-              setIsDialogOpen(false);
-            }}
-            color="secondary"
-            variant="contained"
-          >
+          <Button onClick={() => { handleDeleteAccount(); setIsDialogOpen(false); }} color="secondary" variant="contained">
             Delete
           </Button>
         </DialogActions>
@@ -191,7 +163,3 @@ const AccountManagement = () => {
 };
 
 export default AccountManagement;
-
-
-
-

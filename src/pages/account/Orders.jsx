@@ -9,7 +9,7 @@ const Orders = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const API_BASE_URL = "http://localhost:3000"; // Replace with your backend URL
+  const API_BASE_URL = "http://localhost:3000" || "https://grateful-adventure-production.up.railway.app"; 
 
   useEffect(() => {
     fetchOrders();

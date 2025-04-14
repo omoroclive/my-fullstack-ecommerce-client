@@ -7,7 +7,7 @@ const Ratings = () => {
   const [reviews, setReviews] = useState({});
   const [error, setError] = useState(null);
 
-  const API_BASE_URL = "http://localhost:3000";
+  const API_BASE_URL = "http://localhost:3000" || "https://grateful-adventure-production.up.railway.app";
 
   useEffect(() => {
     const fetchDeliveredProducts = async () => {

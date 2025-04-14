@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Button, TextField, Grid, Container, Typography, Paper, Snackbar, Alert } from '@mui/material';
 
+const API_URL = "http://localhost:3000" || "https://grateful-adventure-production.up.railway.app";
+
 const EmployeeForm = () => {
   const [formData, setFormData] = useState({ name: '', role: '', salary: '' });
   const [error, setError] = useState('');
@@ -15,7 +17,7 @@ const EmployeeForm = () => {
     }
 
     try {
-      await axios.post('http://localhost:3000/api/employees', formData);
+      await axios.post(`${API_URL}/api/employees`, formData);
       setSnackbar({ open: true, message: 'Employee added successfully!', severity: 'success' });
       setFormData({ name: '', role: '', salary: '' });
       setError('');

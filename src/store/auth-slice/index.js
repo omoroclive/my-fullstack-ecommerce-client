@@ -14,7 +14,7 @@ export const registerUser = createAsyncThunk(
   "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axios.post("http://localhost:3000/auth/register", userData);
+      const response = await axios.post("http://localhost:3000/auth/register" || "https:////grateful-adventure-production.up.railway.app/auth/register", userData);
       console.log("Registration response:", response.data);
       return response.data;
     } catch (error) {

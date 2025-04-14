@@ -3,7 +3,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 export const fetchProducts = createAsyncThunk("products/fetch", async () => {
   const token = localStorage.getItem("token"); // Get token from localStorage
 
-  const res = await fetch("http://localhost:3000/api/products", {
+  const res = await fetch("http://localhost:3000/api/products" || "https://grateful-adventure-production.up.railway.app/api/products", {
     headers: {
       Authorization: `Bearer ${token}`, // Pass token in header
     },

@@ -45,7 +45,8 @@ const EditProductPage = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `http://localhost:3000/api/products/${productId}`,
+          `http://localhost:3000/api/products/${productId}` 
+          || `https://grateful-adventure-production.up.railway.app/api/products/${productId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -121,7 +122,8 @@ const EditProductPage = () => {
       }
   
       const response = await axios.put(
-        `http://localhost:3000/api/products/${productId}`,
+        `http://localhost:3000/api/products/${productId}` 
+        || `https://grateful-adventure-production.up.railway.app/api/products/${productId}`,
         formDataToSend,
         {
           headers: {

@@ -18,6 +18,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddressFormControls from "../../config/address";
 
+const API_BASE_URL = "https://grateful-adventure-production.up.railway.app/api/address" || "http://localhost:3000/api/address";
+
 const AddressBook = () => {
   const [addresses, setAddresses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,7 +27,11 @@ const AddressBook = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [formValues, setFormValues] = useState({});
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   const [editingAddressId, setEditingAddressId] = useState(null);
 
   // Fetch addresses from the backend
@@ -35,7 +41,7 @@ const AddressBook = () => {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("No token found. Please log in.");
 
-        const response = await axios.get("http://localhost:3000/api/address", {
+        const response = await axios.get(API_BASE_URL, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -74,28 +80,42 @@ const AddressBook = () => {
 
       if (isEditMode) {
         // Edit Address API call
-        await axios.put(`http://localhost:3000/api/address/${editingAddressId}`, formData, {
+        await axios.put(`${API_BASE_URL}/${editingAddressId}`, formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         setAddresses((prev) =>
-          prev.map((addr) => (addr._id === editingAddressId ? { ...formData, _id: editingAddressId } : addr))
+          prev.map((addr) =>
+            addr._id === editingAddressId ? { ...formData, _id: editingAddressId } : addr
+          )
         );
-        setSnackbar({ open: true, message: "Address updated successfully.", severity: "success" });
+        setSnackbar({
+          open: true,
+          message: "Address updated successfully.",
+          severity: "success",
+        });
       } else {
         // Add Address API call
-        const response = await axios.post("http://localhost:3000/api/address", formData, {
+        const response = await axios.post(API_BASE_URL, formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         setAddresses((prev) => [...prev, response.data.address]);
-        setSnackbar({ open: true, message: "Address added successfully.", severity: "success" });
+        setSnackbar({
+          open: true,
+          message: "Address added successfully.",
+          severity: "success",
+        });
       }
 
       setIsDialogOpen(false);
     } catch (error) {
       console.error("Error saving address:", error);
-      setSnackbar({ open: true, message: "Failed to save address.", severity: "error" });
+      setSnackbar({
+        open: true,
+        message: "Failed to save address.",
+        severity: "error",
+      });
     }
   };
 
@@ -106,15 +126,23 @@ const AddressBook = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:3000/api/address/${addressId}`, {
+      await axios.delete(`${API_BASE_URL}/${addressId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       setAddresses((prev) => prev.filter((address) => address._id !== addressId));
-      setSnackbar({ open: true, message: "Address deleted successfully.", severity: "success" });
+      setSnackbar({
+        open: true,
+        message: "Address deleted successfully.",
+        severity: "success",
+      });
     } catch (error) {
       console.error("Error deleting address:", error);
-      setSnackbar({ open: true, message: "Failed to delete address.", severity: "error" });
+      setSnackbar({
+        open: true,
+        message: "Failed to delete address.",
+        severity: "error",
+      });
     }
   };
 
@@ -213,13 +241,7 @@ const AddressBook = () => {
                 </Grid>
               ))}
             </Grid>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              fullWidth
-              sx={{ mt: 3 }}
-            >
+            <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 3 }}>
               {isEditMode ? "Update Address" : "Save Address"}
             </Button>
           </form>
@@ -237,11 +259,7 @@ const AddressBook = () => {
         autoHideDuration={4000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
+        <Alert severity={snackbar.severity} sx={{ width: "100%" }}>
           {snackbar.message}
         </Alert>
       </Snackbar>
@@ -250,6 +268,3 @@ const AddressBook = () => {
 };
 
 export default AddressBook;
-
-
-

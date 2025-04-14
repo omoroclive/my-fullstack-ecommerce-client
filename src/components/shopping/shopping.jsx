@@ -7,6 +7,11 @@ import FilterDrawer from "./FilterDrawer";
 import ProductGrid from "./ProductGrid";
 import RecentlyViewed from "../../pages/account/RecentlyViewed";
 
+
+
+  // Fetch products from backend
+  const API_URL = "http://localhost:3000" || "https://grateful-adventure-production.up.railway.app";
+
 const Shopping = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -19,14 +24,13 @@ const Shopping = () => {
 
   const navigate = useNavigate();
 
-  // Fetch products from backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("No token found");
 
-        const response = await axios.get("http://localhost:3000/api/products", {
+        const response = await axios.get(`${API_URL}/api/products`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

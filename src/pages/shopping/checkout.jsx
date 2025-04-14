@@ -147,11 +147,10 @@ const Checkout = () => {
         paymentMethod: paymentGateway === "mpesa" ? "Mpesa" : "PayPal",
       };
 
-      // Log the data to the console before sending it
-      //console.log("Sending the following order details to the server:", orderDetails);
+      
 
       // Send order details to the server
-      await axios.post("http://localhost:3000/api/orders", orderDetails, {
+      await axios.post("http://localhost:3000/api/orders"||"https:////grateful-adventure-production.up.railway.app/api/orders", orderDetails, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

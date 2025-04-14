@@ -11,7 +11,7 @@ const AccountManagement = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
 
-  const API_BASE_URL = "http://localhost:3000";
+  const API_BASE_URL = "http://localhost:3000" || "https://grateful-adventure-production.up.railway.app";
 
   // Fetch user preferences including dark mode
   useEffect(() => {

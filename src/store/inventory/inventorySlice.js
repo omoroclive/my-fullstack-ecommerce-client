@@ -7,7 +7,8 @@ const token = localStorage.getItem("token");
 // Fetch inventory
 export const fetchInventory = createAsyncThunk("inventory/fetchInventory", async (_, { rejectWithValue }) => {
   try {
-    const response = await axios.get("http://localhost:3000/api/inventory", {
+    const response = await axios.get("http://localhost:3000/api/inventory" 
+    || "https://grateful-adventure-production.up.railway.app/api/inventory", {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;

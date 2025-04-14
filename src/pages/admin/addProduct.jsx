@@ -51,13 +51,13 @@ const AddProductForm = () => {
       setNotification({ open: true, message: "No authentication token found", severity: "error" });
       return;
     }
-    console.log("Auth Token:", authToken); // Log token for debugging
+    console.log("Auth Token:", authToken); 
 
     // Log form data to ensure it's correct before sending
     const formDataToSubmit = new FormData();
     Object.keys(formData).forEach((key) => {
       if (key === "images") {
-        console.log("Selected images:", formData.images); // Log images for debugging
+        console.log("Selected images:", formData.images); 
 
         for (let i = 0; i < formData.images.length; i++) {
           formDataToSubmit.append("images", formData.images[i]);
@@ -75,7 +75,7 @@ const AddProductForm = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/products", // Ensure the backend URL is correct
+        "http://localhost:3000/api/products" || "https://grateful-adventure-production.up.railway.app/api/products",
         formDataToSubmit,
         {
           headers: {

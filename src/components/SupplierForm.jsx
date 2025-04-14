@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Button, TextField, Grid, Container, Typography, Paper, Snackbar, Alert } from '@mui/material';
 import axios from 'axios';
 
+const API_URL = "http://localhost:3000" || "https://grateful-adventure-production.up.railway.app";
+
 const SupplierForm = ({ setSuppliers }) => {
   const [formData, setFormData] = useState({
     date: '',
@@ -22,7 +24,7 @@ const SupplierForm = ({ setSuppliers }) => {
     }
   
     try {
-      const res = await axios.post('http://localhost:3000/api/suppliers', formData);
+      const res = await axios.post(`${API_URL}/api/suppliers`, formData);
       // Update the supplier list with the new supplier
       setSuppliers((prevSuppliers) => [...prevSuppliers, res.data.supplier]);
       setSnackbar({ open: true, message: 'Supplier added successfully!', severity: 'success' });
@@ -118,3 +120,4 @@ const SupplierForm = ({ setSuppliers }) => {
 };
 
 export default SupplierForm;
+

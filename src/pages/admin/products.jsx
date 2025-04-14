@@ -34,7 +34,7 @@ const Products = () => {
           throw new Error("No token found");
         }
 
-        const response = await axios.get("http://localhost:3000/api/products", {
+        const response = await axios.get("http://localhost:3000/api/products" || "https://grateful-adventure-production.up.railway.app/api/products", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -59,9 +59,9 @@ const Products = () => {
     if (!confirmDelete) return;
 
     try {
-      const token = localStorage.getItem("token"); // Updated key
+      const token = localStorage.getItem("token"); 
       const response = await axios.delete(
-        `http://localhost:3000/api/products/${productId}`,
+        `http://localhost:3000/api/products/${productId}` || `https://grateful-adventure-production.up.railway.app/api/products/${productId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

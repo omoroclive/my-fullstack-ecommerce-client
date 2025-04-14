@@ -27,7 +27,8 @@ const Dashboard = () => {
           throw new Error("No token found");
         }
 
-        const response = await axios.get("http://localhost:3000/admin-dashboard", {
+        const response = await axios.get("http://localhost:3000/admin-dashboard"
+       || "https://grateful-adventure-production.up.railway.app/admin-dashboard", {
           headers: {
             Authorization: Bearer `${token}`,
           },

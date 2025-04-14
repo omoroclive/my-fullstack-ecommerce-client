@@ -10,39 +10,37 @@ const Shop = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found. Please log in.");
-        }
+  const API_URL = process.env.REACT_APP_API_URL || "https://grateful-adventure-production.up.railway.app";
 
-        console.log("Brand:", brand); // Debugging
-        console.log("Category:", category); // Debugging
-
-        let queryParams = [];
-        if (brand) queryParams.push(`brand=${encodeURIComponent(brand)}`);
-        if (category) queryParams.push(`category=${encodeURIComponent(category)}`);
-
-        const queryString = queryParams.length ? `?${queryParams.join("&")}` : "";
-
-        const response = await axios.get(`http://localhost:3000/api/products${queryString}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        console.log("API Response:", response.data); // Debugging
-
-        setProducts(response.data.products || []); // Ensure fallback to empty array
-      } catch (error) {
-        setError(error.response?.data?.message || "Failed to fetch products");
-      } finally {
-        setIsLoading(false);
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No token found. Please log in.");
       }
-    };
 
-    fetchProducts();
-  }, [brand, category]);
+      let queryParams = [];
+      if (brand) queryParams.push(`brand=${encodeURIComponent(brand)}`);
+      if (category) queryParams.push(`category=${encodeURIComponent(category)}`);
+
+      const queryString = queryParams.length ? `?${queryParams.join("&")}` : "";
+
+      const response = await axios.get(`${API_URL}/api/products${queryString}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setProducts(response.data.products || []);
+    } catch (error) {
+      setError(error.response?.data?.message || "Failed to fetch products");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  fetchProducts();
+}, [brand, category]);
+
 
   // Adjusted title to display only brand or category independently
   const pageTitle = brand

@@ -12,6 +12,10 @@ const ShopCategory = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // URLs to try
+  const localURL = "http://localhost:3000";
+  const productionURL = "https://grateful-adventure-production.up.railway.app";
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -24,14 +28,31 @@ const ShopCategory = () => {
         if (category) queryParams.push(`category=${encodeURIComponent(category)}`);
 
         const queryString = queryParams.length ? `?${queryParams.join("&")}` : "";
+        const endpoint = `/api/products${queryString}`;
 
-        const response = await axios.get(`http://localhost:3000/api/products${queryString}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setProducts(response.data.products || []);
+        // Try production URL first, then fallback to local if that fails
+        try {
+          const response = await axios.get(`${productionURL}${endpoint}`, {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 5000 // 5 second timeout
+          });
+          
+          setProducts(response.data.products || []);
+          console.log("Successfully connected to production API");
+        } catch (prodError) {
+          console.log("Failed to connect to production API, trying local...", prodError);
+          
+          // Try local URL as fallback
+          const response = await axios.get(`${localURL}${endpoint}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          
+          setProducts(response.data.products || []);
+          console.log("Successfully connected to local API");
+        }
       } catch (error) {
-        setError(error.response?.data?.message || "Failed to fetch products");
+        console.error("Failed to fetch products:", error);
+        setError(error.response?.data?.message || "Failed to fetch products from both APIs");
       } finally {
         setIsLoading(false);
       }
@@ -106,4 +127,3 @@ const ShopCategory = () => {
 };
 
 export default ShopCategory;
-

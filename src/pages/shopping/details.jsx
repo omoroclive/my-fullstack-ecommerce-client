@@ -60,7 +60,7 @@ const Details = () => {
         if (!token) throw new Error("No token found. Please log in.");
 
         const response = await axios.get(
-          `http://localhost:3000/api/products/${id}`,
+          `http://localhost:3000/api/products/${id}`|| `https://grateful-adventure-production.up.railway.app/api/products/${id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -90,7 +90,7 @@ const Details = () => {
 
         // Fetch reviews for the product
         const reviewsResponse = await axios.get(
-          `http://localhost:3000/api/reviews/${id}`,
+          `http://localhost:3000/api/reviews/${id}`|| `https://grateful-adventure-production.up.railway.app/api/reviews/${id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -118,7 +118,8 @@ const Details = () => {
           userIds.map(async (userId) => {
             try {
               const userResponse = await axios.get(
-                `http://localhost:3000/api/users/${userId}`,
+                `http://localhost:3000/api/users/${userId}`
+                || `https://grateful-adventure-production.up.railway.app/api/users/${userId}`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
                 }

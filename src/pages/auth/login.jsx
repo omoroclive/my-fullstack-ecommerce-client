@@ -93,7 +93,7 @@ function Login() {
           variant="outlined"
           fullWidth
           startIcon={<img src={googleLogo} alt="Google Logo" className="w-6 h-6" />}
-          onClick={() => (window.location.href = "http://localhost:3000/auth/google")}
+          onClick={() => (window.location.href = "http://localhost:3000/auth/google" || "https://your-app.herokuapp.com/auth/google")}
         >
           Login with Google
         </Button>

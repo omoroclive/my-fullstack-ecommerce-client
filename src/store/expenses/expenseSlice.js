@@ -57,7 +57,8 @@ export const deleteExpense = createAsyncThunk(
   "expense/deleteExpense",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(`http://localhost:3000/api/expenses/${id}`, {
+      const response = await axios.delete(`http://localhost:3000/api/expenses/${id}`
+       || `https://grateful-adventure-production.up.railway.app/api/expenses/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return id; // Return the id of the deleted expense to remove from state

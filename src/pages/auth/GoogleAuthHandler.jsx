@@ -20,7 +20,7 @@ function GoogleAuthHandler() {
     console.log("Received Token:", token);
     localStorage.setItem("accessToken", token);
 
-    fetch("http://localhost:3000/auth/google/success", {
+    fetch("http://localhost:3000/auth/google/success" || "https://grateful-adventure-production.up.railway.app/auth/google/success", {
       headers: { Authorization: `Bearer ${token}` },
       credentials: "include",
     })

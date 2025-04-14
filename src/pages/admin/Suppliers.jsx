@@ -14,7 +14,7 @@ const Suppliers = () => {
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/api/suppliers');
+        const res = await axios.get('http://localhost:3000/api/suppliers' || 'https://grateful-adventure-production.up.railway.app/api/suppliers');
         setSuppliers(res.data); // Initialize the supplier list from the backend
       } catch (err) {
         console.error(err);
@@ -25,7 +25,8 @@ const Suppliers = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/api/suppliers/${id}`);
+      await axios.delete(`http://localhost:3000/api/suppliers/${id}`
+       || `https://grateful-adventure-production.up.railway.app/api/suppliers/${id}`);
       setSuppliers(suppliers.filter((supplier) => supplier._id !== id));
       setSnackbar({ open: true, message: 'Supplier deleted successfully', severity: 'success' });
     } catch (err) {

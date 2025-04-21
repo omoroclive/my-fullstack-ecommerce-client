@@ -10,7 +10,7 @@ export const fetchExpenses = createAsyncThunk(
   "expense/fetchExpenses",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get("http://localhost:3000/api/expenses", {
+      const response = await axios.get("http://localhost:3000/api/expenses" ||"https:////grateful-adventure-production.up.railway.app/api/expenses", {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
@@ -25,7 +25,7 @@ export const addExpense = createAsyncThunk(
   "expense/addExpense",
   async (expenseData, { rejectWithValue }) => {
     try {
-      const response = await axios.post("http://localhost:3000/api/expenses", expenseData, {
+      const response = await axios.post("http://localhost:3000/api/expenses" ||"https:////grateful-adventure-production.up.railway.app/api/expenses", expenseData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
@@ -41,14 +41,14 @@ export const updateExpense = createAsyncThunk(
   async ({ id, expenseData }, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `http://localhost:3000/api/expenses/${id}`,
+        `http://localhost:3000/api/expenses/${id}` || `https://grateful-adventure-production.up.railway.app/api/expenses/${id}`,
         expenseData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error updating expense");
-    }
+    } 
   }
 );
 

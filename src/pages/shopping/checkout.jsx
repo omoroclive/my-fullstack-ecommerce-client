@@ -43,7 +43,7 @@ const Checkout = () => {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("User not logged in");
 
-        const response = await axios.get("http://localhost:3000/api/address", {
+        const response = await axios.get("http://localhost:3000/api/address" ||"https:////grateful-adventure-production.up.railway.app/api/address", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAddresses(response.data.addresses || []);
@@ -85,12 +85,12 @@ const Checkout = () => {
 
     try {
       if (paymentGateway === "mpesa") {
-        await axios.post("http://localhost:3000/api/mpesa/stkpush", {
+        await axios.post("http://localhost:3000/api/mpesa/stkpush" ||"https:////grateful-adventure-production.up.railway.app/api/stkpush", {
           phone: phoneNumber,
           amount: totalAmount,
         });
       } else if (paymentGateway === "paypal") {
-        await axios.post("http://localhost:3000/api/paypal/create-order", {
+        await axios.post("http://localhost:3000/api/paypal/create-order" ||"https:////grateful-adventure-production.up.railway.app/api/create-order", {
           amount: totalAmount,
         });
       }

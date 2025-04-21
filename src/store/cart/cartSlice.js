@@ -12,7 +12,7 @@ const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action) => {
       const newItem = action.payload;
-      // Use _id instead of id since that's what's coming from your MongoDB backend
+      
       const existingItem = state.items.find(item => item._id === newItem._id);
 
       if (existingItem) {

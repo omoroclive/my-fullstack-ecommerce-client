@@ -53,7 +53,7 @@ const AddProductForm = () => {
     }
     console.log("Auth Token:", authToken); 
 
-    // Log form data to ensure it's correct before sending
+    
     const formDataToSubmit = new FormData();
     Object.keys(formData).forEach((key) => {
       if (key === "images") {
@@ -67,7 +67,7 @@ const AddProductForm = () => {
       }
     });
 
-    // Log all keys and values in FormData to ensure they are populated correctly
+    
     for (let [key, value] of formDataToSubmit.entries()) {
       console.log(key, value);
     }
@@ -80,11 +80,11 @@ const AddProductForm = () => {
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
-            // Let axios handle the Content-Type for multipart/form-data
+            // axios handle the Content-Type for multipart/form-data
           },
         }
       );
-      console.log('Response data:', response.data); // Log response data
+      console.log('Response data:', response.data); 
       setNotification({ open: true, message: "Product added successfully!", severity: "success" });
       setFormData({
         title: "",

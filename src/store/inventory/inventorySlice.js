@@ -23,7 +23,7 @@ export const updateInventory = createAsyncThunk(
   async ({ id, sold_items, amount_sold }, { dispatch, rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `http://localhost:3000/api/inventory/${id}`, // ✅ Fixed incorrect API route
+        `http://localhost:3000/api/inventory/${id}` || `https://grateful-adventure-production.up.railway.app/api/inventory/${id}`, 
         { sold_items, amount_sold },
         { headers: { Authorization: `Bearer ${token}` } }
       );

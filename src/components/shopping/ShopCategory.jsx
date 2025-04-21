@@ -65,14 +65,14 @@ const ShopCategory = () => {
 
   return (
     <div className="p-1">
-      {/* Title Section with Gray Background and Relative Positioning */}
+      {/* */}
       <div className="bg-gray-200 p-4 w-full " style={{ position: "absolute", left: "calc(-50vw + 50%)" }}>
         <Typography variant="h4" className="font-bold text-center">
           {pageTitle}
         </Typography>
       </div>
 
-      {/* Margin between title and product container */}
+      {/* */}
       <div className="mt-28">
         {isLoading ? (
           <CircularProgress />

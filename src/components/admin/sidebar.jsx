@@ -65,7 +65,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         "& .MuiDrawer-paper": {
           width: 240,
           boxSizing: "border-box",
-          backgroundColor: "#1c1c1c", // Gray background color
+          backgroundColor: "#1c1c1c", 
           color: "white",
         },
       }}

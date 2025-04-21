@@ -24,7 +24,7 @@ const productsSlice = createSlice({
         state.status = "loading";
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
-        console.log("API Response:", action.payload); // Debugging
+        console.log("API Response:", action.payload); 
         state.items = action.payload.products; //  Ensure this is an array
         state.status = "succeeded";
       })

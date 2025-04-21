@@ -1,6 +1,6 @@
 import React from "react";
 import { Drawer, FormControl, InputLabel, Select, MenuItem, TextField, Button, Fab } from "@mui/material";
-import FilterListIcon from "@mui/icons-material/FilterList"; // Import filter icon
+import FilterListIcon from "@mui/icons-material/FilterList";
 
 const FilterDrawer = ({
   isOpen,
@@ -23,8 +23,8 @@ const FilterDrawer = ({
         onClick={toggleDrawer}
         sx={{
           position: "fixed",
-          bottom: 20, // Adjust to your preference
-          right: 20, // Adjust to your preference
+          bottom: 20, 
+          right: 20, 
           zIndex: 1000, // Ensure it stays above other elements
           backgroundColor: "#ff9800",
           "&:hover": { backgroundColor: "#f57c00" }

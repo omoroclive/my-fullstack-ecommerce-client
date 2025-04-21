@@ -162,7 +162,7 @@ const Details = () => {
 
   const handleAddToCart = () => {
     dispatch(addToCart({
-      _id: product._id,  // Make sure to include the product ID
+      _id: product._id,  
       title: product.title,
       price: product.price,
       quantity: quantity,

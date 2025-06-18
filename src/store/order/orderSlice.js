@@ -16,7 +16,7 @@ const getAuthHeaders = () => ({
 export const fetchOrders = createAsyncThunk('orders/fetchOrders', async (_, { rejectWithValue }) => {
   try {
     const response = await axios.get('http://localhost:3000/api/orders' 
-     || 'https://grateful-adventure-production.up.railway.app/api/orders' ,getAuthHeaders());
+     || 'https://ecommerce-server-c6w5.onrender.com/api/orders' ,getAuthHeaders());
     return response.data;
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || 'Failed to fetch orders');
@@ -29,7 +29,7 @@ export const updateOrderStatus = createAsyncThunk(
   async ({ orderId, orderStatus }, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `http://localhost:3000/api/orders/${orderId}/status` || `https://grateful-adventure-production.up.railway.app/api/orders/${orderId}/status`,
+        `http://localhost:3000/api/orders/${orderId}/status` || `https://ecommerce-server-c6w5.onrender.com/api/orders/${orderId}/status`,
         { orderStatus },
         getAuthHeaders()
       );

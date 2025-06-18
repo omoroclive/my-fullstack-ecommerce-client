@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, TextField, Grid, Container, Typography, Paper, Snackbar, Alert } from '@mui/material';
 import axios from 'axios';
 
-const API_URL = "http://localhost:3000" || "https://grateful-adventure-production.up.railway.app";
+const API_URL = "http://localhost:3000" || "https://ecommerce-server-c6w5.onrender.com";
 
 const SupplierForm = ({ setSuppliers }) => {
   const [formData, setFormData] = useState({

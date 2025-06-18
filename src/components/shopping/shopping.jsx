@@ -10,7 +10,7 @@ import RecentlyViewed from "../../pages/account/RecentlyViewed";
 
 
   // Fetch products from backend
-  const API_URL = "http://localhost:3000" || "https://grateful-adventure-production.up.railway.app";
+  const API_URL = "http://localhost:3000" || "https://ecommerce-server-c6w5.onrender.com";
 
 const Shopping = () => {
   const [products, setProducts] = useState([]);

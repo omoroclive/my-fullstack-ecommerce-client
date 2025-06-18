@@ -29,7 +29,7 @@ const EmployeeForm = ({ employees, setEmployees }) => {
     }
 
     try {
-      const res = await axios.post('http://localhost:3000/api/employees' || "https:////grateful-adventure-production.up.railway.app/api/employees", formData);
+      const res = await axios.post('http://localhost:3000/api/employees' || "https://ecommerce-server-c6w5.onrender.com/api/employees", formData);
       const newEmployee = res.data;
       setEmployees((prevEmployees) => [...prevEmployees, newEmployee]);
       setFormData({ name: '', role: '', salary: '' });

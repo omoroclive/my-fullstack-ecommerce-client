@@ -60,7 +60,7 @@ const Home = () => {
           throw new Error("No token found. Please log in.");
         }
 
-        const response = await fetch("http://localhost:3000/api/products" || "https://grateful-adventure-production.up.railway.app/api/products", {
+        const response = await fetch("http://localhost:3000/api/products" || "https://ecommerce-server-c6w5.onrender.com/api/products", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

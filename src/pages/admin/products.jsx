@@ -62,7 +62,7 @@ const Products = () => {
     try {
       const token = localStorage.getItem("token"); 
       const response = await axios.delete(
-        `http://localhost:3000/api/products/${productId}` || `https://grateful-adventure-production.up.railway.app/api/products/${productId}`,
+        `http://localhost:3000/api/products/${productId}` || `https://ecommerce-server-c6w5.onrender.com/api/products/${productId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -98,7 +98,7 @@ function Login() {
              onClick={() => {
               const baseURL = import.meta.env.MODE === "development"
                 ? "http://localhost:3000"
-                : "https://grateful-adventure-production.up.railway.app";
+                : "https://ecommerce-server-c6w5.onrender.com";
               window.location.href = `${baseURL}/auth/google`;
             }}
             

@@ -8,7 +8,7 @@ const token = localStorage.getItem("token");
 export const fetchInventory = createAsyncThunk("inventory/fetchInventory", async (_, { rejectWithValue }) => {
   try {
     const response = await axios.get("http://localhost:3000/api/inventory" 
-    || "https://grateful-adventure-production.up.railway.app/api/inventory", {
+    || "https://ecommerce-server-c6w5.onrender.com/api/inventory", {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;
@@ -23,12 +23,12 @@ export const updateInventory = createAsyncThunk(
   async ({ id, sold_items, amount_sold }, { dispatch, rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `http://localhost:3000/api/inventory/${id}` || `https://grateful-adventure-production.up.railway.app/api/inventory/${id}`, 
+        `http://localhost:3000/api/inventory/${id}` || `https://ecommerce-server-c6w5.onrender.com/api/inventory/${id}`, 
         { sold_items, amount_sold },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // ✅ Fetch the latest inventory after updating
+      // Fetch the latest inventory after updating
       dispatch(fetchInventory());
 
       return response.data;

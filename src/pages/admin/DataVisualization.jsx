@@ -38,10 +38,10 @@ const DataVisualization = () => {
       const authToken = localStorage.getItem("token");
       try {
         const [expensesRes, inventoryRes] = await Promise.all([
-          fetch("http://localhost:3000/api/expenses" || "https://grateful-adventure-production.up.railway.app/api/expenses", {
+          fetch("http://localhost:3000/api/expenses" || "https://ecommerce-server-c6w5.onrender.com/api/expenses", {
             headers: { Authorization: `Bearer ${authToken}` },
           }),
-          fetch("http://localhost:3000/api/inventory" || "https://grateful-adventure-production.up.railway.app/api/inventory", {
+          fetch("http://localhost:3000/api/inventory" || "https://ecommerce-server-c6w5.onrender.com/api/inventory", {
             headers: { Authorization: `Bearer ${authToken}` },
           }),
         ]);

@@ -10,7 +10,7 @@ const Shop = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const API_URL = import.meta.env.VITE_API_URL  || "https://grateful-adventure-production.up.railway.app";
+  const API_URL = import.meta.env.VITE_API_URL  || "https://ecommerce-server-c6w5.onrender.com";
 
 useEffect(() => {
   const fetchProducts = async () => {

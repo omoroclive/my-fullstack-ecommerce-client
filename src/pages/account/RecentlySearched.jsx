@@ -20,7 +20,7 @@ const RecentlySearched = () => {
         }
 
         const response = await axios.get(
-          "http://localhost:3000/api/recently-searched" || "https://grateful-adventure-production.up.railway.app/api/recently-searched",
+          "http://localhost:3000/api/recently-searched" || "https://ecommerce-server-c6w5.onrender.com/api/recently-searched",
           {
             headers: {
               Authorization: `Bearer ${token}`,

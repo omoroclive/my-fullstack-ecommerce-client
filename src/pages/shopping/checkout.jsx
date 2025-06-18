@@ -43,7 +43,7 @@ const Checkout = () => {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("User not logged in");
 
-        const response = await axios.get("http://localhost:3000/api/address" ||"https:////grateful-adventure-production.up.railway.app/api/address", {
+        const response = await axios.get("http://localhost:3000/api/address" ||"https://ecommerce-server-c6w5.onrender.com/api/address", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAddresses(response.data.addresses || []);

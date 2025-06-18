@@ -75,7 +75,7 @@ const AddProductForm = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/products" || "https://grateful-adventure-production.up.railway.app/api/products",
+        "http://localhost:3000/api/products" || "https://ecommerce-server-c6w5.onrender.com/api/products",
         formDataToSubmit,
         {
           headers: {

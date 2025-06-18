@@ -14,7 +14,7 @@ const ShopCategory = () => {
 
   // URLs to try
   const localURL = "http://localhost:3000";
-  const productionURL = "https://grateful-adventure-production.up.railway.app";
+  const productionURL = "https://ecommerce-server-c6w5.onrender.com";
 
   useEffect(() => {
     const fetchProducts = async () => {

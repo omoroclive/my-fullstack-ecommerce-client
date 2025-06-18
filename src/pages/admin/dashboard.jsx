@@ -28,7 +28,7 @@ const Dashboard = () => {
         }
 
         const response = await axios.get("http://localhost:3000/admin-dashboard"
-       || "https://grateful-adventure-production.up.railway.app/admin-dashboard", {
+       || "https://ecommerce-server-c6w5.onrender.com/admin-dashboard", {
           headers: {
             Authorization: Bearer `${token}`,
           },

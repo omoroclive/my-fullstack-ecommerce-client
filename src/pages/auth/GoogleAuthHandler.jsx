@@ -20,14 +20,18 @@ function GoogleAuthHandler() {
     console.log("Received Token:", token);
     localStorage.setItem("accessToken", token);
 
-    fetch("http://localhost:3000/auth/google/success" || "https://ecommerce-server-c6w5.onrender.com/auth/google/success", {
+    const backendURL = import.meta.env.PROD
+      ? "https://ecommerce-server-c6w5.onrender.com"
+      : "http://localhost:3000";
+
+    fetch(`${backendURL}/auth/google/success`, {
       headers: { Authorization: `Bearer ${token}` },
       credentials: "include",
     })
       .then((res) => res.json())
       .then((data) => {
         console.log("Google User Data from Backend:", data);
-    
+
         if (data.user) {
           dispatch(loginUserSuccess({ user: data.user, token }));
           console.log("User successfully saved in Redux:", data.user);
@@ -41,7 +45,6 @@ function GoogleAuthHandler() {
         console.error("Google login error:", err);
         navigate("/login");
       });
-    
   }, [dispatch, navigate]);
 
   return (

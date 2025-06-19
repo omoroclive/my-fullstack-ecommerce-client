@@ -1,6 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+// Use environment variable for base URL
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://ecommerce-server-c6w5.onrender.com";
+
 // Initial state
 const initialState = {
   isAuthenticated: false,
@@ -14,7 +18,7 @@ export const registerUser = createAsyncThunk(
   "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axios.post("http://localhost:3000/auth/register" || "https://ecommerce-server-c6w5.onrender.com/auth/register", userData);
+      const response = await axios.post(`${API_BASE_URL}/auth/register`, userData);
       console.log("Registration response:", response.data);
       return response.data;
     } catch (error) {
@@ -28,14 +32,15 @@ export const loginUser = createAsyncThunk(
   "auth/login",
   async (loginData, { rejectWithValue }) => {
     try {
-      const response = await axios.post("http://localhost:3000/auth/login", loginData);
-      
-      // Ensure user and role are available in the response
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, loginData);
+
       const user = response.data?.user;
-      if (user && user.role) {
-        return { user, token: response.data.accessToken };
+      const token = response.data?.accessToken;
+
+      if (user && user.role && token) {
+        return { user, token };
       } else {
-        return rejectWithValue("User role is missing");
+        return rejectWithValue("Invalid login response: user or token missing");
       }
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Login failed");
@@ -57,7 +62,7 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.user = action.payload.user;
     },
-    loginUserSuccess: (state, action) => {  // ✅ Now inside reducers
+    loginUserSuccess: (state, action) => {
       state.isAuthenticated = true;
       state.user = action.payload.user;
       localStorage.setItem("token", action.payload.token);
@@ -97,13 +102,12 @@ const authSlice = createSlice({
   },
 });
 
-
 // Check for stored token during app initialization
 export const initializeAuthState = () => (dispatch) => {
   const token = localStorage.getItem("token");
   if (token) {
     axios
-      .get("http://localhost:3000/auth/validate-token", {
+      .get(`${API_BASE_URL}/auth/validate-token`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -112,7 +116,7 @@ export const initializeAuthState = () => (dispatch) => {
         dispatch(setUser({ user: response.data.user }));
       })
       .catch((error) => {
-        localStorage.removeItem("token"); // Remove invalid token
+        localStorage.removeItem("token");
         console.error("Token validation failed:", error);
       });
   }

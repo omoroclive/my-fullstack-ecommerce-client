@@ -19,11 +19,7 @@ function Login() {
     dispatch(loginUser(formValues)).then((action) => {
       if (action.meta.requestStatus === "fulfilled") {
         const { role, token } = action.payload.user;
-
-        // Save the token in localStorage
         localStorage.setItem("accessToken", token);
-
-        // Redirect to the appropriate dashboard
         navigate(role === "admin" ? "/admin/dashboard" : "/shop/home");
       } else {
         console.error("Login failed:", action.error.message);
@@ -31,6 +27,7 @@ function Login() {
     });
   };
 
+  // Handle token passed via URL (e.g., from Google OAuth)
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const token = query.get("token");
@@ -41,11 +38,20 @@ function Login() {
     }
   }, [navigate]);
 
+  // If already authenticated, redirect accordingly
   useEffect(() => {
     if (isAuthenticated && user?.role) {
       navigate(user.role === "admin" ? "/admin/dashboard" : "/shop/home");
     }
   }, [isAuthenticated, user, navigate]);
+
+  const handleGoogleLogin = () => {
+    const baseURL =
+      import.meta.env.MODE === "development"
+        ? "http://localhost:3000"
+        : "https://ecommerce-server-c6w5.onrender.com";
+    window.location.href = `${baseURL}/auth/google`;
+  };
 
   return (
     <div className="w-full max-w-md px-6 py-8 bg-gradient-to-br from-gray-100 to-white shadow-lg rounded-lg mt-6 mx-auto">
@@ -92,24 +98,21 @@ function Login() {
         <Button
           variant="outlined"
           fullWidth
-          startIcon={<img src={googleLogo} alt="Google Logo" className="w-6 h-6" />}
-          /*onClick={() => (window.location.href = "http://localhost:3000/auth/google"
-             || "https://grateful-adventure-production.up.railway.app/auth/google")}*/
-             onClick={() => {
-              const baseURL = import.meta.env.MODE === "development"
-                ? "http://localhost:3000"
-                : "https://ecommerce-server-c6w5.onrender.com";
-              window.location.href = `${baseURL}/auth/google`;
-            }}
-            
+          onClick={handleGoogleLogin}
+          startIcon={
+            <img src={googleLogo} alt="Google Logo" className="w-6 h-6" />
+          }
         >
-  
           Login with Google
         </Button>
+
         <Button
           variant="outlined"
           fullWidth
-          startIcon={<img src={facebookLogo} alt="Facebook Logo" className="w-6 h-6" />}
+          startIcon={
+            <img src={facebookLogo} alt="Facebook Logo" className="w-6 h-6" />
+          }
+          disabled
         >
           Login with Facebook
         </Button>

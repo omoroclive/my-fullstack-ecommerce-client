@@ -24,21 +24,22 @@ const Products = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   const navigate = useNavigate();
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+  // Fetch products from backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found");
-        }
+        if (!token) throw new Error("No token found");
 
-        const response = await axios.get(`${BASE_URL}/api/products`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          "https://ecommerce-server-c6w5.onrender.com/api/products",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         setProducts(response.data.products);
       } catch (error) {
@@ -49,8 +50,9 @@ const Products = () => {
     };
 
     fetchProducts();
-  }, [BASE_URL]);
+  }, []);
 
+  // Handle Delete Product
   const handleDelete = async (productId) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this product?"
@@ -59,12 +61,14 @@ const Products = () => {
 
     try {
       const token = localStorage.getItem("token");
-
-      const response = await axios.delete(`${BASE_URL}/api/products/${productId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.delete(
+        `https://ecommerce-server-c6w5.onrender.com/api/products/${productId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       setProducts(products.filter((product) => product._id !== productId));
       setSnackbarMessage(response.data.message || "Product deleted successfully!");
@@ -81,17 +85,18 @@ const Products = () => {
     setSnackbarOpen(false);
   };
 
-  const filteredProducts = products.filter(
-    (product) =>
-      product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.brand.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProducts = products.filter((product) =>
+    [product.title, product.category, product.brand]
+      .some((field) =>
+        field?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
   );
 
   return (
     <div className="p-4">
       <h1 className="text-2xl font-semibold mb-4">Products</h1>
 
+      {/* Search Bar */}
       <TextField
         label="Search Products"
         variant="outlined"
@@ -102,6 +107,7 @@ const Products = () => {
         placeholder="Search by title, category, or brand"
       />
 
+      {/* Content */}
       {isLoading ? (
         <CircularProgress />
       ) : error ? (
@@ -113,11 +119,18 @@ const Products = () => {
               key={product._id}
               className="border rounded-lg shadow-md p-4 bg-white"
             >
+              {/* Product Image */}
               <img
-                src={product.images[0]?.url || "/placeholder.png"}
+                src={
+                  Array.isArray(product.images) && product.images.length > 0
+                    ? product.images[0].url
+                    : "/placeholder.png"
+                }
                 alt={product.title}
                 className="w-full h-64 object-cover rounded mb-4"
               />
+
+              {/* Product Info */}
               <div className="text-center">
                 <h2 className="text-lg font-semibold mb-2">{product.title}</h2>
                 <p className="text-gray-600">
@@ -131,12 +144,11 @@ const Products = () => {
                 </p>
               </div>
 
+              {/* Actions */}
               <div className="flex justify-between mt-4">
                 <IconButton
                   color="primary"
-                  onClick={() =>
-                    navigate(`/admin/dashboard/edit-product/${product._id}`)
-                  }
+                  onClick={() => navigate(`/admin/dashboard/edit-product/${product._id}`)}
                 >
                   <EditIcon />
                 </IconButton>
@@ -152,12 +164,14 @@ const Products = () => {
         </div>
       )}
 
+      {/* No Products Found */}
       {!isLoading && filteredProducts.length === 0 && (
         <p className="text-center text-gray-600 mt-4">
           No products found. Try a different search.
         </p>
       )}
 
+      {/* Snackbar for Feedback */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
@@ -171,6 +185,7 @@ const Products = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
       <RecentlySearch />
       <Footer />
     </div>

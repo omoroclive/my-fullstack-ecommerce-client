@@ -9,7 +9,7 @@ import {
   Alert,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
 import RecentlySearch from "../../pages/account/RecentlySearched";
 import Footer from "../../components/Footer";
@@ -25,12 +25,13 @@ const Products = () => {
 
   const navigate = useNavigate();
 
-  // Fetch products from backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) throw new Error("No token found");
+        if (!token) {
+          throw new Error("No token found");
+        }
 
         const response = await axios.get(
           "https://ecommerce-server-c6w5.onrender.com/api/products",
@@ -40,7 +41,6 @@ const Products = () => {
             },
           }
         );
-        console.log("Fetched products response:", response.data);
 
         setProducts(response.data.products);
       } catch (error) {
@@ -51,9 +51,9 @@ const Products = () => {
     };
 
     fetchProducts();
+    console.log("Products fetched:", products);
   }, []);
 
-  // Handle Delete Product
   const handleDelete = async (productId) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this product?"
@@ -72,7 +72,9 @@ const Products = () => {
       );
 
       setProducts(products.filter((product) => product._id !== productId));
-      setSnackbarMessage(response.data.message || "Product deleted successfully!");
+      setSnackbarMessage(
+        response.data.message || "Product deleted successfully!"
+      );
       setSnackbarSeverity("success");
     } catch (error) {
       setSnackbarMessage("Failed to delete product.");
@@ -86,18 +88,17 @@ const Products = () => {
     setSnackbarOpen(false);
   };
 
-  const filteredProducts = products.filter((product) =>
-    [product.title, product.category, product.brand]
-      .some((field) =>
-        field?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+  const filteredProducts = products.filter(
+    (product) =>
+      product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.brand.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="p-4">
       <h1 className="text-2xl font-semibold mb-4">Products</h1>
 
-      {/* Search Bar */}
       <TextField
         label="Search Products"
         variant="outlined"
@@ -108,7 +109,6 @@ const Products = () => {
         placeholder="Search by title, category, or brand"
       />
 
-      {/* Content */}
       {isLoading ? (
         <CircularProgress />
       ) : error ? (
@@ -120,18 +120,12 @@ const Products = () => {
               key={product._id}
               className="border rounded-lg shadow-md p-4 bg-white"
             >
-              {/* Product Image */}
               <img
-                src={
-                  Array.isArray(product.images) && product.images.length > 0
-                    ? product.images[0].url
-                    : "/placeholder.png"
-                }
+                src={product.images[0]?.url || "/placeholder.png"}
                 alt={product.title}
                 className="w-full h-64 object-cover rounded mb-4"
               />
 
-              {/* Product Info */}
               <div className="text-center">
                 <h2 className="text-lg font-semibold mb-2">{product.title}</h2>
                 <p className="text-gray-600">
@@ -145,11 +139,12 @@ const Products = () => {
                 </p>
               </div>
 
-              {/* Actions */}
               <div className="flex justify-between mt-4">
                 <IconButton
                   color="primary"
-                  onClick={() => navigate(`/admin/dashboard/edit-product/${product._id}`)}
+                  onClick={() =>
+                    navigate(`/admin/dashboard/edit-product/${product._id}`)
+                  }
                 >
                   <EditIcon />
                 </IconButton>
@@ -165,14 +160,12 @@ const Products = () => {
         </div>
       )}
 
-      {/* No Products Found */}
       {!isLoading && filteredProducts.length === 0 && (
         <p className="text-center text-gray-600 mt-4">
           No products found. Try a different search.
         </p>
       )}
 
-      {/* Snackbar for Feedback */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}

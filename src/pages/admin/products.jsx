@@ -16,7 +16,7 @@ import Footer from "../../components/Footer";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(""); // Search input state
+  const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -24,18 +24,17 @@ const Products = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   const navigate = useNavigate();
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-  // Fetch products from backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const token = localStorage.getItem("token"); // Updated key
+        const token = localStorage.getItem("token");
         if (!token) {
           throw new Error("No token found");
         }
 
-        const response = await axios.get("http://localhost:3000/api/products"
-           || "https://grateful-adventure-production.up.railway.app/api/products", {
+        const response = await axios.get(`${BASE_URL}/api/products`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -50,9 +49,8 @@ const Products = () => {
     };
 
     fetchProducts();
-  }, []);
+  }, [BASE_URL]);
 
-  // Handle Delete Product
   const handleDelete = async (productId) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this product?"
@@ -60,22 +58,18 @@ const Products = () => {
     if (!confirmDelete) return;
 
     try {
-      const token = localStorage.getItem("token"); 
-      const response = await axios.delete(
-        `http://localhost:3000/api/products/${productId}` || `https://ecommerce-server-c6w5.onrender.com/api/products/${productId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const token = localStorage.getItem("token");
 
-      // Update the product list and show success message
+      const response = await axios.delete(`${BASE_URL}/api/products/${productId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       setProducts(products.filter((product) => product._id !== productId));
       setSnackbarMessage(response.data.message || "Product deleted successfully!");
       setSnackbarSeverity("success");
     } catch (error) {
-      // Show error message
       setSnackbarMessage("Failed to delete product.");
       setSnackbarSeverity("error");
     } finally {
@@ -83,12 +77,10 @@ const Products = () => {
     }
   };
 
-  // Close Snackbar
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
 
-  // Filter products based on search term
   const filteredProducts = products.filter(
     (product) =>
       product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -100,7 +92,6 @@ const Products = () => {
     <div className="p-4">
       <h1 className="text-2xl font-semibold mb-4">Products</h1>
 
-      {/* Search Bar */}
       <TextField
         label="Search Products"
         variant="outlined"
@@ -111,7 +102,6 @@ const Products = () => {
         placeholder="Search by title, category, or brand"
       />
 
-      {/* Content */}
       {isLoading ? (
         <CircularProgress />
       ) : error ? (
@@ -123,15 +113,12 @@ const Products = () => {
               key={product._id}
               className="border rounded-lg shadow-md p-4 bg-white"
             >
-              {/* Product Image */}
               <img
                 src={product.images[0]?.url || "/placeholder.png"}
                 alt={product.title}
-                className="w-full h-64 object-cover rounded mb-4" // Full width image with increased height
+                className="w-full h-64 object-cover rounded mb-4"
               />
-
-              {/* Product Info */}
-              <div className="text-center"> {/* Center align the title and price */}
+              <div className="text-center">
                 <h2 className="text-lg font-semibold mb-2">{product.title}</h2>
                 <p className="text-gray-600">
                   <strong>Category:</strong> {product.category}
@@ -139,12 +126,11 @@ const Products = () => {
                 <p className="text-gray-600">
                   <strong>Brand:</strong> {product.brand}
                 </p>
-                <p className="text-black font-bold"> {/* Price color changed to black */}
+                <p className="text-black font-bold">
                   <strong>Price:</strong> ${product.price}
                 </p>
               </div>
 
-              {/* Actions */}
               <div className="flex justify-between mt-4">
                 <IconButton
                   color="primary"
@@ -166,14 +152,12 @@ const Products = () => {
         </div>
       )}
 
-      {/* No Products Found */}
       {!isLoading && filteredProducts.length === 0 && (
         <p className="text-center text-gray-600 mt-4">
           No products found. Try a different search.
         </p>
       )}
 
-      {/* Snackbar for Feedback */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
@@ -194,5 +178,3 @@ const Products = () => {
 };
 
 export default Products;
-
-

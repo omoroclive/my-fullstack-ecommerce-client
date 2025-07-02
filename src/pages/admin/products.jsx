@@ -9,7 +9,7 @@ import {
   Alert,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import DeleteIcon from "@mui/icons-material/";
 import { useNavigate } from "react-router-dom";
 import RecentlySearch from "../../pages/account/RecentlySearched";
 import Footer from "../../components/Footer";
@@ -40,6 +40,7 @@ const Products = () => {
             },
           }
         );
+        console.log("Fetched products response:", response.data);
 
         setProducts(response.data.products);
       } catch (error) {

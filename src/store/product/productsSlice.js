@@ -1,11 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 export const fetchProducts = createAsyncThunk("products/fetch", async () => {
-  const token = localStorage.getItem("token"); // Get token from localStorage
+  const token = localStorage.getItem("token");
 
-  const res = await fetch("http://localhost:3000/api/products" || "https://ecommerce-server-c6w5.onrender.com/api/products", {
+  const backendURL = import.meta.env.VITE_API_BASE_URL
+    ? "https://ecommerce-server-c6w5.onrender.com"
+    : "http://localhost:3000";
+
+  const res = await fetch(`${backendURL}/api/products`, {
     headers: {
-      Authorization: `Bearer ${token}`, // Pass token in header
+      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -24,13 +28,13 @@ const productsSlice = createSlice({
         state.status = "loading";
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
-        console.log("API Response:", action.payload); 
-        state.items = action.payload.products; //  Ensure this is an array
+        console.log("API Response:", action.payload);
+        state.items = action.payload.products; // Ensure backend returns products array
         state.status = "succeeded";
       })
       .addCase(fetchProducts.rejected, (state) => {
         state.status = "failed";
-      }); 
+      });
   },
 });
 

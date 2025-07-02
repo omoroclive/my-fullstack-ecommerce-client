@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import {
   CircularProgress,
   TextField,
@@ -10,38 +11,59 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchProducts } from "../../redux/productsSlice"; // adjust path as needed
 import RecentlySearch from "../../pages/account/RecentlySearched";
 import Footer from "../../components/Footer";
-import axios from "axios";
 
 const Products = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  const { items: products, status } = useSelector((state) => state.products);
-
-  const [searchTerm, setSearchTerm] = useState("");
+  const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(""); // Search input state
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  // Fetch products from Redux store
+  const navigate = useNavigate();
+
+  const backendURL = import.meta.env.VITE_API_BASE_URL;
+
+  // Fetch products from backend
   useEffect(() => {
-    dispatch(fetchProducts());
-  }, [dispatch]);
+    const fetchProducts = async () => {
+      try {
+        const token = localStorage.getItem("token"); // Updated key
+        if (!token) {
+          throw new Error("No token found");
+        }
+
+        const response = await axios.get(`${backendURL}/api/products`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setProducts(response.data.products);
+      } catch (error) {
+        setError(error.response?.data?.message || "Failed to fetch products");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // Handle Delete Product
   const handleDelete = async (productId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this product?");
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this product?"
+    );
     if (!confirmDelete) return;
 
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await axios.delete(
-        `${import.meta.env.VITE_API_BASE_URL}/api/products/${productId}`,
+      const token = localStorage.getItem("token"); 
+      const response = await axios.delete(
+        `${backendURL}/api/products/${productId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -49,12 +71,12 @@ const Products = () => {
         }
       );
 
-      // Re-fetch products after deletion
-      dispatch(fetchProducts());
-
-      setSnackbarMessage(res.data.message || "Product deleted successfully!");
+      // Update the product list and show success message
+      setProducts(products.filter((product) => product._id !== productId));
+      setSnackbarMessage(response.data.message || "Product deleted successfully!");
       setSnackbarSeverity("success");
     } catch (error) {
+      // Show error message
       setSnackbarMessage("Failed to delete product.");
       setSnackbarSeverity("error");
     } finally {
@@ -91,10 +113,10 @@ const Products = () => {
       />
 
       {/* Content */}
-      {status === "loading" ? (
+      {isLoading ? (
         <CircularProgress />
-      ) : status === "failed" ? (
-        <p style={{ color: "red" }}>Failed to load products.</p>
+      ) : error ? (
+        <p style={{ color: "red" }}>{error}</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
@@ -146,7 +168,7 @@ const Products = () => {
       )}
 
       {/* No Products Found */}
-      {status === "succeeded" && filteredProducts.length === 0 && (
+      {!isLoading && filteredProducts.length === 0 && (
         <p className="text-center text-gray-600 mt-4">
           No products found. Try a different search.
         </p>
@@ -166,7 +188,6 @@ const Products = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-
       <RecentlySearch />
       <Footer />
     </div>

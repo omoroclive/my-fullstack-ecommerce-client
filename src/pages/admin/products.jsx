@@ -4,7 +4,6 @@ import {
   CircularProgress,
   TextField,
   IconButton,
-  Button,
   Snackbar,
   Alert,
 } from "@mui/material";
@@ -24,23 +23,23 @@ const Products = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   const navigate = useNavigate();
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found");
-        }
+        if (!token) throw new Error("No token found");
 
-        const response = await axios.get(`${BASE_URL}/api/products`, {
+        const response = await axios.get(`${API_BASE_URL}/api/products`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        setProducts(response.data.products);
+        const productList = response.data.products || response.data || [];
+        setProducts(productList);
       } catch (error) {
         setError(error.response?.data?.message || "Failed to fetch products");
       } finally {
@@ -49,8 +48,9 @@ const Products = () => {
     };
 
     fetchProducts();
-  }, [BASE_URL]);
+  }, [API_BASE_URL]);
 
+  // Delete product
   const handleDelete = async (productId) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this product?"
@@ -59,15 +59,19 @@ const Products = () => {
 
     try {
       const token = localStorage.getItem("token");
-
-      const response = await axios.delete(`${BASE_URL}/api/products/${productId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.delete(
+        `${API_BASE_URL}/api/products/${productId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       setProducts(products.filter((product) => product._id !== productId));
-      setSnackbarMessage(response.data.message || "Product deleted successfully!");
+      setSnackbarMessage(
+        response.data.message || "Product deleted successfully!"
+      );
       setSnackbarSeverity("success");
     } catch (error) {
       setSnackbarMessage("Failed to delete product.");
@@ -81,11 +85,11 @@ const Products = () => {
     setSnackbarOpen(false);
   };
 
-  const filteredProducts = products.filter(
+  const filteredProducts = (products || []).filter(
     (product) =>
-      product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.brand.toLowerCase().includes(searchTerm.toLowerCase())
+      product.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.brand?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -114,10 +118,11 @@ const Products = () => {
               className="border rounded-lg shadow-md p-4 bg-white"
             >
               <img
-                src={product.images[0]?.url || "/placeholder.png"}
+                src={product.images?.[0]?.url || "/placeholder.png"}
                 alt={product.title}
                 className="w-full h-64 object-cover rounded mb-4"
               />
+
               <div className="text-center">
                 <h2 className="text-lg font-semibold mb-2">{product.title}</h2>
                 <p className="text-gray-600">
@@ -171,6 +176,7 @@ const Products = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
       <RecentlySearch />
       <Footer />
     </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   CircularProgress,
@@ -25,22 +25,23 @@ const Products = () => {
 
   const navigate = useNavigate();
 
-  const backendURL = import.meta.env.VITE_API_BASE_URL;
-
   // Fetch products from backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const token = localStorage.getItem("token"); // Updated key
+        const token = localStorage.getItem("token");
         if (!token) {
           throw new Error("No token found");
         }
 
-        const response = await axios.get(`${backendURL}/api/products`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          "https://ecommerce-server-c6w5.onrender.com/api/products",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         setProducts(response.data.products);
       } catch (error) {
@@ -61,9 +62,9 @@ const Products = () => {
     if (!confirmDelete) return;
 
     try {
-      const token = localStorage.getItem("token"); 
+      const token = localStorage.getItem("token");
       const response = await axios.delete(
-        `${backendURL}/api/products/${productId}`,
+        `https://ecommerce-server-c6w5.onrender.com/api/products/${productId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -71,12 +72,10 @@ const Products = () => {
         }
       );
 
-      // Update the product list and show success message
       setProducts(products.filter((product) => product._id !== productId));
       setSnackbarMessage(response.data.message || "Product deleted successfully!");
       setSnackbarSeverity("success");
     } catch (error) {
-      // Show error message
       setSnackbarMessage("Failed to delete product.");
       setSnackbarSeverity("error");
     } finally {
@@ -126,7 +125,7 @@ const Products = () => {
             >
               {/* Product Image */}
               <img
-                src={product.images[0]?.url || "/placeholder.png"}
+                src={product.images?.[0]?.url || "/placeholder.png"}
                 alt={product.title}
                 className="w-full h-64 object-cover rounded mb-4"
               />
@@ -188,6 +187,7 @@ const Products = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
       <RecentlySearch />
       <Footer />
     </div>

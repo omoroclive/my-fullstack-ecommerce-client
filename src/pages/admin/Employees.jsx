@@ -17,6 +17,8 @@ import {
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
 const EmployeeForm = ({ employees, setEmployees }) => {
   const [formData, setFormData] = useState({ name: '', role: '', salary: '' });
   const [error, setError] = useState('');
@@ -29,7 +31,7 @@ const EmployeeForm = ({ employees, setEmployees }) => {
     }
 
     try {
-      const res = await axios.post('http://localhost:3000/api/employees' || "https://ecommerce-server-c6w5.onrender.com/api/employees", formData);
+      const res = await axios.post(`${BASE_URL}/api/employees`, formData);
       const newEmployee = res.data;
       setEmployees((prevEmployees) => [...prevEmployees, newEmployee]);
       setFormData({ name: '', role: '', salary: '' });
@@ -99,7 +101,7 @@ const Employees = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/api/employees');
+        const res = await axios.get(`${BASE_URL}/api/employees`);
         setEmployees(res.data);
       } catch (err) {
         console.error(err);
@@ -110,7 +112,7 @@ const Employees = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/api/employees/${id}`);
+      await axios.delete(`${BASE_URL}/api/employees/${id}`);
       setEmployees(employees.filter(employee => employee._id !== id));
     } catch (err) {
       console.error(err);
@@ -164,5 +166,3 @@ const Employees = () => {
 };
 
 export default Employees;
-
-

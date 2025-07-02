@@ -9,29 +9,25 @@ const RecentlySearched = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
   useEffect(() => {
     const fetchRecentlySearched = async () => {
       try {
         const token = localStorage.getItem("token");
-        console.log("Retrieved Token:", token); // Debugging
 
         if (!token) {
           throw new Error("No token found. Please log in.");
         }
 
-        const response = await axios.get(
-          "http://localhost:3000/api/recently-searched" || "https://ecommerce-server-c6w5.onrender.com/api/recently-searched",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axios.get(`${BASE_URL}/api/recently-searched`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        console.log("Fetched Recently Searched Data:", response.data.searches); // Debugging
         setRecentSearches(response.data.searches);
       } catch (error) {
-        console.error("Error fetching recently searched data:", error); // Debugging
         setError(
           error.response?.data?.message || "Failed to fetch recently searched data"
         );
@@ -41,7 +37,7 @@ const RecentlySearched = () => {
     };
 
     fetchRecentlySearched();
-  }, []);
+  }, [BASE_URL]);
 
   return (
     <div className="p-4">
@@ -58,9 +54,7 @@ const RecentlySearched = () => {
               key={index}
               className="border rounded-lg shadow hover:shadow-lg transition duration-300 cursor-pointer p-4"
               onClick={() =>
-                search.productId
-                  ? navigate(`/shop/details/${search.productId}`)
-                  : null
+                search.productId ? navigate(`/shop/details/${search.productId}`) : null
               }
             >
               <h3 className="text-lg font-semibold">

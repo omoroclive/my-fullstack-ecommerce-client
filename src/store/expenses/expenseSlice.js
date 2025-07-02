@@ -5,12 +5,15 @@ import axios from "axios";
 // Get token from localStorage
 const token = localStorage.getItem("token");
 
+// Define base URL from environment or fallback to localhost
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
 // Fetch expenses
 export const fetchExpenses = createAsyncThunk(
   "expense/fetchExpenses",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get("http://localhost:3000/api/expenses" ||"https:////grateful-adventure-production.up.railway.app/api/expenses", {
+      const response = await axios.get(`${BASE_URL}/api/expenses`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
@@ -25,7 +28,7 @@ export const addExpense = createAsyncThunk(
   "expense/addExpense",
   async (expenseData, { rejectWithValue }) => {
     try {
-      const response = await axios.post("http://localhost:3000/api/expenses" ||"https:////grateful-adventure-production.up.railway.app/api/expenses", expenseData, {
+      const response = await axios.post(`${BASE_URL}/api/expenses`, expenseData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
@@ -41,14 +44,16 @@ export const updateExpense = createAsyncThunk(
   async ({ id, expenseData }, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `http://localhost:3000/api/expenses/${id}` || `https://ecommerce-server-c6w5.onrender.com/api/expenses/${id}`,
+        `${BASE_URL}/api/expenses/${id}`,
         expenseData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error updating expense");
-    } 
+    }
   }
 );
 
@@ -57,8 +62,7 @@ export const deleteExpense = createAsyncThunk(
   "expense/deleteExpense",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(`http://localhost:3000/api/expenses/${id}`
-       || `https://ecommerce-server-c6w5.onrender.com/api/expenses/${id}`, {
+      await axios.delete(`${BASE_URL}/api/expenses/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return id; // Return the id of the deleted expense to remove from state

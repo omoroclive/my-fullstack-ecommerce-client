@@ -1,6 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
+// Set base URL depending on environment
+const BASE_URL =
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:3000/api'
+    : 'https://ecommerce-server-c6w5.onrender.com/api';
+
 // Retrieve token from localStorage
 const token = localStorage.getItem('token');
 
@@ -15,8 +21,7 @@ const getAuthHeaders = () => ({
 // Async thunk for fetching orders
 export const fetchOrders = createAsyncThunk('orders/fetchOrders', async (_, { rejectWithValue }) => {
   try {
-    const response = await axios.get('http://localhost:3000/api/orders' 
-     || 'https://ecommerce-server-c6w5.onrender.com/api/orders' ,getAuthHeaders());
+    const response = await axios.get(`${BASE_URL}/orders`, getAuthHeaders());
     return response.data;
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || 'Failed to fetch orders');
@@ -29,11 +34,11 @@ export const updateOrderStatus = createAsyncThunk(
   async ({ orderId, orderStatus }, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `http://localhost:3000/api/orders/${orderId}/status` || `https://ecommerce-server-c6w5.onrender.com/api/orders/${orderId}/status`,
+        `${BASE_URL}/orders/${orderId}/status`,
         { orderStatus },
         getAuthHeaders()
       );
-      return response.data;  // Ensure the whole updated order is returned
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update order status');
     }
@@ -76,7 +81,7 @@ const orderSlice = createSlice({
         const updatedOrder = action.payload;
         const index = state.orders.findIndex(order => order._id === updatedOrder._id);
         if (index !== -1) {
-          state.orders[index] = updatedOrder;  // Replace with the updated order object
+          state.orders[index] = updatedOrder;
         }
       })
       .addCase(updateOrderStatus.rejected, (state, action) => {

@@ -7,6 +7,8 @@ import {
 import { Edit, Delete } from '@mui/icons-material';
 import SupplierForm from '../../components/SupplierForm';
 
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
 const Suppliers = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -14,8 +16,8 @@ const Suppliers = () => {
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/api/suppliers' || 'https://ecommerce-server-c6w5.onrender.com/api/suppliers');
-        setSuppliers(res.data); // Initialize the supplier list from the backend
+        const res = await axios.get(`${BASE_URL}/api/suppliers`);
+        setSuppliers(res.data);
       } catch (err) {
         console.error(err);
       }
@@ -25,9 +27,8 @@ const Suppliers = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/api/suppliers/${id}`
-       || `https://ecommerce-server-c6w5.onrender.com/api/suppliers/${id}`);
-      setSuppliers(suppliers.filter((supplier) => supplier._id !== id));
+      await axios.delete(`${BASE_URL}/api/suppliers/${id}`);
+      setSuppliers((prev) => prev.filter((supplier) => supplier._id !== id));
       setSnackbar({ open: true, message: 'Supplier deleted successfully', severity: 'success' });
     } catch (err) {
       console.error(err);
@@ -41,8 +42,8 @@ const Suppliers = () => {
         Suppliers
       </Typography>
 
-      <SupplierForm setSuppliers={setSuppliers} /> {/* Pass setSuppliers to SupplierForm */}
-      
+      <SupplierForm setSuppliers={setSuppliers} />
+
       <TableContainer component={Paper} style={{ marginTop: '20px' }}>
         <Table>
           <TableHead>
@@ -74,8 +75,12 @@ const Suppliers = () => {
           </TableBody>
         </Table>
       </TableContainer>
-      
-      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={3000} 
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
         <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
       </Snackbar>
     </Container>

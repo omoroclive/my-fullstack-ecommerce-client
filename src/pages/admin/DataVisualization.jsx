@@ -35,27 +35,30 @@ const DataVisualization = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const authToken = localStorage.getItem("token");
+      const token = localStorage.getItem("token");
+
+      const baseURL = "https://ecommerce-server-c6w5.onrender.com";
       try {
         const [expensesRes, inventoryRes] = await Promise.all([
-          fetch("http://localhost:3000/api/expenses" || "https://ecommerce-server-c6w5.onrender.com/api/expenses", {
-            headers: { Authorization: `Bearer ${authToken}` },
+          fetch(`${baseURL}/api/expenses`, {
+            headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch("http://localhost:3000/api/inventory" || "https://ecommerce-server-c6w5.onrender.com/api/inventory", {
-            headers: { Authorization: `Bearer ${authToken}` },
+          fetch(`${baseURL}/api/inventory`, {
+            headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
 
-        if (!expensesRes.ok || !inventoryRes.ok) 
+        if (!expensesRes.ok || !inventoryRes.ok) {
           throw new Error("Failed to fetch data");
+        }
 
-        const [expensesData, inventoryData] = await Promise.all([
+        const [expenses, inventory] = await Promise.all([
           expensesRes.json(),
           inventoryRes.json(),
         ]);
 
-        setExpensesData(expensesData);
-        setInventoryData(inventoryData);
+        setExpensesData(expenses);
+        setInventoryData(inventory);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -66,43 +69,42 @@ const DataVisualization = () => {
     fetchData();
   }, []);
 
-  const totalRevenue = expensesData.reduce((sum, item) => sum + item.revenue_generated, 0);
-  const totalExpenses = expensesData.reduce((sum, item) => sum + item.expenses_amount, 0);
-  const totalOrderedItems = inventoryData.reduce((sum, item) => sum + item.sold_items, 0);
+  const totalRevenue = expensesData.reduce((sum, e) => sum + (e.revenue_generated || 0), 0);
+  const totalExpenses = expensesData.reduce((sum, e) => sum + (e.expenses_amount || 0), 0);
+  const totalOrders = inventoryData.reduce((sum, i) => sum + (i.sold_items || 0), 0);
 
   const statCards = [
     {
       title: "Total Revenue",
       value: totalRevenue,
-      icon: <AttachMoneyIcon sx={{ fontSize: 40 }} />,
+      icon: <AttachMoneyIcon fontSize="large" />,
       color: "#4CAF50",
     },
     {
       title: "Total Expenses",
       value: totalExpenses,
-      icon: <MoneyOffIcon sx={{ fontSize: 40 }} />,
+      icon: <MoneyOffIcon fontSize="large" />,
       color: "#F44336",
     },
     {
       title: "Total Orders",
-      value: totalOrderedItems,
-      icon: <ShoppingCartIcon sx={{ fontSize: 40 }} />,
+      value: totalOrders,
+      icon: <ShoppingCartIcon fontSize="large" />,
       color: "#2196F3",
     },
   ];
 
-  const revenueVsExpensesData = expensesData.map((expense) => ({
-    date: new Date(expense.date).toLocaleDateString(),
-    Revenue: expense.revenue_generated,
-    Expenses: expense.expenses_amount,
+  const revenueVsExpensesData = expensesData.map((e) => ({
+    date: new Date(e.date).toLocaleDateString(),
+    Revenue: e.revenue_generated,
+    Expenses: e.expenses_amount,
   }));
 
   const brandData = inventoryData.reduce((acc, item) => {
-    if (!acc[item.brand]) {
-      acc[item.brand] = { sold: 0, stock: 0 };
-    }
-    acc[item.brand].sold += item.sold_items;
-    acc[item.brand].stock += item.stock_balance;
+    const { brand, sold_items, stock_balance } = item;
+    if (!acc[brand]) acc[brand] = { sold: 0, stock: 0 };
+    acc[brand].sold += sold_items || 0;
+    acc[brand].stock += stock_balance || 0;
     return acc;
   }, {});
 
@@ -112,54 +114,55 @@ const DataVisualization = () => {
     "Stock Balance": data.stock,
   }));
 
-  if (loading) return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-      <CircularProgress />
-    </Box>
-  );
+  if (loading)
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <CircularProgress />
+      </Box>
+    );
 
-  if (error) return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-      <Typography color="error" variant="h6">Error: {error}</Typography>
-    </Box>
-  );
+  if (error)
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <Typography color="error" variant="h6">
+          Error: {error}
+        </Typography>
+      </Box>
+    );
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Paper 
+      <Paper
         elevation={0}
-        sx={{ 
-          p: 3, 
-          background: 'linear-gradient(45deg, rgba(66,66,74,0.02) 0%, rgba(25,118,210,0.08) 100%)',
+        sx={{
+          p: 3,
+          mb: 4,
           borderRadius: 4,
-          mb: 4
+          background: "linear-gradient(45deg, rgba(66,66,74,0.02), rgba(25,118,210,0.08))",
         }}
       >
-        <Typography 
-          variant="h4" 
-          sx={{ 
+        <Typography
+          variant="h4"
+          sx={{
             mb: 4,
             fontWeight: 700,
-            background: 'linear-gradient(45deg, #1976d2, #42424a)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+            background: "linear-gradient(45deg, #1976d2, #42424a)",
+            backgroundClip: "text",
+            WebkitTextFillColor: "transparent",
           }}
         >
           Analytics Dashboard
         </Typography>
 
         <Grid container spacing={3}>
-          {statCards.map((card) => (
-            <Grid item xs={12} md={4} key={card.title}>
-              <Card 
-                sx={{ 
+          {statCards.map(({ title, value, icon, color }) => (
+            <Grid item xs={12} md={4} key={title}>
+              <Card
+                sx={{
                   borderRadius: 4,
-                  transition: 'transform 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                  },
-                  background: `linear-gradient(135deg, ${card.color}15 0%, ${card.color}05 100%)`,
+                  transition: "transform 0.2s",
+                  "&:hover": { transform: "translateY(-4px)" },
+                  background: `linear-gradient(135deg, ${color}15, ${color}05)`,
                 }}
               >
                 <CardContent>
@@ -168,18 +171,18 @@ const DataVisualization = () => {
                       sx={{
                         p: 2,
                         borderRadius: 2,
-                        color: card.color,
-                        bgcolor: `${card.color}15`,
+                        color,
+                        bgcolor: `${color}15`,
                       }}
                     >
-                      {card.icon}
+                      {icon}
                     </Box>
                     <Box>
                       <Typography variant="body1" color="text.secondary">
-                        {card.title}
+                        {title}
                       </Typography>
                       <Typography variant="h5" fontWeight="bold">
-                        {card.value.toLocaleString()}
+                        {value.toLocaleString()}
                       </Typography>
                     </Box>
                   </Box>
@@ -193,39 +196,19 @@ const DataVisualization = () => {
       <Grid container spacing={4}>
         <Grid item xs={12}>
           <Card sx={{ borderRadius: 4, p: 3 }}>
-            <Typography variant="h6" gutterBottom fontWeight="600">
+            <Typography variant="h6" fontWeight={600} gutterBottom>
               Revenue vs. Expenses Trend
             </Typography>
             <Box height={400}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={revenueVsExpensesData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
-                  <Tooltip 
-                    contentStyle={{ 
-                      borderRadius: 8,
-                      border: 'none',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-                    }} 
-                  />
+                  <Tooltip />
                   <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="Revenue" 
-                    stroke="#4CAF50" 
-                    strokeWidth={2}
-                    dot={{ stroke: '#4CAF50', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="Expenses" 
-                    stroke="#F44336" 
-                    strokeWidth={2}
-                    dot={{ stroke: '#F44336', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
+                  <Line type="monotone" dataKey="Revenue" stroke="#4CAF50" strokeWidth={2} />
+                  <Line type="monotone" dataKey="Expenses" stroke="#F44336" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </Box>
@@ -234,22 +217,16 @@ const DataVisualization = () => {
 
         <Grid item xs={12}>
           <Card sx={{ borderRadius: 4, p: 3 }}>
-            <Typography variant="h6" gutterBottom fontWeight="600">
+            <Typography variant="h6" fontWeight={600} gutterBottom>
               Brand Performance
             </Typography>
             <Box height={400}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="brand" />
                   <YAxis />
-                  <Tooltip 
-                    contentStyle={{ 
-                      borderRadius: 8,
-                      border: 'none',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-                    }}
-                  />
+                  <Tooltip />
                   <Legend />
                   <Bar dataKey="Sold Items" fill="#2196F3" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="Stock Balance" fill="#FF9800" radius={[4, 4, 0, 0]} />
@@ -264,5 +241,3 @@ const DataVisualization = () => {
 };
 
 export default DataVisualization;
-
-

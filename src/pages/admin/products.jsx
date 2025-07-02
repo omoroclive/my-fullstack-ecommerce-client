@@ -1,66 +1,47 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import {
   CircularProgress,
   TextField,
   IconButton,
+  Button,
   Snackbar,
   Alert,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProducts } from "../../redux/productsSlice"; // adjust path as needed
 import RecentlySearch from "../../pages/account/RecentlySearched";
 import Footer from "../../components/Footer";
+import axios from "axios";
 
 const Products = () => {
-  const [products, setProducts] = useState([]);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { items: products, status } = useSelector((state) => state.products);
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  const navigate = useNavigate();
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-  // Fetch products
+  // Fetch products from Redux store
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("No token found");
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
-        const response = await axios.get(`${API_BASE_URL}/api/products`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const productList = response.data.products || response.data || [];
-        setProducts(productList);
-      } catch (error) {
-        setError(error.response?.data?.message || "Failed to fetch products");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [API_BASE_URL]);
-
-  // Delete product
+  // Handle Delete Product
   const handleDelete = async (productId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this product?"
-    );
+    const confirmDelete = window.confirm("Are you sure you want to delete this product?");
     if (!confirmDelete) return;
 
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.delete(
-        `${API_BASE_URL}/api/products/${productId}`,
+
+      const res = await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/api/products/${productId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -68,10 +49,10 @@ const Products = () => {
         }
       );
 
-      setProducts(products.filter((product) => product._id !== productId));
-      setSnackbarMessage(
-        response.data.message || "Product deleted successfully!"
-      );
+      // Re-fetch products after deletion
+      dispatch(fetchProducts());
+
+      setSnackbarMessage(res.data.message || "Product deleted successfully!");
       setSnackbarSeverity("success");
     } catch (error) {
       setSnackbarMessage("Failed to delete product.");
@@ -81,21 +62,24 @@ const Products = () => {
     }
   };
 
+  // Close Snackbar
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
 
-  const filteredProducts = (products || []).filter(
+  // Filter products based on search term
+  const filteredProducts = products.filter(
     (product) =>
-      product.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.brand?.toLowerCase().includes(searchTerm.toLowerCase())
+      product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.brand.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="p-4">
       <h1 className="text-2xl font-semibold mb-4">Products</h1>
 
+      {/* Search Bar */}
       <TextField
         label="Search Products"
         variant="outlined"
@@ -106,10 +90,11 @@ const Products = () => {
         placeholder="Search by title, category, or brand"
       />
 
-      {isLoading ? (
+      {/* Content */}
+      {status === "loading" ? (
         <CircularProgress />
-      ) : error ? (
-        <p style={{ color: "red" }}>{error}</p>
+      ) : status === "failed" ? (
+        <p style={{ color: "red" }}>Failed to load products.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
@@ -117,12 +102,14 @@ const Products = () => {
               key={product._id}
               className="border rounded-lg shadow-md p-4 bg-white"
             >
+              {/* Product Image */}
               <img
-                src={product.images?.[0]?.url || "/placeholder.png"}
+                src={product.images[0]?.url || "/placeholder.png"}
                 alt={product.title}
                 className="w-full h-64 object-cover rounded mb-4"
               />
 
+              {/* Product Info */}
               <div className="text-center">
                 <h2 className="text-lg font-semibold mb-2">{product.title}</h2>
                 <p className="text-gray-600">
@@ -136,6 +123,7 @@ const Products = () => {
                 </p>
               </div>
 
+              {/* Actions */}
               <div className="flex justify-between mt-4">
                 <IconButton
                   color="primary"
@@ -157,12 +145,14 @@ const Products = () => {
         </div>
       )}
 
-      {!isLoading && filteredProducts.length === 0 && (
+      {/* No Products Found */}
+      {status === "succeeded" && filteredProducts.length === 0 && (
         <p className="text-center text-gray-600 mt-4">
           No products found. Try a different search.
         </p>
       )}
 
+      {/* Snackbar for Feedback */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}

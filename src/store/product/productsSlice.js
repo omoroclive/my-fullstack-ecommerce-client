@@ -1,11 +1,6 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-
 export const fetchProducts = createAsyncThunk("products/fetch", async () => {
   const token = localStorage.getItem("token");
-
-  const backendURL = import.meta.env.VITE_API_BASE_URL
-    ? "https://ecommerce-server-c6w5.onrender.com"
-    : "http://localhost:3000";
+  const backendURL = import.meta.env.VITE_API_BASE_URL;
 
   const res = await fetch(`${backendURL}/api/products`, {
     headers: {
@@ -15,7 +10,7 @@ export const fetchProducts = createAsyncThunk("products/fetch", async () => {
 
   if (!res.ok) throw new Error("Failed to fetch products");
 
-  return res.json();
+  return res.json(); // This should return { products: [...] }
 });
 
 const productsSlice = createSlice({
@@ -29,7 +24,7 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         console.log("API Response:", action.payload);
-        state.items = action.payload.products; // Ensure backend returns products array
+        state.items = action.payload.products; // Make sure API response has this shape
         state.status = "succeeded";
       })
       .addCase(fetchProducts.rejected, (state) => {
@@ -39,4 +34,3 @@ const productsSlice = createSlice({
 });
 
 export default productsSlice.reducer;
-

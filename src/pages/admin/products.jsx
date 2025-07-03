@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import {
   CircularProgress,
   TextField,
   IconButton,
+  Button,
   Snackbar,
   Alert,
 } from "@mui/material";
@@ -25,6 +26,8 @@ const Products = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchProducts = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -33,37 +36,32 @@ const Products = () => {
         const response = await axios.get(
           "https://ecommerce-server-c6w5.onrender.com/api/products",
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal,
           }
         );
-        setProducts(response.data.products);
+        setProducts(response.data.products || []);
       } catch (error) {
-        setError(error.response?.data?.message || "Failed to fetch products");
+        if (axios.isCancel(error)) {
+          console.log("Fetch cancelled");
+        } else {
+          setError(error.response?.data?.message || "Failed to fetch products");
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchProducts();
-  }, []);
 
-  const getProductImage = (product) => {
-    if (
-      product &&
-      Array.isArray(product.images) &&
-      product.images.length > 0 &&
-      product.images[0] &&
-      typeof product.images[0].url === "string"
-    ) {
-      return product.images[0].url;
-    }
-    return "/placeholder.png";
-  };
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   const handleDelete = async (productId) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
+
     try {
       const token = localStorage.getItem("token");
       const response = await axios.delete(
@@ -72,10 +70,11 @@ const Products = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setProducts(products.filter((p) => p._id !== productId));
+
+      setProducts((prev) => prev.filter((product) => product._id !== productId));
       setSnackbarMessage(response.data.message || "Product deleted successfully!");
       setSnackbarSeverity("success");
-    } catch {
+    } catch (error) {
       setSnackbarMessage("Failed to delete product.");
       setSnackbarSeverity("error");
     } finally {
@@ -85,12 +84,16 @@ const Products = () => {
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
-  const filteredProducts = products.filter(
-    (p) =>
-      p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.brand.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const title = product.title?.toLowerCase() || "";
+      const category = product.category?.toLowerCase() || "";
+      const brand = product.brand?.toLowerCase() || "";
+      const search = searchTerm.toLowerCase();
+
+      return title.includes(search) || category.includes(search) || brand.includes(search);
+    });
+  }, [products, searchTerm]);
 
   return (
     <div className="p-4">
@@ -107,9 +110,11 @@ const Products = () => {
       />
 
       {isLoading ? (
-        <CircularProgress />
+        <div className="flex justify-center mt-6">
+          <CircularProgress />
+        </div>
       ) : error ? (
-        <p style={{ color: "red" }}>{error}</p>
+        <p className="text-red-500 text-center">{error}</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
@@ -118,21 +123,29 @@ const Products = () => {
               className="border rounded-lg shadow-md p-4 bg-white"
             >
               <img
-                src={getProductImage(product)}
-                alt={product.title}
+                src={
+                  Array.isArray(product.images) &&
+                  product.images.length > 0 &&
+                  product.images[0].url
+                    ? product.images[0].url
+                    : "/placeholder.png"
+                }
+                alt={product.title || "Product Image"}
                 className="w-full h-64 object-cover rounded mb-4"
               />
 
               <div className="text-center">
-                <h2 className="text-lg font-semibold mb-2">{product.title}</h2>
+                <h2 className="text-lg font-semibold mb-2">
+                  {product.title || "Untitled"}
+                </h2>
                 <p className="text-gray-600">
-                  <strong>Category:</strong> {product.category}
+                  <strong>Category:</strong> {product.category || "N/A"}
                 </p>
                 <p className="text-gray-600">
-                  <strong>Brand:</strong> {product.brand}
+                  <strong>Brand:</strong> {product.brand || "N/A"}
                 </p>
                 <p className="text-black font-bold">
-                  <strong>Price:</strong> ${product.price}
+                  <strong>Price:</strong> ${product.price || "0.00"}
                 </p>
               </div>
 
@@ -163,8 +176,16 @@ const Products = () => {
         </p>
       )}
 
-      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose}>
-        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: "100%" }}>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>

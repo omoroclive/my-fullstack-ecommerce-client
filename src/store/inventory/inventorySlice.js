@@ -7,7 +7,7 @@ export const fetchInventory = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+      const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
       const response = await axios.get(`${BASE_URL}/api/inventory`, {
         headers: { Authorization: `Bearer ${token}` },

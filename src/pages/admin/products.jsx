@@ -283,7 +283,8 @@ const Products = () => {
       </Snackbar>
 
       
-      
+      <RecentlySearch />
+      <Footer />
     </div>
   );
 };

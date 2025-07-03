@@ -6,7 +6,7 @@ import axios from "axios";
 const token = localStorage.getItem("token");
 
 // Define base URL from environment or fallback to localhost
-const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 // Fetch expenses
 export const fetchExpenses = createAsyncThunk(

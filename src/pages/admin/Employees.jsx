@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 
-const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const EmployeeForm = ({ employees, setEmployees }) => {
   const [formData, setFormData] = useState({ name: '', role: '', salary: '' });

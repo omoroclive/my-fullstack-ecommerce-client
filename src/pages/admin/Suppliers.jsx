@@ -7,7 +7,7 @@ import {
 import { Edit, Delete } from '@mui/icons-material';
 import SupplierForm from '../../components/SupplierForm';
 
-const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const Suppliers = () => {
   const [suppliers, setSuppliers] = useState([]);

@@ -25,17 +25,16 @@ const Products = () => {
   const navigate = useNavigate();
 
   const getImageUrl = (images) => {
-  if (!Array.isArray(images)) {
-    console.warn("Images is not an array:", images);
-    return "/placeholder.png";
-  }
-  if (images.length === 0 || !images[0]?.url) {
-    console.warn("Images is empty or missing URL:", images);
-    return "/placeholder.png";
-  }
-  return images[0].url;
-};
-
+    if (!Array.isArray(images)) {
+      console.warn("Images is not an array:", images);
+      return "/placeholder.png";
+    }
+    if (images.length === 0 || !images[0]?.url) {
+      console.warn("Images is empty or missing URL:", images);
+      return "/placeholder.png";
+    }
+    return images[0].url;
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -55,8 +54,6 @@ const Products = () => {
         );
 
         setProducts(response.data.products || []);
-        console.log("Fetched products:", response.data.products);
-
       } catch (error) {
         setError(error.response?.data?.message || "Failed to fetch products");
       } finally {
@@ -123,7 +120,9 @@ const Products = () => {
       />
 
       {isLoading ? (
-        <CircularProgress />
+        <div className="flex justify-center my-10">
+          <CircularProgress />
+        </div>
       ) : error ? (
         <p style={{ color: "red" }}>{error}</p>
       ) : (
@@ -133,9 +132,11 @@ const Products = () => {
               key={product._id}
               className="border rounded-lg shadow-md p-4 bg-white"
             >
-              {/* <img src={getImageUrl(product.images)} ... /> */}
-<p>Image rendering removed for debugging.</p>
-
+              <img
+                src={getImageUrl(product.images)}
+                alt={product.title}
+                className="w-full h-48 object-cover rounded-md mb-4"
+              />
 
               <div className="text-center">
                 <h2 className="text-lg font-semibold mb-2">

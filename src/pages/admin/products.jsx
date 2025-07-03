@@ -38,6 +38,8 @@ const Products = () => {
           },
         });
 
+        console.log("API Response:", response.data);
+
         setProducts(response.data.products);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to fetch products");

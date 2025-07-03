@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   CircularProgress,
   TextField,
   IconButton,
-  Button,
   Snackbar,
   Alert,
 } from "@mui/material";
@@ -25,54 +24,63 @@ const Products = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const controller = new AbortController();
+  // Helper function to safely get image URL
+  const getImageUrl = (images) => {
+    if (Array.isArray(images) && images.length > 0 && images[0]?.url) {
+      return images[0].url;
+    }
+    return "/placeholder.png";
+  };
 
+  useEffect(() => {
     const fetchProducts = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) throw new Error("No token found");
+        if (!token) {
+          throw new Error("No token found");
+        }
 
         const response = await axios.get(
           "https://ecommerce-server-c6w5.onrender.com/api/products",
           {
-            headers: { Authorization: `Bearer ${token}` },
-            signal: controller.signal,
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
+
         setProducts(response.data.products || []);
       } catch (error) {
-        if (axios.isCancel(error)) {
-          console.log("Fetch cancelled");
-        } else {
-          setError(error.response?.data?.message || "Failed to fetch products");
-        }
+        setError(error.response?.data?.message || "Failed to fetch products");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchProducts();
-
-    return () => {
-      controller.abort();
-    };
   }, []);
 
   const handleDelete = async (productId) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this product?"
+    );
+    if (!confirmDelete) return;
 
     try {
       const token = localStorage.getItem("token");
       const response = await axios.delete(
         `https://ecommerce-server-c6w5.onrender.com/api/products/${productId}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
-      setProducts((prev) => prev.filter((product) => product._id !== productId));
-      setSnackbarMessage(response.data.message || "Product deleted successfully!");
+      setProducts(products.filter((product) => product._id !== productId));
+      setSnackbarMessage(
+        response.data.message || "Product deleted successfully!"
+      );
       setSnackbarSeverity("success");
     } catch (error) {
       setSnackbarMessage("Failed to delete product.");
@@ -82,18 +90,16 @@ const Products = () => {
     }
   };
 
-  const handleSnackbarClose = () => setSnackbarOpen(false);
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const title = product.title?.toLowerCase() || "";
-      const category = product.category?.toLowerCase() || "";
-      const brand = product.brand?.toLowerCase() || "";
-      const search = searchTerm.toLowerCase();
-
-      return title.includes(search) || category.includes(search) || brand.includes(search);
-    });
-  }, [products, searchTerm]);
+  const filteredProducts = products.filter(
+    (product) =>
+      product.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.brand?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="p-4">
@@ -110,11 +116,9 @@ const Products = () => {
       />
 
       {isLoading ? (
-        <div className="flex justify-center mt-6">
-          <CircularProgress />
-        </div>
+        <CircularProgress />
       ) : error ? (
-        <p className="text-red-500 text-center">{error}</p>
+        <p style={{ color: "red" }}>{error}</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
@@ -123,20 +127,14 @@ const Products = () => {
               className="border rounded-lg shadow-md p-4 bg-white"
             >
               <img
-                src={
-                  Array.isArray(product.images) &&
-                  product.images.length > 0 &&
-                  product.images[0].url
-                    ? product.images[0].url
-                    : "/placeholder.png"
-                }
+                src={getImageUrl(product.images)}
                 alt={product.title || "Product Image"}
                 className="w-full h-64 object-cover rounded mb-4"
               />
 
               <div className="text-center">
                 <h2 className="text-lg font-semibold mb-2">
-                  {product.title || "Untitled"}
+                  {product.title || "No Title"}
                 </h2>
                 <p className="text-gray-600">
                   <strong>Category:</strong> {product.category || "N/A"}

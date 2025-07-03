@@ -25,7 +25,6 @@ const Products = () => {
   const navigate = useNavigate();
   const API_BASE = `${import.meta.env.VITE_API_BASE_URL}/api/products`;
 
-  // Fetch products on mount
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -39,8 +38,7 @@ const Products = () => {
         });
 
         console.log("API Response:", response.data);
-
-        setProducts(response.data.products);
+        setProducts(response.data.products || []);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to fetch products");
       } finally {
@@ -77,11 +75,13 @@ const Products = () => {
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
-  const filteredProducts = products.filter((product) =>
-    [product.title, product.category, product.brand].some((field) =>
-      field.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  const filteredProducts = Array.isArray(products)
+    ? products.filter((product) =>
+        [product.title, product.category, product.brand].some((field) =>
+          field.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      )
+    : [];
 
   return (
     <div className="p-4">
@@ -102,56 +102,56 @@ const Products = () => {
       ) : error ? (
         <p style={{ color: "red" }}>{error}</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <div
-              key={product._id}
-              className="border rounded-lg shadow-md p-4 bg-white"
-            >
-              <img
-                src={product.images[0]?.url || "/placeholder.png"}
-                alt={product.title}
-                className="w-full h-64 object-cover rounded mb-4"
-              />
-
-              <div className="text-center">
-                <h2 className="text-lg font-semibold mb-2">{product.title}</h2>
-                <p className="text-gray-600">
-                  <strong>Category:</strong> {product.category}
-                </p>
-                <p className="text-gray-600">
-                  <strong>Brand:</strong> {product.brand}
-                </p>
-                <p className="text-black font-bold">
-                  <strong>Price:</strong> ${product.price}
-                </p>
-              </div>
-
-              <div className="flex justify-between mt-4">
-                <IconButton
-                  color="primary"
-                  onClick={() =>
-                    navigate(`/admin/dashboard/edit-product/${product._id}`)
-                  }
+        <>
+          {filteredProducts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map((product) => (
+                <div
+                  key={product._id}
+                  className="border rounded-lg shadow-md p-4 bg-white"
                 >
-                  <EditIcon />
-                </IconButton>
-                <IconButton
-                  color="error"
-                  onClick={() => handleDelete(product._id)}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </div>
+                  <img
+                    src={product.images?.[0]?.url || "/placeholder.png"}
+                    alt={product.title}
+                    className="w-full h-64 object-cover rounded mb-4"
+                  />
+
+                  <div className="text-center">
+                    <h2 className="text-lg font-semibold mb-2">{product.title}</h2>
+                    <p className="text-gray-600">
+                      <strong>Category:</strong> {product.category}
+                    </p>
+                    <p className="text-gray-600">
+                      <strong>Brand:</strong> {product.brand}
+                    </p>
+                    <p className="text-black font-bold">
+                      <strong>Price:</strong> ${product.price}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between mt-4">
+                    <IconButton
+                      color="primary"
+                      onClick={() => navigate(`/admin/dashboard/edit-product/${product._id}`)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDelete(product._id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
-
-      {!isLoading && filteredProducts.length === 0 && (
-        <p className="text-center text-gray-600 mt-4">
-          No products found. Try a different search.
-        </p>
+          ) : (
+            <p className="text-center text-gray-600 mt-4">
+              No products found. Try a different search.
+            </p>
+          )}
+        </>
       )}
 
       <Snackbar

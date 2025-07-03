@@ -24,13 +24,18 @@ const Products = () => {
 
   const navigate = useNavigate();
 
-  // Helper function to safely get image URL
   const getImageUrl = (images) => {
-    if (Array.isArray(images) && images.length > 0 && images[0]?.url) {
-      return images[0].url;
-    }
+  if (!Array.isArray(images)) {
+    console.warn("Images is not an array:", images);
     return "/placeholder.png";
-  };
+  }
+  if (images.length === 0 || !images[0]?.url) {
+    console.warn("Images is empty or missing URL:", images);
+    return "/placeholder.png";
+  }
+  return images[0].url;
+};
+
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -50,6 +55,8 @@ const Products = () => {
         );
 
         setProducts(response.data.products || []);
+        console.log("Fetched products:", response.data.products);
+
       } catch (error) {
         setError(error.response?.data?.message || "Failed to fetch products");
       } finally {
@@ -126,11 +133,9 @@ const Products = () => {
               key={product._id}
               className="border rounded-lg shadow-md p-4 bg-white"
             >
-              <img
-                src={getImageUrl(product.images)}
-                alt={product.title || "Product Image"}
-                className="w-full h-64 object-cover rounded mb-4"
-              />
+              {/* <img src={getImageUrl(product.images)} ... /> */}
+<p>Image rendering removed for debugging.</p>
+
 
               <div className="text-center">
                 <h2 className="text-lg font-semibold mb-2">

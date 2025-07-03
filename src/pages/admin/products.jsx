@@ -4,7 +4,6 @@ import {
   CircularProgress,
   TextField,
   IconButton,
-  Button,
   Snackbar,
   Alert,
 } from "@mui/material";
@@ -29,11 +28,7 @@ const Products = () => {
     const fetchProducts = async () => {
       try {
         const token = localStorage.getItem("token");
-        console.log("Token:", token);
-
-        if (!token) {
-          throw new Error("No token found");
-        }
+        if (!token) throw new Error("No token found");
 
         const response = await axios.get(
           "https://ecommerce-server-c6w5.onrender.com/api/products",
@@ -43,8 +38,6 @@ const Products = () => {
             },
           }
         );
-        console.log("Fetched products from API:", response.data.products);
-
         setProducts(response.data.products);
       } catch (error) {
         setError(error.response?.data?.message || "Failed to fetch products");
@@ -54,32 +47,35 @@ const Products = () => {
     };
 
     fetchProducts();
-    
   }, []);
 
-  const handleDelete = async (productId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this product?"
-    );
-    if (!confirmDelete) return;
+  const getProductImage = (product) => {
+    if (
+      product &&
+      Array.isArray(product.images) &&
+      product.images.length > 0 &&
+      product.images[0] &&
+      typeof product.images[0].url === "string"
+    ) {
+      return product.images[0].url;
+    }
+    return "/placeholder.png";
+  };
 
+  const handleDelete = async (productId) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
       const token = localStorage.getItem("token");
       const response = await axios.delete(
         `https://ecommerce-server-c6w5.onrender.com/api/products/${productId}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-
-      setProducts(products.filter((product) => product._id !== productId));
-      setSnackbarMessage(
-        response.data.message || "Product deleted successfully!"
-      );
+      setProducts(products.filter((p) => p._id !== productId));
+      setSnackbarMessage(response.data.message || "Product deleted successfully!");
       setSnackbarSeverity("success");
-    } catch (error) {
+    } catch {
       setSnackbarMessage("Failed to delete product.");
       setSnackbarSeverity("error");
     } finally {
@@ -87,15 +83,13 @@ const Products = () => {
     }
   };
 
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
+  const handleSnackbarClose = () => setSnackbarOpen(false);
 
   const filteredProducts = products.filter(
-    (product) =>
-      product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.brand.toLowerCase().includes(searchTerm.toLowerCase())
+    (p) =>
+      p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.brand.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -124,11 +118,10 @@ const Products = () => {
               className="border rounded-lg shadow-md p-4 bg-white"
             >
               <img
-  src={(Array.isArray(product.images) && product.images.length > 0 && product.images[0].url) || "/placeholder.png"}
-  alt={product.title}
-  className="w-full h-64 object-cover rounded mb-4"
-/>
-
+                src={getProductImage(product)}
+                alt={product.title}
+                className="w-full h-64 object-cover rounded mb-4"
+              />
 
               <div className="text-center">
                 <h2 className="text-lg font-semibold mb-2">{product.title}</h2>
@@ -170,16 +163,8 @@ const Products = () => {
         </p>
       )}
 
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleSnackbarClose}
-      >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity={snackbarSeverity}
-          sx={{ width: "100%" }}
-        >
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose}>
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: "100%" }}>
           {snackbarMessage}
         </Alert>
       </Snackbar>

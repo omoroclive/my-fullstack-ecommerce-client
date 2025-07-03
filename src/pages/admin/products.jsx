@@ -1,203 +1,76 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import {
-  CircularProgress,
-  TextField,
-  IconButton,
-  Snackbar,
-  Alert,
-} from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchProducts, deleteProduct } from "../redux/slices/productSlice";
 import { useNavigate } from "react-router-dom";
-import RecentlySearch from "../../pages/account/RecentlySearched";
-import Footer from "../../components/Footer";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 const Products = () => {
-  const [products, setProducts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const getImageUrl = (images) => {
-    if (!Array.isArray(images)) {
-      console.warn("Images is not an array:", images);
-      return "/placeholder.png";
-    }
-    if (images.length === 0 || !images[0]?.url) {
-      console.warn("Images is empty or missing URL:", images);
-      return "/placeholder.png";
-    }
-    return images[0].url;
-  };
+  const { products, loading, error } = useSelector((state) => state.product);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found");
-        }
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
-        const response = await axios.get(
-          "https://ecommerce-server-c6w5.onrender.com/api/products",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        setProducts(response.data.products || []);
-      } catch (error) {
-        setError(error.response?.data?.message || "Failed to fetch products");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
-  const handleDelete = async (productId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this product?"
-    );
-    if (!confirmDelete) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.delete(
-        `https://ecommerce-server-c6w5.onrender.com/api/products/${productId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setProducts(products.filter((product) => product._id !== productId));
-      setSnackbarMessage(
-        response.data.message || "Product deleted successfully!"
-      );
-      setSnackbarSeverity("success");
-    } catch (error) {
-      setSnackbarMessage("Failed to delete product.");
-      setSnackbarSeverity("error");
-    } finally {
-      setSnackbarOpen(true);
+  const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      dispatch(deleteProduct(id));
     }
   };
 
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
+  const renderProductImage = (product) => {
+    const hasImages = Array.isArray(product.images) && product.images.length > 0;
+    const imageUrl = hasImages ? product.images[0]?.url : "/placeholder.png";
+
+    return (
+      <img
+        src={imageUrl}
+        alt={product.title || "Product"}
+        className="w-full h-48 object-cover rounded-md mb-4"
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = "/placeholder.png";
+        }}
+      />
+    );
   };
 
-  const filteredProducts = products.filter(
-    (product) =>
-      product.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.brand?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  if (loading) return <p className="text-center text-blue-600">Loading...</p>;
+  if (error) return <p className="text-center text-red-500">Error: {error}</p>;
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-semibold mb-4">Products</h1>
-
-      <TextField
-        label="Search Products"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Search by title, category, or brand"
-      />
-
-      {isLoading ? (
-        <div className="flex justify-center my-10">
-          <CircularProgress />
-        </div>
-      ) : error ? (
-        <p style={{ color: "red" }}>{error}</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <div
-              key={product._id}
-              className="border rounded-lg shadow-md p-4 bg-white"
-            >
-              <img
-                src={getImageUrl(product.images)}
-                alt={product.title}
-                className="w-full h-48 object-cover rounded-md mb-4"
-              />
-
-              <div className="text-center">
-                <h2 className="text-lg font-semibold mb-2">
-                  {product.title || "No Title"}
-                </h2>
-                <p className="text-gray-600">
-                  <strong>Category:</strong> {product.category || "N/A"}
-                </p>
-                <p className="text-gray-600">
-                  <strong>Brand:</strong> {product.brand || "N/A"}
-                </p>
-                <p className="text-black font-bold">
-                  <strong>Price:</strong> ${product.price || "0.00"}
-                </p>
-              </div>
-
-              <div className="flex justify-between mt-4">
-                <IconButton
-                  color="primary"
-                  onClick={() =>
-                    navigate(`/admin/dashboard/edit-product/${product._id}`)
-                  }
-                >
-                  <EditIcon />
-                </IconButton>
-                <IconButton
-                  color="error"
-                  onClick={() => handleDelete(product._id)}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {!isLoading && filteredProducts.length === 0 && (
-        <p className="text-center text-gray-600 mt-4">
-          No products found. Try a different search.
-        </p>
-      )}
-
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleSnackbarClose}
-      >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity={snackbarSeverity}
-          sx={{ width: "100%" }}
+    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {products?.map((product) => (
+        <div
+          key={product._id}
+          className="bg-white shadow-md rounded-lg overflow-hidden relative"
         >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+          {renderProductImage(product)}
 
-      <RecentlySearch />
-      <Footer />
+          <div className="p-4">
+            <h2 className="text-lg font-semibold truncate">{product.title}</h2>
+            <p className="text-gray-600">${product.price}</p>
+            <div className="flex justify-between mt-4">
+              <button
+                className="text-blue-600 hover:text-blue-800"
+                onClick={() => navigate(`/edit-product/${product._id}`)}
+              >
+                <FaEdit />
+              </button>
+              <button
+                className="text-red-600 hover:text-red-800"
+                onClick={() => handleDelete(product._id)}
+              >
+                <FaTrash />
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
 
 export default Products;
+

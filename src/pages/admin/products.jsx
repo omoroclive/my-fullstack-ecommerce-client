@@ -124,10 +124,11 @@ const Products = () => {
               className="border rounded-lg shadow-md p-4 bg-white"
             >
               <img
-                src={product.images[0]?.url || "/placeholder.png"}
-                alt={product.title}
-                className="w-full h-64 object-cover rounded mb-4"
-              />
+  src={(Array.isArray(product.images) && product.images.length > 0 && product.images[0].url) || "/placeholder.png"}
+  alt={product.title}
+  className="w-full h-64 object-cover rounded mb-4"
+/>
+
 
               <div className="text-center">
                 <h2 className="text-lg font-semibold mb-2">{product.title}</h2>

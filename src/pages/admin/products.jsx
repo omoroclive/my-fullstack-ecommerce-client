@@ -29,6 +29,8 @@ const Products = () => {
     const fetchProducts = async () => {
       try {
         const token = localStorage.getItem("token");
+        console.log("Token:", token);
+
         if (!token) {
           throw new Error("No token found");
         }
@@ -41,6 +43,7 @@ const Products = () => {
             },
           }
         );
+        console.log("Fetched products from API:", response.data.products);
 
         setProducts(response.data.products);
       } catch (error) {
@@ -51,7 +54,7 @@ const Products = () => {
     };
 
     fetchProducts();
-    console.log("Products fetched:", products);
+    
   }, []);
 
   const handleDelete = async (productId) => {

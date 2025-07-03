@@ -23,10 +23,9 @@ const Products = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   const navigate = useNavigate();
+  const API_BASE = `${import.meta.env.VITE_API_BASE_URL}/api/products`;
 
-  const API_BASE =
-    "https://grateful-adventure-production.up.railway.app/api/products";
-
+  // Fetch products on mount
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -55,7 +54,7 @@ const Products = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const deleteUrl = `https://ecommerce-server-c6w5.onrender.com/api/products/${productId}`;
+      const deleteUrl = `${import.meta.env.VITE_API_BASE_URL}/api/products/${productId}`;
 
       const response = await axios.delete(deleteUrl, {
         headers: {
@@ -77,8 +76,9 @@ const Products = () => {
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
   const filteredProducts = products.filter((product) =>
-    [product.title, product.category, product.brand]
-      .some((field) => field.toLowerCase().includes(searchTerm.toLowerCase()))
+    [product.title, product.category, product.brand].some((field) =>
+      field.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
   return (

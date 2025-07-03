@@ -6,6 +6,9 @@ import {
   IconButton,
   Snackbar,
   Alert,
+  Chip,
+  Box,
+  Typography,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -38,7 +41,9 @@ const Products = () => {
         });
 
         console.log("API Response:", response.data);
-        setProducts(response.data.products || []);
+        // Handle the response structure properly
+        const productsData = response.data.products || response.data || [];
+        setProducts(Array.isArray(productsData) ? productsData : []);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to fetch products");
       } finally {
@@ -75,17 +80,73 @@ const Products = () => {
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
-  const filteredProducts = Array.isArray(products)
-    ? products.filter((product) =>
-        [product.title, product.category, product.brand].some((field) =>
-          field.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      )
-    : [];
+  const filteredProducts = React.useMemo(() => {
+    if (!Array.isArray(products) || products.length === 0) {
+      return [];
+    }
+    
+    return products.filter((product) => {
+      if (!product || typeof product !== 'object') return false;
+      
+      const searchFields = [
+        product.title || '',
+        product.category || '',
+        product.brand || ''
+      ];
+      
+      return searchFields.some((field) =>
+        field.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
+  }, [products, searchTerm]);
+
+  // Helper function to render price with sale price handling
+  const renderPrice = (product) => {
+    if (!product || typeof product.price === 'undefined') {
+      return <Typography variant="body2" className="text-gray-500">Price not available</Typography>;
+    }
+    
+    const hasValidSalePrice = product.salePrice && product.salePrice > 0;
+    
+    if (hasValidSalePrice) {
+      return (
+        <Box className="flex items-center gap-2">
+          <Typography variant="body2" className="text-red-600 font-bold">
+            ${product.salePrice}
+          </Typography>
+          <Typography variant="body2" className="text-gray-500 line-through">
+            ${product.price}
+          </Typography>
+          <Chip 
+            label="SALE" 
+            size="small" 
+            color="error" 
+            variant="outlined"
+          />
+        </Box>
+      );
+    }
+    
+    return (
+      <Typography variant="body2" className="text-black font-bold">
+        ${product.price}
+      </Typography>
+    );
+  };
+
+  // Helper function to get stock status
+  const getStockStatus = (totalStock) => {
+    if (typeof totalStock !== 'number') return { label: "Stock Unknown", color: "default" };
+    if (totalStock === 0) return { label: "Out of Stock", color: "error" };
+    if (totalStock <= 5) return { label: "Low Stock", color: "warning" };
+    return { label: "In Stock", color: "success" };
+  };
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-semibold mb-4">Products</h1>
+      <h1 className="text-2xl font-semibold mb-4">
+        Products ({filteredProducts.length})
+      </h1>
 
       <TextField
         label="Search Products"
@@ -95,61 +156,114 @@ const Products = () => {
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder="Search by title, category, or brand"
+        className="mb-4"
       />
 
       {isLoading ? (
-        <CircularProgress />
+        <div className="flex justify-center items-center py-8">
+          <CircularProgress />
+        </div>
       ) : error ? (
-        <p style={{ color: "red" }}>{error}</p>
+        <div className="text-center py-8">
+          <p style={{ color: "red" }}>{error}</p>
+        </div>
       ) : (
         <>
           {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => (
-                <div
-                  key={product._id}
-                  className="border rounded-lg shadow-md p-4 bg-white"
-                >
-                  <img
-                    src={product.images?.[0]?.url || "/placeholder.png"}
-                    alt={product.title}
-                    className="w-full h-64 object-cover rounded mb-4"
-                  />
+              {filteredProducts.map((product) => {
+                const stockStatus = getStockStatus(product.totalStock);
+                
+                return (
+                  <div
+                    key={product._id}
+                    className="border rounded-lg shadow-md p-4 bg-white hover:shadow-lg transition-shadow"
+                  >
+                    <div className="relative">
+                      <img
+                        src={product.images?.[0]?.url || "/placeholder.png"}
+                        alt={product.title}
+                        className="w-full h-64 object-cover rounded mb-4"
+                        onError={(e) => {
+                          e.target.src = "/placeholder.png";
+                        }}
+                      />
+                      {product.salePrice > 0 && (
+                        <div className="absolute top-2 left-2">
+                          <Chip 
+                            label="SALE" 
+                            size="small" 
+                            color="error"
+                            className="bg-red-500 text-white"
+                          />
+                        </div>
+                      )}
+                    </div>
 
-                  <div className="text-center">
-                    <h2 className="text-lg font-semibold mb-2">{product.title}</h2>
-                    <p className="text-gray-600">
-                      <strong>Category:</strong> {product.category}
-                    </p>
-                    <p className="text-gray-600">
-                      <strong>Brand:</strong> {product.brand}
-                    </p>
-                    <p className="text-black font-bold">
-                      <strong>Price:</strong> ${product.price}
-                    </p>
-                  </div>
+                    <div className="text-center space-y-2">
+                      <h2 className="text-lg font-semibold mb-2 line-clamp-2">
+                        {product.title || 'Untitled Product'}
+                      </h2>
+                      
+                      <div className="flex justify-center gap-2 mb-2">
+                        <Chip 
+                          label={product.category || 'No Category'} 
+                          size="small" 
+                          variant="outlined"
+                        />
+                        <Chip 
+                          label={product.brand || 'No Brand'} 
+                          size="small" 
+                          variant="outlined"
+                        />
+                      </div>
 
-                  <div className="flex justify-between mt-4">
-                    <IconButton
-                      color="primary"
-                      onClick={() => navigate(`/admin/dashboard/edit-product/${product._id}`)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDelete(product._id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+                      <div className="flex justify-center">
+                        {renderPrice(product)}
+                      </div>
+
+                      <div className="flex justify-center">
+                        <Chip 
+                          label={`${stockStatus.label} (${product.totalStock || 0})`}
+                          size="small"
+                          color={stockStatus.color}
+                          variant="outlined"
+                        />
+                      </div>
+
+                      {product.description && (
+                        <p className="text-gray-600 text-sm line-clamp-2">
+                          {product.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex justify-between mt-4">
+                      <IconButton
+                        color="primary"
+                        onClick={() => navigate(`/admin/dashboard/edit-product/${product._id}`)}
+                        title="Edit Product"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        color="error"
+                        onClick={() => handleDelete(product._id)}
+                        title="Delete Product"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
-            <p className="text-center text-gray-600 mt-4">
-              No products found. Try a different search.
-            </p>
+            <div className="text-center py-8">
+              <p className="text-gray-600">
+                {searchTerm ? "No products found matching your search." : "No products available."}
+              </p>
+            </div>
           )}
         </>
       )}

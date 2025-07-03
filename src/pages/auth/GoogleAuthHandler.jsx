@@ -18,17 +18,16 @@ function GoogleAuthHandler() {
     }
 
     console.log("Received Token:", token);
-    localStorage.setItem("token", token); // ✅ consistent with app-wide usage
+    localStorage.setItem("token", token); 
 
-    const backendURL = import.meta.env.PROD
-      ? "https://ecommerce-server-c6w5.onrender.com"
-      : "http://localhost:3000";
+    const backendURL = import.meta.env.VITE_API_BASE_URL 
+      
 
     fetch(`${backendURL}/auth/google/success`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
       credentials: "include",
-      mode: "cors", // ✅ ensure proper CORS behavior
+      mode: "cors", 
     })
       .then((res) => {
         if (!res.ok) throw new Error("Network response not OK");

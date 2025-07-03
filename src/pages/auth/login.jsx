@@ -46,10 +46,7 @@ function Login() {
   }, [isAuthenticated, user, navigate]);
 
   const handleGoogleLogin = () => {
-    const baseURL =
-      import.meta.env.MODE === "development"
-        ? "http://localhost:3000"
-        : "https://ecommerce-server-c6w5.onrender.com";
+    const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
     window.location.href = `${baseURL}/auth/google`;
   };
 

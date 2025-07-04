@@ -43,9 +43,12 @@ const Checkout = () => {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("User not logged in");
 
-        const response = await axios.get("http://localhost:3000/api/address" ||"https://ecommerce-server-c6w5.onrender.com/api/address", {
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
+        const response = await axios.get(`${API_BASE_URL}/api/address`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         setAddresses(response.data.addresses || []);
       } catch (error) {
         console.error("Error fetching addresses:", error);
@@ -85,12 +88,12 @@ const Checkout = () => {
 
     try {
       if (paymentGateway === "mpesa") {
-        await axios.post("http://localhost:3000/api/mpesa/stkpush" ||"https:////grateful-adventure-production.up.railway.app/api/stkpush", {
+        await axios.post(`${API_BASE_URL}/api/mpesa/stkpush`, {
           phone: phoneNumber,
           amount: totalAmount,
         });
       } else if (paymentGateway === "paypal") {
-        await axios.post("http://localhost:3000/api/paypal/create-order" ||"https:////grateful-adventure-production.up.railway.app/api/create-order", {
+        await axios.post(`${API_BASE_URL}/api/paypal/create-order`, {
           amount: totalAmount,
         });
       }
@@ -147,14 +150,15 @@ const Checkout = () => {
         paymentMethod: paymentGateway === "mpesa" ? "Mpesa" : "PayPal",
       };
 
-      
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
       // Send order details to the server
-      await axios.post("http://localhost:3000/api/orders"||"https:////grateful-adventure-production.up.railway.app/api/orders", orderDetails, {
+      await axios.post(`${API_BASE_URL}/api/orders`, orderDetails, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      
+
+
 
       setSnackbar({
         open: true,
@@ -325,7 +329,7 @@ const Checkout = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-      <Payment/>
+      <Payment />
     </Box>
   );
 };

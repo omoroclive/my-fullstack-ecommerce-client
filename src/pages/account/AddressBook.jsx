@@ -18,7 +18,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddressFormControls from "../../config/address";
 
-const API_BASE_URL = "https://ecommerce-server-c6w5.onrender.com/api/address";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 const AddressBook = () => {
   const [addresses, setAddresses] = useState([]);

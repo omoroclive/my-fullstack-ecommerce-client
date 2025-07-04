@@ -10,7 +10,7 @@ import RecentlyViewed from "../../pages/account/RecentlyViewed";
 
 
   // Fetch products from backend
-  const API_URL = "http://localhost:3000" || "https://ecommerce-server-c6w5.onrender.com";
+  const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";  
 
 const Shopping = () => {
   const [products, setProducts] = useState([]);

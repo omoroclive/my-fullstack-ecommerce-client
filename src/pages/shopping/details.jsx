@@ -59,12 +59,15 @@ const Details = () => {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("No token found. Please log in.");
 
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
         const response = await axios.get(
-          `http://localhost:3000/api/products/${id}`|| `https://ecommerce-server-c6w5.onrender.com/api/products/${id}`,
+          `${API_BASE_URL}/api/products/${id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
+
 
         setProduct(response.data.product);
         setMainImage(
@@ -89,12 +92,15 @@ const Details = () => {
         if (!token) throw new Error("No token found. Please log in.");
 
         // Fetch reviews for the product
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
         const reviewsResponse = await axios.get(
-          `http://localhost:3000/api/reviews/${id}`|| `https://ecommerce-server-c6w5.onrender.com/api/reviews/${id}`,
+          `${API_BASE_URL}/api/reviews/${id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
+
 
         const reviewsData = reviewsResponse.data || [];
         setReviews(reviewsData);
@@ -118,8 +124,7 @@ const Details = () => {
           userIds.map(async (userId) => {
             try {
               const userResponse = await axios.get(
-                `http://localhost:3000/api/users/${userId}`
-                || `https://ecommerce-server-c6w5.onrender.com/api/users/${userId}`,
+                `${API_BASE_URL}/api/users/${userId}`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
                 }
@@ -162,7 +167,7 @@ const Details = () => {
 
   const handleAddToCart = () => {
     dispatch(addToCart({
-      _id: product._id,  
+      _id: product._id,
       title: product.title,
       price: product.price,
       quantity: quantity,
@@ -205,7 +210,7 @@ const Details = () => {
   };
 
   const handleCall = () => {
-    window.location.href = "tel:+254791150726"; 
+    window.location.href = "tel:+254791150726";
   };
 
   const incrementQuantity = () => setQuantity((prev) => prev + 1);
@@ -295,58 +300,58 @@ const Details = () => {
             </Box>
 
             {/* Action Buttons */}
-<Box className="flex flex-col sm:flex-row md:justify-start items-stretch sm:items-center gap-4 mt-6">
-  <Button
-    variant="contained"
-    sx={{
-      backgroundColor: "#ea580c",
-      "&:hover": { backgroundColor: "#c2410c" },
-      whiteSpace: "nowrap",
-      width: "100%", // Full width on mobile
-      sm: { width: "auto" },
-      md: { width: "200px" }, // Fixed width for medium screens
-    }}
-    startIcon={<ShoppingCartIcon />}
-    onClick={handleAddToCart}
-  >
-    Add to Cart
-  </Button>
+            <Box className="flex flex-col sm:flex-row md:justify-start items-stretch sm:items-center gap-4 mt-6">
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "#ea580c",
+                  "&:hover": { backgroundColor: "#c2410c" },
+                  whiteSpace: "nowrap",
+                  width: "100%", // Full width on mobile
+                  sm: { width: "auto" },
+                  md: { width: "200px" }, // Fixed width for medium screens
+                }}
+                startIcon={<ShoppingCartIcon />}
+                onClick={handleAddToCart}
+              >
+                Add to Cart
+              </Button>
 
-  <Button
-    variant="outlined"
-    sx={{
-      borderColor: "#ea580c",
-      color: "#ea580c",
-      "&:hover": {
-        borderColor: "#c2410c",
-        backgroundColor: "#c2410c",
-        color: "white",
-      },
-      whiteSpace: "nowrap",
-      width: "100%",
-      sm: { width: "auto" },
-      md: { width: "200px" }, // Fixed width for consistency
-    }}
-    startIcon={<FavoriteBorderIcon />}
-    onClick={handleAddToWishlist}
-  >
-    Add to Wishlist
-  </Button>
+              <Button
+                variant="outlined"
+                sx={{
+                  borderColor: "#ea580c",
+                  color: "#ea580c",
+                  "&:hover": {
+                    borderColor: "#c2410c",
+                    backgroundColor: "#c2410c",
+                    color: "white",
+                  },
+                  whiteSpace: "nowrap",
+                  width: "100%",
+                  sm: { width: "auto" },
+                  md: { width: "200px" }, // Fixed width for consistency
+                }}
+                startIcon={<FavoriteBorderIcon />}
+                onClick={handleAddToWishlist}
+              >
+                Add to Wishlist
+              </Button>
 
-  <Box className="flex justify-center md:justify-start gap-2">
-    <IconButton className="text-orange-600 hover:text-orange-700" onClick={handleShare}>
-      <ShareIcon />
-    </IconButton>
+              <Box className="flex justify-center md:justify-start gap-2">
+                <IconButton className="text-orange-600 hover:text-orange-700" onClick={handleShare}>
+                  <ShareIcon />
+                </IconButton>
 
-    <IconButton className="text-orange-600 hover:text-orange-700" onClick={handleCall}>
-      <PhoneIcon />
-    </IconButton>
+                <IconButton className="text-orange-600 hover:text-orange-700" onClick={handleCall}>
+                  <PhoneIcon />
+                </IconButton>
 
-    <IconButton className="text-green-600 hover:text-green-700">
-      <WhatsAppIcon />
-    </IconButton>
-  </Box>
-</Box>
+                <IconButton className="text-green-600 hover:text-green-700">
+                  <WhatsAppIcon />
+                </IconButton>
+              </Box>
+            </Box>
 
           </Grid>
         </Grid>

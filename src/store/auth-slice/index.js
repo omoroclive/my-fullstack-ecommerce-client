@@ -2,8 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 // Use environment variable for base URL
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://ecommerce-server-c6w5.onrender.com";
+const API_BASE_URL =import.meta.env.VITE_API_BASE_URL;
 
 // Initial state
 const initialState = {

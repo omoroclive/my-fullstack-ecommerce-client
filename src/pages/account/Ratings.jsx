@@ -7,7 +7,7 @@ const Ratings = () => {
   const [reviews, setReviews] = useState({});
   const [error, setError] = useState(null);
 
-  const API_BASE_URL = "https://ecommerce-server-c6w5.onrender.com";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
 
   useEffect(() => {
     const fetchDeliveredProducts = async () => {

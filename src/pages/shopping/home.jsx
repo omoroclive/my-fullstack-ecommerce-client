@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setBrandFilter, setCategoryFilter } from "../../store/filter/filterSlice";
-import { 
-  CircularProgress, 
-  Button, 
-  IconButton, 
+import {
+  CircularProgress,
+  Button,
+  IconButton,
   Typography,
   Card,
   CardContent
@@ -60,16 +60,18 @@ const Home = () => {
           throw new Error("No token found. Please log in.");
         }
 
-        const response = await fetch("http://localhost:3000/api/products" || "https://ecommerce-server-c6w5.onrender.com/api/products", {
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
+        const response = await fetch(`${API_BASE_URL}/api/products`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        
+
         if (!response.ok) {
           throw new Error("Failed to fetch products");
         }
-        
+
         const data = await response.json();
         setFeaturedProducts(data.products.slice(0, 6));
       } catch (error) {
@@ -116,8 +118,8 @@ const Home = () => {
   );
 
   const ProductCard = ({ product }) => (
-    <Card 
-      sx={{ 
+    <Card
+      sx={{
         cursor: 'pointer',
         transition: 'box-shadow 0.3s',
         '&:hover': { boxShadow: 3 }
@@ -134,18 +136,18 @@ const Home = () => {
           {product.title}
         </Typography>
         <Typography variant="body1" className="text-black font-bold">
-        <p className="text-gray-600">
-                  <strong>Price:</strong> ${product.price}
-                </p>
-          
+          <p className="text-gray-600">
+            <strong>Price:</strong> ${product.price}
+          </p>
+
         </Typography>
-                <p className="text-gray-600">
-                  <strong>Category:</strong> {product.category}
-                </p>
-                <p className="text-gray-600">
-                  <strong>Brand:</strong> {product.brand}
-                </p>
-                
+        <p className="text-gray-600">
+          <strong>Category:</strong> {product.category}
+        </p>
+        <p className="text-gray-600">
+          <strong>Brand:</strong> {product.brand}
+        </p>
+
       </CardContent>
     </Card>
   );
@@ -190,7 +192,7 @@ const Home = () => {
             ))}
           </div>
         )}
-        
+
         <div className="text-center mt-6">
           <Button
             variant="contained"

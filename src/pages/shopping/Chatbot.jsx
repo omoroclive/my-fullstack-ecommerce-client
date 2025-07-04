@@ -11,8 +11,10 @@ const Chatbot = () => {
     const userMessage = { text: input, sender: "user" };
     setMessages([...messages, userMessage]);
 
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
     try {
-      const response = await fetch("http://localhost:3000/chat" || "https://ecommerce-server-c6w5.onrender.com/chat", {
+      const response = await fetch(`${API_BASE_URL}/chatbot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input }),

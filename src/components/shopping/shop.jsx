@@ -10,7 +10,7 @@ const Shop = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const API_URL = import.meta.env.VITE_API_URL  || "https://ecommerce-server-c6w5.onrender.com";
+  const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"; 
 
 useEffect(() => {
   const fetchProducts = async () => {

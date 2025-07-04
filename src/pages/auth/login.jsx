@@ -19,7 +19,7 @@ function Login() {
     dispatch(loginUser(formValues)).then((action) => {
       if (action.meta.requestStatus === "fulfilled") {
         const { role, token } = action.payload.user;
-        localStorage.setItem("accessToken", token);
+        localStorage.setItem("token", token);
         navigate(role === "admin" ? "/admin/dashboard" : "/shop/home");
       } else {
         console.error("Login failed:", action.error.message);

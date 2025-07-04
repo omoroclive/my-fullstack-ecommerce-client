@@ -17,8 +17,34 @@ import {
   CircularProgress,
   Alert,
   Snackbar,
+  Box,
+  Grid,
+  Divider,
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Save as SaveIcon } from '@mui/icons-material';
+import { styled } from '@mui/material/styles';
+
+const StyledTableHead = styled(TableHead)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  '& th': {
+    color: theme.palette.common.white,
+    fontWeight: 600,
+  },
+}));
+
+const ActionButton = styled(Button)(({ theme }) => ({
+  marginTop: theme.spacing(2),
+  padding: theme.spacing(1.5),
+  fontWeight: 600,
+  textTransform: 'none',
+}));
+
+const ExpensePaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(4),
+  borderRadius: '12px',
+  boxShadow: '0 4px 20px 0 rgba(0,0,0,0.08)',
+}));
 
 const Expenses = () => {
   const dispatch = useDispatch();
@@ -84,89 +110,153 @@ const Expenses = () => {
   };
 
   return (
-    <Container maxWidth="md">
-      <Typography variant="h4" gutterBottom>
-        Expense Management
-      </Typography>
-      <Paper elevation={3} style={{ padding: '16px', marginBottom: '24px' }}>
-        <TextField
-          label="Expense Name"
-          name="expenses_name"
-          value={newExpense.expenses_name}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-        />
-        <TextField
-          label="Amount"
-          name="expenses_amount"
-          type="number"
-          value={newExpense.expenses_amount}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-        />
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'primary.main' }}>
+          Expense Management
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
+          Track and manage your organization's expenses
+        </Typography>
+      </Box>
+
+      <ExpensePaper>
+        <Typography variant="h6" component="h2" sx={{ mb: 2, fontWeight: 600 }}>
+          {editMode ? 'Edit Expense' : 'Add New Expense'}
+        </Typography>
+        <Divider sx={{ mb: 3 }} />
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Expense Name"
+              name="expenses_name"
+              value={newExpense.expenses_name}
+              onChange={handleChange}
+              fullWidth
+              variant="outlined"
+              size="small"
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Amount ($)"
+              name="expenses_amount"
+              type="number"
+              value={newExpense.expenses_amount}
+              onChange={handleChange}
+              fullWidth
+              variant="outlined"
+              size="small"
+              InputProps={{
+                startAdornment: '$',
+              }}
+            />
+          </Grid>
+        </Grid>
         {editMode ? (
-          <Button
+          <ActionButton
             variant="contained"
-            color="secondary"
+            color="primary"
             onClick={handleSaveEdit}
             fullWidth
-            style={{ marginTop: '16px' }}
+            startIcon={<SaveIcon />}
           >
-            Save
-          </Button>
+            Save Changes
+          </ActionButton>
         ) : (
-          <Button
+          <ActionButton
             variant="contained"
             color="primary"
             onClick={handleAddExpense}
             fullWidth
-            style={{ marginTop: '16px' }}
+            startIcon={<AddIcon />}
           >
             Add Expense
-          </Button>
+          </ActionButton>
         )}
-      </Paper>
-      {status === 'loading' && <CircularProgress />}
-      {status === 'failed' && <Alert severity="error">{error}</Alert>}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Expense Name</TableCell>
-              <TableCell>Amount</TableCell>
-              <TableCell>Revenue Generated</TableCell>
-              <TableCell>Revenue Balance</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {expenses.map((expense) => (
-              <TableRow key={expense._id}>
-                <TableCell>{expense.expenses_name}</TableCell>
-                <TableCell>${expense.expenses_amount.toFixed(2)}</TableCell>
-                <TableCell>${expense.revenue_generated.toFixed(2)}</TableCell>
-                <TableCell>${expense.revenue_balance.toFixed(2)}</TableCell>
-                <TableCell>
-                  <IconButton onClick={() => handleEditExpense(expense._id)} aria-label="edit">
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleDeleteExpense(expense._id)} aria-label="delete">
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
+      </ExpensePaper>
+
+      {status === 'loading' && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+      
+      {status === 'failed' && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      <Paper elevation={0} sx={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px 0 rgba(0,0,0,0.08)' }}>
+        <TableContainer>
+          <Table>
+            <StyledTableHead>
+              <TableRow>
+                <TableCell>Expense Name</TableCell>
+                <TableCell align="right">Amount</TableCell>
+                <TableCell align="right">Revenue Generated</TableCell>
+                <TableCell align="right">Revenue Balance</TableCell>
+                <TableCell align="center">Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </StyledTableHead>
+            <TableBody>
+              {expenses.map((expense) => (
+                <TableRow 
+                  key={expense._id}
+                  hover
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                >
+                  <TableCell component="th" scope="row">
+                    <Typography fontWeight={500}>
+                      {expense.expenses_name}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    ${expense.expenses_amount.toFixed(2)}
+                  </TableCell>
+                  <TableCell align="right">
+                    ${expense.revenue_generated.toFixed(2)}
+                  </TableCell>
+                  <TableCell align="right">
+                    ${expense.revenue_balance.toFixed(2)}
+                  </TableCell>
+                  <TableCell align="center">
+                    <IconButton 
+                      onClick={() => handleEditExpense(expense._id)} 
+                      aria-label="edit"
+                      color="primary"
+                      sx={{ mr: 1 }}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton 
+                      onClick={() => handleDeleteExpense(expense._id)} 
+                      aria-label="delete"
+                      color="error"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+
       <Snackbar
         open={notification.open}
         autoHideDuration={6000}
         onClose={handleNotificationClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <Alert onClose={handleNotificationClose} severity={notification.severity}>
+        <Alert 
+          onClose={handleNotificationClose} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+          elevation={6}
+        >
           {notification.message}
         </Alert>
       </Snackbar>

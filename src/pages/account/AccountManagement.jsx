@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Button, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import {
+  Button,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 const AccountManagement = () => {
@@ -11,7 +19,7 @@ const AccountManagement = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
 
-  const API_BASE_URL = "http://localhost:3000" || "https://ecommerce-server-c6w5.onrender.com";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // Fetch user preferences including dark mode
   useEffect(() => {
@@ -24,14 +32,14 @@ const AccountManagement = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        setIsDarkMode(response.data.isDarkMode); 
+        setIsDarkMode(response.data.isDarkMode);
       } catch (error) {
         console.error("Error fetching user preferences:", error);
       }
     };
 
     fetchUserPreferences();
-  }, []);
+  }, [API_BASE_URL]);
 
   // Handle Password Change
   const handleChangePassword = async () => {
@@ -93,7 +101,11 @@ const AccountManagement = () => {
   };
 
   return (
-    <div className={`p-6 max-w-3xl mx-auto rounded-lg shadow-lg transition-all duration-300 ${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}>
+    <div
+      className={`p-6 max-w-3xl mx-auto rounded-lg shadow-lg transition-all duration-300 ${
+        isDarkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+      }`}
+    >
       <h1 className="text-2xl font-bold mb-6 text-center">Account Management</h1>
 
       {/* Dark Mode Toggle Button */}
@@ -135,7 +147,9 @@ const AccountManagement = () => {
       {/* Delete Account Section */}
       <section>
         <h2 className="text-xl font-semibold mb-4 text-red-600">Delete Account</h2>
-        <p className="mb-4">Deleting your account is irreversible. All your data will be permanently deleted.</p>
+        <p className="mb-4">
+          Deleting your account is irreversible. All your data will be permanently deleted.
+        </p>
         <Button variant="outlined" color="secondary" onClick={() => setIsDialogOpen(true)} className="w-full">
           Delete Account
         </Button>
@@ -153,7 +167,14 @@ const AccountManagement = () => {
           <Button onClick={() => setIsDialogOpen(false)} color="primary">
             Cancel
           </Button>
-          <Button onClick={() => { handleDeleteAccount(); setIsDialogOpen(false); }} color="secondary" variant="contained">
+          <Button
+            onClick={() => {
+              handleDeleteAccount();
+              setIsDialogOpen(false);
+            }}
+            color="secondary"
+            variant="contained"
+          >
             Delete
           </Button>
         </DialogActions>

@@ -7,7 +7,7 @@ const Ratings = () => {
   const [reviews, setReviews] = useState({});
   const [error, setError] = useState(null);
 
-  const API_BASE_URL = "http://localhost:3000" || "https://ecommerce-server-c6w5.onrender.com";
+  const API_BASE_URL = "https://ecommerce-server-c6w5.onrender.com";
 
   useEffect(() => {
     const fetchDeliveredProducts = async () => {
@@ -76,7 +76,7 @@ const Ratings = () => {
             <CardMedia
               component="img"
               sx={{ width: 120, height: 120, objectFit: "contain", marginRight: 2 }}
-              image={product.image || "https://via.placeholder.com/120"} // Default image if missing
+              image={product.image || "https://via.placeholder.com/120"} 
               alt={product.name || "Product Image"}
             />
             

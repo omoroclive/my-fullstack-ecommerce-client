@@ -17,14 +17,15 @@ function Login() {
 
   const handleLoginSubmit = (formValues) => {
     dispatch(loginUser(formValues)).then((action) => {
-      if (action.meta.requestStatus === "fulfilled") {
-        const { role, token } = action.payload.user;
-        localStorage.setItem("token", token);
-        navigate(role === "admin" ? "/admin/dashboard" : "/shop/home");
-      } else {
-        console.error("Login failed:", action.error.message);
-      }
-    });
+  if (action.meta.requestStatus === "fulfilled") {
+    const { token, user } = action.payload;
+    localStorage.setItem("token", token);
+    navigate(user.role === "admin" ? "/admin/dashboard" : "/shop/home");
+  } else {
+    console.error("Login failed:", action.error.message);
+  }
+});
+
   };
 
   // Handle token passed via URL (e.g., from Google OAuth)
@@ -33,7 +34,8 @@ function Login() {
     const token = query.get("token");
 
     if (token) {
-      localStorage.setItem("accessToken", token);
+      localStorage.setItem("token", token);
+
       navigate("/shop/home");
     }
   }, [navigate]);

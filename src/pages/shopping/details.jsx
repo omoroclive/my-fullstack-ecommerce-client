@@ -84,23 +84,20 @@ const Details = () => {
     fetchProduct();
   }, [id]);
 
-  // Fetch reviews and associated user details
+  // ✅ Simplified: Fetch only the reviews (user is already populated)
   useEffect(() => {
-    const fetchReviewsAndUsers = async () => {
+    const fetchReviews = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("No token found. Please log in.");
 
-        // Fetch reviews for the product
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-
         const reviewsResponse = await axios.get(
           `${API_BASE_URL}/api/reviews/${id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-
 
         const reviewsData = reviewsResponse.data || [];
         setReviews(reviewsData);
@@ -113,43 +110,17 @@ const Details = () => {
         const avgRating = reviewsData.length
           ? totalRatings / reviewsData.length
           : 0;
-        setAverageRating(avgRating.toFixed(1)); // Round to 1 decimal place
-
-        // Get unique user IDs from reviews
-        const userIds = [...new Set(reviewsData.map((review) => review.user))];
-
-        // Fetch user details for each unique user ID
-        const userDetails = {};
-        await Promise.all(
-          userIds.map(async (userId) => {
-            try {
-              const userResponse = await axios.get(
-                `${API_BASE_URL}/api/users/${userId}`,
-                {
-                  headers: { Authorization: `Bearer ${token}` },
-                }
-              );
-              userDetails[userId] = userResponse.data;
-            } catch (error) {
-              console.error(
-                `Failed to fetch user details for ID ${userId}:`,
-                error
-              );
-              userDetails[userId] = { name: "Anonymous User" };
-            }
-          })
-        );
-
-        setReviewUsers(userDetails);
+        setAverageRating(Number(avgRating.toFixed(1))); // ensure it's a number
       } catch (err) {
         console.error("Failed to fetch reviews:", err);
       }
     };
 
     if (id) {
-      fetchReviewsAndUsers();
+      fetchReviews();
     }
   }, [id]);
+
 
   // Add to Recently Viewed
   useEffect(() => {
@@ -402,7 +373,8 @@ const Details = () => {
                     className="border-b border-gray-200 pb-4 mb-4"
                   >
                     <Typography variant="subtitle1" className="font-medium">
-                      {reviewUsers[review.user]?.name || "Anonymous User"}
+                      {review.user?.fullName || "Anonymous User"}
+
                     </Typography>
                     <Rating
                       value={review.rating || 0}
@@ -436,7 +408,7 @@ const Details = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-      
+
       <Footer />
     </Box>
   );

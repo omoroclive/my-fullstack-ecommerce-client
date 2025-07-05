@@ -28,17 +28,7 @@ function Login() {
 
   };
 
-  // Handle token passed via URL (e.g., from Google OAuth)
-  useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    const token = query.get("token");
-
-    if (token) {
-      localStorage.setItem("token", token);
-
-      navigate("/shop/home");
-    }
-  }, [navigate]);
+ 
 
   // If already authenticated, redirect accordingly
   useEffect(() => {

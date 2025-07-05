@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginUserSuccess } from "../../store/auth-slice";
 
+
 function GoogleAuthHandler() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -13,42 +14,28 @@ function GoogleAuthHandler() {
 
     if (!token) {
       console.error("Google login failed: No token received");
-      navigate("/login");
+      navigate("/auth/login");
       return;
     }
 
-    console.log("Received Token:", token);
-    localStorage.setItem("token", token); 
+    // ✅ Save token
+    localStorage.setItem("token", token);
 
-    const backendURL = import.meta.env.VITE_API_BASE_URL 
-      
+    try {
+      // ✅ Optionally decode token to get user info
+      const decoded = jwt_decode(token);
+      const user = {
+        email: decoded.email,
+        role: decoded.role,
+        _id: decoded.userId,
+      };
 
-    fetch(`${backendURL}/auth/google/success`, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-      credentials: "include",
-      mode: "cors", 
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Network response not OK");
-        return res.json();
-      })
-      .then((data) => {
-        console.log("Google User Data from Backend:", data);
-
-        if (data.user) {
-          dispatch(loginUserSuccess({ user: data.user, token }));
-          console.log("User successfully saved in Redux:", data.user);
-          navigate("/shop/home");
-        } else {
-          console.error("User data missing from backend");
-          navigate("/login");
-        }
-      })
-      .catch((err) => {
-        console.error("Google login error:", err);
-        navigate("/login");
-      });
+      dispatch(loginUserSuccess({ user, token }));
+      navigate(user.role === "admin" ? "/admin/dashboard" : "/shop/home");
+    } catch (error) {
+      console.error("Failed to decode JWT:", error);
+      navigate("/auth/login");
+    }
   }, [dispatch, navigate]);
 
   return (
@@ -66,20 +53,13 @@ function GoogleAuthHandler() {
 
       <style>{`
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes loadingDots {
-          0% { opacity: 0; }
+          0%, 100% { opacity: 0; }
           50% { opacity: 1; }
-          100% { opacity: 0; }
         }
 
         .animate-fade-in {
@@ -92,17 +72,9 @@ function GoogleAuthHandler() {
           display: inline-block;
         }
 
-        .loading-dots .dot:nth-child(1) {
-          animation-delay: 0s;
-        }
-
-        .loading-dots .dot:nth-child(2) {
-          animation-delay: 0.2s;
-        }
-
-        .loading-dots .dot:nth-child(3) {
-          animation-delay: 0.4s;
-        }
+        .loading-dots .dot:nth-child(1) { animation-delay: 0s; }
+        .loading-dots .dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots .dot:nth-child(3) { animation-delay: 0.4s; }
       `}</style>
     </div>
   );

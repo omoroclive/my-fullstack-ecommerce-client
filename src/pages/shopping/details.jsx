@@ -57,6 +57,7 @@ const Details = () => {
     const fetchProduct = async () => {
       try {
         const token = localStorage.getItem("token");
+        console.log("Token:", token); // Debugging line
         if (!token) throw new Error("No token found. Please log in.");
 
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";

@@ -436,7 +436,7 @@ const Details = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-      <RecentlyViewed />
+      
       <Footer />
     </Box>
   );

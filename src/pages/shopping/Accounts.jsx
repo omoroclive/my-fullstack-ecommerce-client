@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
-import { 
-  Drawer, 
-  List, 
-  ListItem, 
-  ListItemIcon, 
-  ListItemText, 
-  Divider, 
-  Avatar, 
-  Typography, 
-  IconButton, 
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Avatar,
+  Typography,
+  IconButton,
 } from '@mui/material';
-import { 
-  Menu as MenuIcon, 
-  Home as HomeIcon, 
-  Person as PersonIcon, 
-  Star as StarIcon, 
-  Favorite as FavoriteIcon, 
-  History as HistoryIcon, 
-  Search as SearchIcon, 
-  ShoppingBag as ShoppingBagIcon, 
-  Settings as SettingsIcon, 
-  ExitToApp as ExitToAppIcon, 
-  Login as LoginIcon, 
+import {
+  Menu as MenuIcon,
+  Home as HomeIcon,
+  Person as PersonIcon,
+  Star as StarIcon,
+  Favorite as FavoriteIcon,
+  History as HistoryIcon,
+  Search as SearchIcon,
+  ShoppingBag as ShoppingBagIcon,
+  Settings as SettingsIcon,
+  ExitToApp as ExitToAppIcon,
+  Login as LoginIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Outlet } from 'react-router-dom';
@@ -95,9 +95,9 @@ const Accounts = () => {
           {/* Menu Items */}
           <List>
             {menuItems.map((item, index) => (
-              <ListItem 
-                button 
-                key={index} 
+              <ListItem
+                button
+                key={index}
                 onClick={() => handleMenuItemClick(item.route)}
                 sx={{
                   '&:hover': { backgroundColor: '#4A5568' },
@@ -106,9 +106,9 @@ const Accounts = () => {
                 <ListItemIcon sx={{ color: 'white' }}>
                   {item.icon}
                 </ListItemIcon>
-                <ListItemText 
-                  primary={item.text} 
-                  sx={{ color: 'white' }} 
+                <ListItemText
+                  primary={item.text}
+                  sx={{ color: 'white' }}
                 />
               </ListItem>
             ))}
@@ -119,9 +119,9 @@ const Accounts = () => {
           {/* Settings Items */}
           <List>
             {settingsItems.map((item, index) => (
-              <ListItem 
-                button 
-                key={index} 
+              <ListItem
+                button
+                key={index}
                 onClick={() => handleMenuItemClick(item.route)}
                 sx={{
                   '&:hover': { backgroundColor: '#4A5568' },
@@ -130,16 +130,18 @@ const Accounts = () => {
                 <ListItemIcon sx={{ color: 'white' }}>
                   {item.icon}
                 </ListItemIcon>
-                <ListItemText 
-                  primary={item.text} 
-                  sx={{ color: 'white' }} 
+                <ListItemText
+                  primary={item.text}
+                  sx={{ color: 'white' }}
                 />
               </ListItem>
             ))}
-            <ListItem 
-              button 
-              onClick={() => { 
-                localStorage.clear();
+            <ListItem
+              button
+              onClick={() => {
+                localStorage.removeItem("token");
+                localStorage.removeItem("email");
+                // dispatch(logout()); // Optional: reset Redux auth state
                 navigate('/auth/login');
                 setIsSidebarOpen(false);
               }}
@@ -150,15 +152,16 @@ const Accounts = () => {
               <ListItemIcon sx={{ color: '#E53E3E' }}>
                 <ExitToAppIcon />
               </ListItemIcon>
-              <ListItemText 
-                primary="Logout" 
-                sx={{ color: '#E53E3E' }} 
+              <ListItemText
+                primary="Logout"
+                sx={{ color: '#E53E3E' }}
               />
             </ListItem>
-            <ListItem 
-              button 
-              onClick={() => { 
-                navigate('/auth/login'); 
+
+            <ListItem
+              button
+              onClick={() => {
+                navigate('/auth/login');
                 setIsSidebarOpen(false);
               }}
               sx={{
@@ -168,9 +171,9 @@ const Accounts = () => {
               <ListItemIcon sx={{ color: '#3182CE' }}>
                 <LoginIcon />
               </ListItemIcon>
-              <ListItemText 
-                primary="Sign In" 
-                sx={{ color: '#3182CE' }} 
+              <ListItemText
+                primary="Sign In"
+                sx={{ color: '#3182CE' }}
               />
             </ListItem>
           </List>
@@ -184,10 +187,10 @@ const Accounts = () => {
           aria-label="open drawer"
           edge="start"
           onClick={handleDrawerToggle}
-          sx={{ 
-            mr: 2, 
-            color: 'white', 
-            backgroundColor: '#2D3748', 
+          sx={{
+            mr: 2,
+            color: 'white',
+            backgroundColor: '#2D3748',
             '&:hover': { backgroundColor: '#4A5568' },
           }}
         >

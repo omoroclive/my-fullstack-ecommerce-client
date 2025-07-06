@@ -99,6 +99,7 @@ const AddressBook = () => {
         const response = await axios.post(`${API_BASE_URL}/api/address`, formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log("Address added:", response.data.address);
 
         setAddresses((prev) => [...prev, response.data.address]);
 
@@ -128,7 +129,7 @@ const AddressBook = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${API_BASE_URL}/${addressId}`, {
+      await axios.delete(`${API_BASE_URL}/api/address${addressId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

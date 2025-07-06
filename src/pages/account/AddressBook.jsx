@@ -72,7 +72,6 @@ const AddressBook = () => {
     setIsDialogOpen(true);
   };
 
-  // Handle Form Submit (Add or Edit)
   const handleFormSubmit = async (formData) => {
     try {
       const token = localStorage.getItem("token");
@@ -80,7 +79,7 @@ const AddressBook = () => {
 
       if (isEditMode) {
         // Edit Address API call
-        await axios.put(`${API_BASE_URL}/${editingAddressId}`, formData, {
+        await axios.put(`${API_BASE_URL}/api/address/${editingAddressId}`, formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -89,6 +88,7 @@ const AddressBook = () => {
             addr._id === editingAddressId ? { ...formData, _id: editingAddressId } : addr
           )
         );
+
         setSnackbar({
           open: true,
           message: "Address updated successfully.",
@@ -96,13 +96,12 @@ const AddressBook = () => {
         });
       } else {
         // Add Address API call
-        await axios.post(`${API_BASE_URL}/api/address`, formData, {
+        const response = await axios.post(`${API_BASE_URL}/api/address`, formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-
-
         setAddresses((prev) => [...prev, response.data.address]);
+
         setSnackbar({
           open: true,
           message: "Address added successfully.",
@@ -120,6 +119,7 @@ const AddressBook = () => {
       });
     }
   };
+
 
   // Handle Address Deletion
   const handleDeleteAddress = async (addressId) => {

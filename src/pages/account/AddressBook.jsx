@@ -41,12 +41,11 @@ const AddressBook = () => {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("No token found. Please log in.");
 
-        await axios.get(`${API_BASE_URL}/api/addresses`, {
+        const response = await axios.get(`${API_BASE_URL}/api/addresses`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-
         setAddresses(response.data.addresses || []);
+
       } catch (error) {
         console.error("Error fetching addresses:", error);
         setError(error.response?.data?.message || "Failed to fetch addresses");
@@ -97,9 +96,10 @@ const AddressBook = () => {
         });
       } else {
         // Add Address API call
-        await axios.post(`${API_BASE_URL}/api/addresses`, {
+        await axios.post(`${API_BASE_URL}/api/addresses`, formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
 
 
         setAddresses((prev) => [...prev, response.data.address]);

@@ -73,12 +73,33 @@ const AddressBook = () => {
   };
 
   const handleFormSubmit = async (formData) => {
+    // Validate required fields
+    const requiredFields = [
+      "fullName",
+      "streetAddress",
+      "city",
+      "state",
+      "zipCode",
+      "country",
+      "phoneNumber",
+    ];
+
+    const missingFields = requiredFields.filter((field) => !formData[field]?.trim());
+
+    if (missingFields.length > 0) {
+      setSnackbar({
+        open: true,
+        message: `Please fill in all required fields.`,
+        severity: "warning",
+      });
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please log in.");
 
       if (isEditMode) {
-        // Edit Address API call
         await axios.put(`${API_BASE_URL}/api/address/${editingAddressId}`, formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -95,11 +116,9 @@ const AddressBook = () => {
           severity: "success",
         });
       } else {
-        // Add Address API call
         const response = await axios.post(`${API_BASE_URL}/api/address`, formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("Address added:", response.data.address);
 
         setAddresses((prev) => [...prev, response.data.address]);
 
@@ -120,6 +139,7 @@ const AddressBook = () => {
       });
     }
   };
+
 
 
   // Handle Address Deletion

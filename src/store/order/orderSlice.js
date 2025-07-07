@@ -5,25 +5,28 @@ import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 // Retrieve token from localStorage
-const token = localStorage.getItem('token');
+const getToken = () => localStorage.getItem('token');
 
 // Helper function for setting headers with Authorization token
 const getAuthHeaders = () => ({
   headers: {
-    'Authorization': `Bearer ${token}`,
+    Authorization: `Bearer ${getToken()}`,
     'Content-Type': 'application/json',
   },
 });
 
 // Async thunk for fetching orders
-export const fetchOrders = createAsyncThunk('orders/fetchOrders', async (_, { rejectWithValue }) => {
-  try {
-    const response = await axios.get(`${BASE_URL}/orders`, getAuthHeaders());
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(error.response?.data?.message || 'Failed to fetch orders');
+export const fetchOrders = createAsyncThunk(
+  'orders/fetchOrders',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/orders`, getAuthHeaders());
+      return response.data.orders || response.data; // depends on your backend response
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch orders');
+    }
   }
-});
+);
 
 // Async thunk for updating order status
 export const updateOrderStatus = createAsyncThunk(
@@ -31,7 +34,7 @@ export const updateOrderStatus = createAsyncThunk(
   async ({ orderId, orderStatus }, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `${BASE_URL}/orders/${orderId}/status`,
+        `${BASE_URL}/api/orders/${orderId}/status`,
         { orderStatus },
         getAuthHeaders()
       );
@@ -76,7 +79,7 @@ const orderSlice = createSlice({
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         state.loading = false;
         const updatedOrder = action.payload;
-        const index = state.orders.findIndex(order => order._id === updatedOrder._id);
+        const index = state.orders.findIndex((order) => order._id === updatedOrder._id);
         if (index !== -1) {
           state.orders[index] = updatedOrder;
         }

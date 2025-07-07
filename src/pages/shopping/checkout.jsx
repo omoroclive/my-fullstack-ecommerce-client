@@ -20,6 +20,8 @@ import paypalLogo from "../../assets/images/paypalLogo.jpg";
 import Footer from "../../components/Footer";
 import Payment from "./payment";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
 const Checkout = () => {
   const navigate = useNavigate();
   const cartItems = useSelector((state) => state.cart.items); // Use Redux to get cart items

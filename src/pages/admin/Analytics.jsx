@@ -22,7 +22,7 @@ const Analytics = () => {
     const fetchDashboardMetrics = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`${API_BASE_URL}/api/analytics/dashboard`, {
+        const response = await axios.get(`${API_BASE_URL}/api/analytics`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setMetrics(response.data);

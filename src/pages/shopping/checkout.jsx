@@ -35,7 +35,7 @@ const Checkout = () => {
     message: "",
     severity: "success",
   });
-
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
   // Fetch user addresses
   useEffect(() => {
     const fetchAddresses = async () => {
@@ -43,7 +43,7 @@ const Checkout = () => {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("User not logged in");
 
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
 
         const response = await axios.get(`${API_BASE_URL}/api/address`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -80,23 +80,40 @@ const Checkout = () => {
       return;
     }
 
+    if (paymentGateway === "mpesa" && !phoneNumber.match(/^2547\d{8}$/)) {
+      setSnackbar({
+        open: true,
+        message: "Please enter a valid Kenyan phone number (e.g., 254712345678).",
+        severity: "error",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
-    const totalAmount =
-      paymentGateway === "mpesa"
-        ? (cartTotal + shippingCost) * 140
-        : cartTotal + shippingCost;
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("User not authenticated");
+
+      const totalAmount =
+        paymentGateway === "mpesa"
+          ? (cartTotal + shippingCost) * 140
+          : cartTotal + shippingCost;
+
       if (paymentGateway === "mpesa") {
-        await axios.post(`${API_BASE_URL}/api/mpesa/stkpush`, {
-          phone: phoneNumber,
-          amount: totalAmount,
-        });
+        await axios.post(
+          `${API_BASE_URL}/api/mpesa/stkpush`,
+          { phone: phoneNumber, amount: totalAmount },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       } else if (paymentGateway === "paypal") {
-        await axios.post(`${API_BASE_URL}/api/paypal/create-order`, {
-          amount: totalAmount,
-        });
+        await axios.post(
+          `${API_BASE_URL}/api/paypal/create-order`,
+          { amount: totalAmount },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       }
+
       setSnackbar({
         open: true,
         message: "Payment successful! You can now place your order.",
@@ -106,13 +123,17 @@ const Checkout = () => {
       console.error("Error processing payment:", error);
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || "Failed to process payment.",
+        message:
+          error?.response?.data?.message || error.message || "Failed to process payment.",
         severity: "error",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+
+
 
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {
@@ -211,7 +232,7 @@ const Checkout = () => {
           </MenuItem>
           {addresses.map((address) => (
             <MenuItem key={address._id} value={address._id}>
-              {address.street}, {address.city}, {address.country}
+              {address.streetAddress}, {address.city}, {address.country}
             </MenuItem>
           ))}
         </Select>

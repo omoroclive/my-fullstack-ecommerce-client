@@ -54,6 +54,7 @@ import GoogleAuthHandler from "./pages/auth/GoogleAuthHandler";
 import SearchResults from "./components/shopping/searchResults";
 import PrivacyPolicy from "./pages/auth/privacy";
 import TermsAndConditions from "./pages/auth/TermsAndConditions";
+import Analytics from "./pages/admin/Analytics";
 
 
 
@@ -111,6 +112,7 @@ function App() {
         <Route path="dashboard/expenses" element={<Expenses />} />
         <Route path="dashboard/add-product" element={<AddProductForm />} />
         <Route path="dashboard/data-visualization" element={<DataVisualization />} />
+        <Route path="dashboard/analytics" element={<Analytics />} />
       </Route>
 
       {/* Shopping Routes */}

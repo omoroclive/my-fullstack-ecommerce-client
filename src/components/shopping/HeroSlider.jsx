@@ -1,15 +1,10 @@
-
 import React from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Button } from "@mui/material";
 import { ArrowForward } from "@mui/icons-material";
-import slider from "../../assets/images/sliderBanner.png";
-import slider2 from "../../assets/images/sliderBanner2.png";
-import slider3 from "../../assets/images/sliderBanner3.jpg";
 
-// Custom CSS for the slick slider arrows
 const customArrowStyles = `
   .slick-prev,
   .slick-next {
@@ -27,13 +22,8 @@ const customArrowStyles = `
     transform: scale(1.1);
   }
 
-  .slick-prev {
-    left: 20px;
-  }
-
-  .slick-next {
-    right: 20px;
-  }
+  .slick-prev { left: 20px; }
+  .slick-next { right: 20px; }
 
   .slick-prev:before,
   .slick-next:before {
@@ -57,6 +47,36 @@ const customArrowStyles = `
   }
 `;
 
+const slides = [
+  {
+    id: 1,
+    title: "Mega Sale!",
+    subtitle: "Up to 70% Off",
+    description: "Don't miss out on our exclusive offers. Shop now and save big!",
+    buttonText: "Shop Now",
+    jpg: "/images/sliderBanner.jpg",
+    webp: "/images/sliderBanner.webp",
+  },
+  {
+    id: 2,
+    title: "New Arrivals",
+    subtitle: "Summer Collection 2025",
+    description: "Explore our latest collection of clothing and accessories.",
+    buttonText: "Discover More",
+    jpg: "/images/sliderBanner2.jpg",
+    webp: "/images/sliderBanner2.webp",
+  },
+  {
+    id: 3,
+    title: "Shop By Category",
+    subtitle: "Find Your Style",
+    description: "Find exactly what you're looking for. Browse our top categories.",
+    buttonText: "Browse All",
+    jpg: "/images/sliderBanner3.jpg",
+    webp: "/images/sliderBanner3.webp",
+  },
+];
+
 const HeroSlider = () => {
   const settings = {
     dots: true,
@@ -71,33 +91,6 @@ const HeroSlider = () => {
     cssEase: "cubic-bezier(0.87, 0, 0.13, 1)",
   };
 
-  const slides = [
-    {
-      id: 1,
-      image: slider,
-      title: "Mega Sale!",
-      subtitle: "Up to 70% Off",
-      description: "Don't miss out on our exclusive offers. Shop now and save big!",
-      buttonText: "Shop Now",
-    },
-    {
-      id: 2,
-      image: slider2,
-      title: "New Arrivals",
-      subtitle: "Summer Collection 2025",
-      description: "Explore our latest collection of clothing and accessories.",
-      buttonText: "Discover More",
-    },
-    {
-      id: 3,
-      image: slider3,
-      title: "Shop By Category",
-      subtitle: "Find Your Style",
-      description: "Find exactly what you're looking for. Browse our top categories.",
-      buttonText: "Browse All",
-    },
-  ];
-
   return (
     <>
       <style>{customArrowStyles}</style>
@@ -105,16 +98,23 @@ const HeroSlider = () => {
         <Slider {...settings}>
           {slides.map((slide) => (
             <div key={slide.id} className="relative h-[600px] w-full">
-              {/* Background Image */}
+              {/* Background Image with WebP + lazy loading */}
               <div className="absolute inset-0">
-                <div className="absolute inset-0 bg-black/40 z-10" /> {/* Overlay */}
-                <img
-                  src={slide.image}
-                  alt={slide.title}
-                  className="w-full h-full object-cover object-center"
-                />
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent z-10" />
+
+                <picture>
+                  <source srcSet={slide.webp} type="image/webp" />
+                  <source srcSet={slide.jpg} type="image/jpeg" />
+                  <img
+                    src={slide.jpg}
+                    loading="lazy"
+                    alt=""
+                    className="w-full h-full object-cover object-center"
+                  />
+                </picture>
               </div>
-              
+
               {/* Content */}
               <div className="relative z-20 h-full flex items-center">
                 <div className="container mx-auto px-6 md:px-12">
@@ -130,14 +130,15 @@ const HeroSlider = () => {
                         {slide.description}
                       </p>
                       <Button
+                        aria-label={slide.buttonText}
                         variant="contained"
                         color="primary"
                         size="large"
                         endIcon={<ArrowForward />}
                         sx={{
                           borderRadius: '28px',
-                          padding: '12px 32px',
-                          fontSize: '1rem',
+                          padding: { xs: '10px 20px', md: '12px 32px' },
+                          fontSize: { xs: '0.875rem', md: '1rem' },
                           textTransform: 'none',
                           '&:hover': {
                             transform: 'translateY(-2px)',
@@ -159,27 +160,4 @@ const HeroSlider = () => {
   );
 };
 
-// Add these animations to your global CSS or tailwind.config.js
-const globalStyles = `
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .animate-fadeIn {
-    animation: fadeIn 0.8s ease-out forwards;
-  }
-`;
-
 export default HeroSlider;
-
-
-
-
-

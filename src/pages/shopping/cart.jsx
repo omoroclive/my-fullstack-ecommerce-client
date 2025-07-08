@@ -4,15 +4,14 @@ import { removeFromCart, updateQuantity, clearCart } from "../../store/cart/cart
 import {
   Box,
   Typography,
-  Grid,
+  Stack,
+  Paper,
   Button,
   IconButton,
   TextField,
   Divider,
   Breadcrumbs,
   Link,
-  Stack,
-  Paper,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -50,8 +49,8 @@ const Cart = () => {
           variant="contained"
           onClick={() => navigate("/shop/products")}
           sx={{
-            backgroundColor: '#ea580c',
-            '&:hover': { backgroundColor: '#c2410c' }
+            backgroundColor: "#ea580c",
+            "&:hover": { backgroundColor: "#c2410c" },
           }}
         >
           Continue Shopping
@@ -62,7 +61,7 @@ const Cart = () => {
 
   return (
     <Box className="p-4 md:p-8 max-w-7xl mx-auto">
-      {/* Header Section */}
+      {/* Header */}
       <Paper
         elevation={0}
         sx={{
@@ -76,14 +75,10 @@ const Cart = () => {
         <Typography
           variant="h5"
           className="font-bold mb-2"
-          sx={{
-            textTransform: "uppercase",
-            color: "#1F2937",
-          }}
+          sx={{ textTransform: "uppercase", color: "#1F2937" }}
         >
           Shopping Cart
         </Typography>
-
         <Breadcrumbs
           aria-label="breadcrumb"
           sx={{
@@ -116,11 +111,7 @@ const Cart = () => {
       {/* Cart Items */}
       <Stack spacing={3} mb={4}>
         {cart.items.map((item) => (
-          <Paper
-            key={item._id}
-            elevation={1}
-            className="p-3 md:p-4"
-          >
+          <Paper key={item._id} elevation={1} className="p-3 md:p-4">
             <Stack
               direction={{ xs: "column", sm: "row" }}
               spacing={3}
@@ -128,12 +119,7 @@ const Cart = () => {
               justifyContent="space-between"
             >
               {/* Product Info */}
-              <Stack
-                direction="row"
-                spacing={2}
-                alignItems="center"
-                width={{ xs: "100%", sm: "auto" }}
-              >
+              <Stack direction="row" spacing={2} alignItems="center" width={{ xs: "100%", sm: "auto" }}>
                 <img
                   src={item.image || "https://via.placeholder.com/150"}
                   alt={item.title}
@@ -168,7 +154,10 @@ const Cart = () => {
                   inputProps={{ min: 1 }}
                   sx={{ width: { xs: 70, sm: 80 } }}
                 />
-                <Typography variant="body2" className="text-gray-500 min-w-[100px] text-right">
+                <Typography
+                  variant="body2"
+                  className="text-gray-500 min-w-[100px] text-right"
+                >
                   ${item.totalPrice.toFixed(2)}
                 </Typography>
                 <IconButton
@@ -186,7 +175,7 @@ const Cart = () => {
 
       <Divider />
 
-      {/* Cart Total and Buttons */}
+      {/* Cart Summary & Buttons */}
       <Stack
         direction={{ xs: "column", sm: "row" }}
         justifyContent="space-between"
@@ -209,52 +198,54 @@ const Cart = () => {
             onClick={handleClearCart}
             fullWidth
             sx={{
-              borderColor: '#dc2626',
-              color: '#dc2626',
-              '&:hover': {
-                backgroundColor: '#dc2626',
-                color: 'white'
-              }
+              borderColor: "#dc2626",
+              color: "#dc2626",
+              "&:hover": {
+                backgroundColor: "#dc2626",
+                color: "white",
+              },
             }}
           >
             Clear Cart
           </Button>
+
           <Button
             variant="contained"
             fullWidth
             onClick={() => navigate("/shop/checkout")}
             sx={{
-              backgroundColor: '#ea580c',
-              '&:hover': {
-                backgroundColor: '#c2410c',
+              backgroundColor: "#ea580c",
+              "&:hover": {
+                backgroundColor: "#c2410c",
               },
             }}
           >
             Checkout
           </Button>
-          <Box display="flex" justifyContent="flex-start" mt={2}>
-            <Button
-              variant="outlined"
-              onClick={() => navigate("/shop/products")}
-              sx={{
-                borderColor: "#ea580c",
-                color: "#ea580c",
-                "&:hover": {
-                  backgroundColor: "#ea580c",
-                  color: "white",
-                },
-              }}
-            >
-              Continue Shopping
-            </Button>
-          </Box>
-
         </Stack>
       </Stack>
+
+      {/* Continue Shopping Button */}
+      <Box display="flex" justifyContent="flex-start" mt={2}>
+        <Button
+          variant="outlined"
+          onClick={() => navigate("/shop/products")}
+          sx={{
+            borderColor: "#ea580c",
+            color: "#ea580c",
+            "&:hover": {
+              backgroundColor: "#ea580c",
+              color: "white",
+            },
+          }}
+        >
+          Continue Shopping
+        </Button>
+      </Box>
+
       <Shipping />
       <Footer />
     </Box>
-
   );
 };
 

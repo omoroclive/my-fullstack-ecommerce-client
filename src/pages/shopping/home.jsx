@@ -53,36 +53,28 @@ const Home = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const fetchFeaturedProducts = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found. Please log in.");
-        }
+  const fetchFeaturedProducts = async () => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+      const response = await fetch(`${API_BASE_URL}/api/products`);
 
-        const response = await fetch(`${API_BASE_URL}/api/products`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
-
-        const data = await response.json();
-        setFeaturedProducts(data.products.slice(0, 6));
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setIsLoading(false);
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
       }
-    };
 
-    fetchFeaturedProducts();
-  }, []);
+      const data = await response.json();
+      setFeaturedProducts(data.products.slice(0, 6));
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  fetchFeaturedProducts();
+}, []);
+
 
   const handleBrandClick = (brand) => {
     dispatch(setBrandFilter(brand));

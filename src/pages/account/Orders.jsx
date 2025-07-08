@@ -12,7 +12,14 @@ const Orders = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"; 
 
   useEffect(() => {
+
     fetchOrders();
+
+    const interval = setInterval(() => {
+    fetchOrders(); // repeat fetch every 15s
+  }, 15000); // every 15 seconds
+
+  return () => clearInterval(interval); // cleanup
   }, []);
 
   const fetchOrders = async () => {
@@ -29,7 +36,7 @@ const Orders = () => {
       const updatedOrders = await Promise.all(
         fetchedOrders.map(async (order) => {
           const latestStatus = await fetchOrderStatus(order._id);
-          return { ...order, status: latestStatus };
+          return { ...order, orderStatus: latestStatus };
         })
       );
 

@@ -2,7 +2,17 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import debounce from "lodash/debounce";
-import { AppBar, Toolbar, Badge, IconButton, InputBase, Box, Avatar, Typography } from "@mui/material";
+import {
+  AppBar,
+  Toolbar,
+  Badge,
+  IconButton,
+  InputBase,
+  Box,
+  Avatar,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SearchIcon from "@mui/icons-material/Search";
@@ -16,69 +26,68 @@ const Navbar = ({ onSearch }) => {
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
   const user = useSelector((state) => state.auth.user);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const isMobile = useMediaQuery("(max-width:600px)");
 
-  // Debounced search function
   const debouncedSearch = useMemo(
     () =>
       debounce((query) => {
         if (query.trim()) {
-          // Update URL search params
           setSearchParams({ q: query });
-          // Call the search handler
-          if (onSearch) {
-            onSearch(query);
-          }
-          // Navigate to search results page if not already there
+          if (onSearch) onSearch(query);
           navigate(`/shop/search?q=${encodeURIComponent(query)}`);
         } else {
-          // Clear search params if query is empty
           setSearchParams({});
-          if (onSearch) {
-            onSearch("");
-          }
+          if (onSearch) onSearch("");
         }
-      }, 500), // Increased debounce time for better performance
+      }, 500),
     [onSearch, navigate, setSearchParams]
   );
 
-  // Handle search input change
   const handleSearchChange = (event) => {
     const newQuery = event.target.value;
     setSearchQuery(newQuery);
     debouncedSearch(newQuery);
   };
 
-  // Handle form submission
   const handleSearchSubmit = (event) => {
     event.preventDefault();
     debouncedSearch.cancel();
     if (searchQuery.trim()) {
       setSearchParams({ q: searchQuery });
-      if (onSearch) {
-        onSearch(searchQuery);
-      }
+      if (onSearch) onSearch(searchQuery);
       navigate(`/shop/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
 
-  // Cleanup debounce on unmount
   useEffect(() => {
-    return () => {
-      debouncedSearch.cancel();
-    };
+    return () => debouncedSearch.cancel();
   }, [debouncedSearch]);
 
   return (
     <AppBar position="sticky" sx={{ backgroundColor: "black" }}>
-      <Toolbar>
-        <img
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between", px: 2 }}>
+        {/* Logo */}
+        <Box
+          component="img"
           src={logo}
           alt="Logo"
           onClick={() => navigate("/")}
-          style={{ cursor: "pointer", height: "40px", marginRight: "auto" }}
+          sx={{
+            cursor: "pointer",
+            height: 40,
+            mr: 2,
+          }}
         />
-        {/* Centered Search Bar */}
-        <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>
+
+        {/* Search */}
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Box
             component="form"
             onSubmit={handleSearchSubmit}
@@ -87,9 +96,10 @@ const Navbar = ({ onSearch }) => {
               alignItems: "center",
               backgroundColor: "white",
               borderRadius: 2,
-              padding: "5px",
+              px: 1.5,
+              py: 0.5,
               width: "100%",
-              maxWidth: "300px",
+              maxWidth: 400,
             }}
           >
             <SearchIcon color="action" />
@@ -98,33 +108,48 @@ const Navbar = ({ onSearch }) => {
               inputProps={{ "aria-label": "search" }}
               value={searchQuery}
               onChange={handleSearchChange}
-              sx={{ marginLeft: 1, flex: 1 }}
+              sx={{ ml: 1, flex: 1 }}
             />
           </Box>
         </Box>
-        {/* Cart Icon */}
-        <IconButton aria-label="cart" color="inherit" onClick={() => navigate("/shop/cart")}>
-          <Badge badgeContent={cartCount} color="error">
-            <ShoppingCartIcon />
-          </Badge>
-        </IconButton>
-        {/* User Profile Section */}
-        {isAuthenticated && user ? (
-          <Box sx={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={() => navigate("/shop/account")}>
-            <Avatar src={user.image || ""} alt={user.firstName || "User"} sx={{ width: 32, height: 32, marginRight: 1 }} />
-            <Typography variant="body1" color="white">
-              {user.firstName ? user.firstName : "User"}
-            </Typography>
-          </Box>
-        ) : (
-          <IconButton aria-label="account" color="inherit" onClick={() => navigate("/shop/account")}>
-            <AccountCircleIcon />
+
+        {/* Cart + Profile */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <IconButton aria-label="cart" color="inherit" onClick={() => navigate("/shop/cart")}>
+            <Badge badgeContent={cartCount} color="error">
+              <ShoppingCartIcon />
+            </Badge>
           </IconButton>
-        )}
+
+          {isAuthenticated && user ? (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                cursor: "pointer",
+              }}
+              onClick={() => navigate("/shop/account")}
+            >
+              <Avatar
+                src={user.image || ""}
+                alt={user.firstName || "User"}
+                sx={{ width: 32, height: 32, mr: 1 }}
+              />
+              {!isMobile && (
+                <Typography variant="body1" color="white" sx={{ fontSize: "0.9rem" }}>
+                  {user.firstName || "User"}
+                </Typography>
+              )}
+            </Box>
+          ) : (
+            <IconButton aria-label="account" color="inherit" onClick={() => navigate("/shop/account")}>
+              <AccountCircleIcon />
+            </IconButton>
+          )}
+        </Box>
       </Toolbar>
     </AppBar>
   );
 };
 
 export default Navbar;
-

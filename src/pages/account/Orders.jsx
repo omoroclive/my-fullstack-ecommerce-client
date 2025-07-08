@@ -152,7 +152,7 @@ const Orders = () => {
                   ) : (
                     <Button
                       variant="contained"
-                      onClick={() => navigate(`/orders/${order._id}`)}
+                      onClick={() => navigate("/shop/details")}
                       className="mt-4 w-full"
                       style={{ backgroundColor: "#ff9800" }}
                     >

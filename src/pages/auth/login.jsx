@@ -8,6 +8,9 @@ import { loginUser } from "../../store/auth-slice";
 import googleLogo from "../../assets/images/google.jpg";
 import facebookLogo from "../../assets/images/facebookIcon.jpg";
 
+localStorage.setItem('email', response.data.user.email);
+
+
 function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();

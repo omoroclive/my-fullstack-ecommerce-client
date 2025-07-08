@@ -8,11 +8,13 @@ import {
   IconButton,
   Typography,
   Card,
-  CardContent
+  CardContent,
+  CardActionArea,
+  Box,
+  Grid
 } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
-// Components
 import Chatbot from "./Chatbot";
 import Footer from "../../components/Footer";
 
@@ -29,7 +31,6 @@ import kidsCategoryLogo from "../../assets/images/kidsCategory.png";
 import footwearCategoryLogo from "../../assets/images/footwearCategory.png";
 import accessoriesCategoryLogo from "../../assets/images/accessoriesCategory1.png";
 
-// Data configuration
 const BRANDS = [
   { logo: pumaIcon, brand: "puma" },
   { logo: nikeLogo, brand: "nike" },
@@ -56,26 +57,19 @@ const Home = () => {
     const fetchFeaturedProducts = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found. Please log in.");
-        }
+        if (!token) throw new Error("No token found. Please log in.");
 
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-
         const response = await fetch(`${API_BASE_URL}/api/products`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
+        if (!response.ok) throw new Error("Failed to fetch products");
 
         const data = await response.json();
         setFeaturedProducts(data.products.slice(0, 6));
-      } catch (error) {
-        setError(error.message);
+      } catch (err) {
+        setError(err.message);
       } finally {
         setIsLoading(false);
       }
@@ -95,155 +89,177 @@ const Home = () => {
   };
 
   const ImageWithArrow = ({ src, alt, onClick }) => (
-    <div className="cursor-pointer relative" onClick={onClick}>
+    <Card
+      sx={{
+        width: 120,
+        textAlign: "center",
+        position: "relative",
+        p: 1,
+        borderRadius: 3,
+        boxShadow: 1,
+        transition: "transform 0.3s",
+        "&:hover": {
+          transform: "translateY(-5px)",
+          boxShadow: 4,
+        },
+        backgroundColor: "#fff"
+      }}
+      onClick={onClick}
+    >
       <img
         src={src}
         alt={alt}
-        className="w-24 h-24 object-contain rounded-full"
-        style={{ backgroundColor: 'white' }} // Adding white background for logos
+        style={{ width: "100%", height: 80, objectFit: "contain" }}
       />
       <IconButton
         sx={{
           position: "absolute",
-          bottom: "-30px",
-          right: "15px",
-          color: "black",
-          transition: "color 0.3s ease",
-          "&:hover": { color: "orange" },
+          bottom: -15,
+          right: 10,
+          backgroundColor: "#fff",
+          border: "1px solid #ccc",
+          "&:hover": { backgroundColor: "orange", color: "#fff" },
         }}
       >
         <ArrowForwardIcon />
       </IconButton>
-    </div>
+    </Card>
   );
 
   const ProductCard = ({ product }) => (
     <Card
       sx={{
-        cursor: 'pointer',
-        transition: 'box-shadow 0.3s',
-        '&:hover': { boxShadow: 3 }
+        transition: "0.3s",
+        "&:hover": {
+          boxShadow: 6,
+          transform: "translateY(-5px)",
+        },
+        cursor: "pointer",
       }}
       onClick={() => navigate(`/shop/details/${product._id}`)}
     >
-      <img
-        src={product.images[0]?.url || "/placeholder.png"}
-        alt={product.title}
-        className="w-full h-48 object-contain rounded-t-lg"
-      />
-      <CardContent>
-        <Typography variant="h6" className="font-semibold">
-          {product.title}
-        </Typography>
-        <Typography variant="body1" className="text-black font-bold">
-          <p className="text-gray-600">
+      <CardActionArea>
+        <img
+          src={product.images[0]?.url || "/placeholder.png"}
+          alt={product.title}
+          style={{ width: "100%", height: 200, objectFit: "contain" }}
+        />
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            {product.title}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
             <strong>Price:</strong> ${product.price}
-          </p>
-
-        </Typography>
-        <p className="text-gray-600">
-          <strong>Category:</strong> {product.category}
-        </p>
-        <p className="text-gray-600">
-          <strong>Brand:</strong> {product.brand}
-        </p>
-
-      </CardContent>
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Category:</strong> {product.category}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Brand:</strong> {product.brand}
+          </Typography>
+        </CardContent>
+      </CardActionArea>
     </Card>
   );
 
   return (
-    <div className="p-4">
-      {/* Top Brands Section */}
-      <section className="mt-8 text-center bg-gray-100 p-6 rounded-lg">
-        <Typography variant="h4" className="font-bold mb-8">
+    <Box sx={{ px: { xs: 2, md: 6 }, py: 4 }}>
+      {/* Top Brands */}
+      <Box sx={{ backgroundColor: "#f9f9f9", borderRadius: 3, p: 4, mb: 6 }}>
+        <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
           Top Brands
         </Typography>
-        <div className="flex justify-between items-center gap-4">
+        <Grid container spacing={3} justifyContent="center">
           {BRANDS.map(({ logo, brand }) => (
-            <ImageWithArrow
-              key={brand}
-              src={logo}
-              alt={brand}
-              onClick={() => handleBrandClick(brand)}
-            />
+            <Grid item key={brand}>
+              <ImageWithArrow src={logo} alt={brand} onClick={() => handleBrandClick(brand)} />
+            </Grid>
           ))}
-        </div>
-      </section>
+        </Grid>
+      </Box>
 
-      {/* Featured Products Section */}
-      <section className="mt-8">
-        <Typography variant="h4" className="font-bold text-center mb-4">
+      {/* Featured Products */}
+      <Box sx={{ mb: 6 }}>
+        <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
           Featured Products
         </Typography>
-
         {isLoading ? (
-          <div className="flex justify-center">
+          <Box textAlign="center">
             <CircularProgress />
-          </div>
+          </Box>
         ) : error ? (
-          <Typography color="error" className="text-center">
+          <Typography color="error" textAlign="center">
             {error}
           </Typography>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <Grid container spacing={4}>
             {featuredProducts.map((product) => (
-              <ProductCard key={product._id} product={product} />
+              <Grid item xs={12} sm={6} md={4} key={product._id}>
+                <ProductCard product={product} />
+              </Grid>
             ))}
-          </div>
+          </Grid>
         )}
-
-        <div className="text-center mt-6">
+        <Box textAlign="center" mt={4}>
           <Button
             variant="contained"
-            color="primary"
-            style={{ backgroundColor: "orange" }}
+            sx={{
+              backgroundColor: "orange",
+              "&:hover": { backgroundColor: "#e68a00" },
+            }}
             onClick={() => navigate("/shop/shopping")}
           >
             View All Products
           </Button>
-        </div>
-      </section>
+        </Box>
+      </Box>
 
-      {/* Top Categories Section */}
-      <section className="mt-8 text-center bg-gray-100 p-6 rounded-lg">
-        <Typography variant="h4" className="font-bold mb-8">
+      {/* Top Categories */}
+      <Box sx={{ backgroundColor: "#f9f9f9", borderRadius: 3, p: 4, mb: 6 }}>
+        <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
           Top Categories
         </Typography>
-        <div className="flex justify-between items-center gap-4">
+        <Grid container spacing={3} justifyContent="center">
           {CATEGORIES.map(({ logo, category }) => (
-            <ImageWithArrow
-              key={category}
-              src={logo}
-              alt={category}
-              onClick={() => handleCategoryClick(category)}
-            />
+            <Grid item key={category}>
+              <ImageWithArrow src={logo} alt={category} onClick={() => handleCategoryClick(category)} />
+            </Grid>
           ))}
-        </div>
-      </section>
+        </Grid>
+      </Box>
 
-      {/* Promotional Section */}
-      <section className="mt-12 bg-blue-100 p-6 rounded-lg">
-        <Typography variant="h5" className="font-bold mb-4">
+      {/* Promotional Banner */}
+      <Box
+        sx={{
+          backgroundColor: "#e3f2fd",
+          borderRadius: 3,
+          p: 4,
+          textAlign: "center",
+          mb: 6,
+        }}
+      >
+        <Typography variant="h5" fontWeight="bold" gutterBottom>
           Exclusive Deals
         </Typography>
-        <Typography variant="body1" className="text-gray-700">
-          Don't miss out on our exclusive offers and discounts!
+        <Typography variant="body1" color="text.secondary">
+          Don’t miss out on our exclusive offers and discounts!
         </Typography>
         <Button
           variant="contained"
-          color="secondary"
+          sx={{
+            mt: 3,
+            backgroundColor: "orange",
+            "&:hover": { backgroundColor: "#e68a00" },
+          }}
           onClick={() => navigate("/shop/shopping")}
-          className="mt-4"
-          style={{ backgroundColor: "orange" }}
         >
           Shop Now
         </Button>
-      </section>
+      </Box>
 
       <Chatbot />
       <Footer />
-    </div>
+    </Box>
   );
 };
 

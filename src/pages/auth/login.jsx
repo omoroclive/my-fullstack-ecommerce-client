@@ -8,7 +8,7 @@ import { loginUser } from "../../store/auth-slice";
 import googleLogo from "../../assets/images/google.jpg";
 import facebookLogo from "../../assets/images/facebookIcon.jpg";
 
-localStorage.setItem('email', response.data.user.email);
+
 
 
 function Login() {
@@ -23,6 +23,7 @@ function Login() {
   if (action.meta.requestStatus === "fulfilled") {
     const { token, user } = action.payload;
     localStorage.setItem("token", token);
+    localStorage.setItem('email', response.data.user.email);
     navigate(user.role === "admin" ? "/admin/dashboard" : "/shop/home");
   } else {
     console.error("Login failed:", action.error.message);

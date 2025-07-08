@@ -5,12 +5,12 @@ import "slick-carousel/slick/slick-theme.css";
 import { Button } from "@mui/material";
 import { ArrowForward } from "@mui/icons-material";
 
-import sliderBanner1 from '../assets/images/sliderBanner.jpg';
-import sliderBanner1Webp from '../assets/images/sliderBanner.webp';
-import sliderBanner2 from '../assets/images/sliderBanner2.png';
-import sliderBanner2Webp from '../assets/images/sliderBanner2.webp';
-import sliderBanner3 from '../assets/images/sliderBanner3.jpg';
-import sliderBanner3Webp from '../assets/images/sliderBanner3.webp';
+import sliderBanner1 from '../../assets/images/sliderBanner.png';
+import sliderBanner1Webp from '../../assets/images/sliderBanner.webp';
+import sliderBanner2 from '../../assets/images/sliderBanner2.png';
+import sliderBanner2Webp from '../../assets/images/sliderBanner2.webp';
+import sliderBanner3 from '../../assets/images/sliderBanner3.jpg';
+import sliderBanner3Webp from '../../assets/images/sliderBanner3.webp';
 
 
 const customArrowStyles = `

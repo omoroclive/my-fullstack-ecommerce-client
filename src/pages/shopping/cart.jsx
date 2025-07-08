@@ -46,7 +46,7 @@ const Cart = () => {
         <Typography variant="h5" className="text-center mb-4">
           Your cart is empty
         </Typography>
-        <Button 
+        <Button
           variant="contained"
           onClick={() => navigate("/shop/products")}
           sx={{
@@ -171,8 +171,8 @@ const Cart = () => {
                 <Typography variant="body2" className="text-gray-500 min-w-[100px] text-right">
                   ${item.totalPrice.toFixed(2)}
                 </Typography>
-                <IconButton 
-                  color="error" 
+                <IconButton
+                  color="error"
                   onClick={() => handleRemove(item._id)}
                   sx={{ ml: { xs: 0, sm: 2 } }}
                 >
@@ -197,18 +197,18 @@ const Cart = () => {
         <Typography variant="h6" className="font-bold text-center sm:text-left">
           Total: ${cart.totalAmount.toFixed(2)}
         </Typography>
-        
+
         <Stack
           direction={{ xs: "column", sm: "row" }}
           spacing={2}
           width={{ xs: "100%", sm: "auto" }}
         >
-          <Button 
-            variant="outlined" 
-            color="error" 
+          <Button
+            variant="outlined"
+            color="error"
             onClick={handleClearCart}
             fullWidth
-            sx={{ 
+            sx={{
               borderColor: '#dc2626',
               color: '#dc2626',
               '&:hover': {
@@ -232,12 +232,29 @@ const Cart = () => {
           >
             Checkout
           </Button>
+          <Box display="flex" justifyContent="flex-start" mt={2}>
+            <Button
+              variant="outlined"
+              onClick={() => navigate("/shop/products")}
+              sx={{
+                borderColor: "#ea580c",
+                color: "#ea580c",
+                "&:hover": {
+                  backgroundColor: "#ea580c",
+                  color: "white",
+                },
+              }}
+            >
+              Continue Shopping
+            </Button>
+          </Box>
+
         </Stack>
       </Stack>
       <Shipping />
       <Footer />
     </Box>
-    
+
   );
 };
 

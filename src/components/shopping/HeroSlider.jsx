@@ -5,6 +5,14 @@ import "slick-carousel/slick/slick-theme.css";
 import { Button } from "@mui/material";
 import { ArrowForward } from "@mui/icons-material";
 
+import sliderBanner1 from '../assets/images/sliderBanner.jpg';
+import sliderBanner1Webp from '../assets/images/sliderBanner.webp';
+import sliderBanner2 from '../assets/images/sliderBanner2.png';
+import sliderBanner2Webp from '../assets/images/sliderBanner2.webp';
+import sliderBanner3 from '../assets/images/sliderBanner3.jpg';
+import sliderBanner3Webp from '../assets/images/sliderBanner3.webp';
+
+
 const customArrowStyles = `
   .slick-prev,
   .slick-next {
@@ -54,8 +62,8 @@ const slides = [
     subtitle: "Up to 70% Off",
     description: "Don't miss out on our exclusive offers. Shop now and save big!",
     buttonText: "Shop Now",
-    jpg: "/images/sliderBanner.jpg",
-    webp: "/images/sliderBanner.webp",
+    jpg: sliderBanner1,
+    webp: sliderBanner1Webp,
   },
   {
     id: 2,
@@ -63,8 +71,8 @@ const slides = [
     subtitle: "Summer Collection 2025",
     description: "Explore our latest collection of clothing and accessories.",
     buttonText: "Discover More",
-    jpg: "/images/sliderBanner2.jpg",
-    webp: "/images/sliderBanner2.webp",
+    jpg: sliderBanner2,
+    webp: sliderBanner2Webp,
   },
   {
     id: 3,
@@ -72,10 +80,11 @@ const slides = [
     subtitle: "Find Your Style",
     description: "Find exactly what you're looking for. Browse our top categories.",
     buttonText: "Browse All",
-    jpg: "/images/sliderBanner3.jpg",
-    webp: "/images/sliderBanner3.webp",
+    jpg: sliderBanner3,
+    webp: sliderBanner3Webp,
   },
 ];
+
 
 const HeroSlider = () => {
   const settings = {

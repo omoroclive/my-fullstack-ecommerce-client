@@ -47,7 +47,7 @@ const Cart = () => {
         </Typography>
         <Button
           variant="contained"
-          onClick={() => navigate("/shop/products")}
+          onClick={() => navigate("/shop/shopping")}
           sx={{
             backgroundColor: "#ea580c",
             "&:hover": { backgroundColor: "#c2410c" },
@@ -99,7 +99,7 @@ const Cart = () => {
           <Link
             underline="hover"
             color="inherit"
-            onClick={() => navigate("/shop/products")}
+            onClick={() => navigate("/shop/shopping")}
             sx={{ "&:hover": { color: "#ea580c" } }}
           >
             Shop
@@ -229,7 +229,7 @@ const Cart = () => {
       <Box display="flex" justifyContent="flex-start" mt={2}>
         <Button
           variant="outlined"
-          onClick={() => navigate("/shop/products")}
+          onClick={() => navigate("/shop/shopping")}
           sx={{
             borderColor: "#ea580c",
             color: "#ea580c",

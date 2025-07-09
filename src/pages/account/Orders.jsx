@@ -1,67 +1,38 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Typography, Card, CardContent, CardMedia, Grid, Container, Stepper, Step, StepLabel, Box } from "@mui/material";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOrders } from "../../store/order/orderSlice";
+import {
+  Button,
+  Typography,
+  Card,
+  CardContent,
+  CardMedia,
+  Grid,
+  Container,
+  Stepper,
+  Step,
+  StepLabel,
+  Box
+} from "@mui/material";
 
 const Orders = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"; 
+  const { orders, loading, error } = useSelector((state) => state.orders);
 
   useEffect(() => {
+    // Initial fetch
+    dispatch(fetchOrders());
 
-    fetchOrders();
-
+    // Set up polling interval
     const interval = setInterval(() => {
-    fetchOrders(); // repeat fetch every 15s
-  }, 15000); // every 15 seconds
+      dispatch(fetchOrders());
+    }, 15000); // every 15 seconds
 
-  return () => clearInterval(interval); // cleanup
-  }, []);
-
-  const fetchOrders = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found. Please log in.");
-
-      const ordersResponse = await axios.get(`${API_BASE_URL}/api/orders`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const fetchedOrders = ordersResponse.data;
-
-      const updatedOrders = await Promise.all(
-        fetchedOrders.map(async (order) => {
-          const latestStatus = await fetchOrderStatus(order._id);
-          return { ...order, orderStatus: latestStatus };
-        })
-      );
-
-      setOrders(updatedOrders);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      setError("Failed to fetch orders. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchOrderStatus = async (orderId) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`${API_BASE_URL}/api/orders/${orderId}/status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      return response.data.orderStatus;
-    } catch (error) {
-      console.error(`Error fetching status for order ${orderId}:`, error.response?.data?.message || error.message);
-      return "Unknown";
-    }
-  };
+    // Clean up interval on unmount
+    return () => clearInterval(interval);
+  }, [dispatch]);
 
   const getOrderStep = (orderStatus) => {
     switch (orderStatus) {
@@ -177,6 +148,3 @@ const Orders = () => {
 };
 
 export default Orders;
-
-
-

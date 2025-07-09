@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchOrders } from "../../store/order/orderSlice";
+import { fetchOrders, updateOrderStatus } from "../../store/order/orderSlice";
 import {
   Button,
   Typography,
@@ -13,13 +13,17 @@ import {
   Stepper,
   Step,
   StepLabel,
-  Box
+  Box,
+  CircularProgress,
+  Alert,
+  Snackbar
 } from "@mui/material";
 
 const Orders = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { orders, loading, error } = useSelector((state) => state.orders);
+  const [notification, setNotification] = React.useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
     // Initial fetch
@@ -28,30 +32,71 @@ const Orders = () => {
     // Set up polling interval
     const interval = setInterval(() => {
       dispatch(fetchOrders());
-    }, 15000); // every 15 seconds
+    }, 15000);
 
-    // Clean up interval on unmount
     return () => clearInterval(interval);
   }, [dispatch]);
 
-  const getOrderStep = (orderStatus) => {
-    switch (orderStatus) {
-      case "Ordered":
-        return 0;
-      case "Shipped":
-        return 1;
-      case "Delivered":
-        return 2;
-      default:
-        return 0;
+  const handleStatusUpdate = async (orderId, newStatus) => {
+    try {
+      await dispatch(updateOrderStatus({ orderId, orderStatus: newStatus })).unwrap();
+      setNotification({
+        open: true,
+        message: 'Order status updated successfully!',
+        severity: 'success'
+      });
+    } catch (error) {
+      setNotification({
+        open: true,
+        message: `Failed to update status: ${error}`,
+        severity: 'error'
+      });
     }
   };
 
-  if (loading) return <Typography>Loading orders...</Typography>;
-  if (error) return <Typography color="error">{error}</Typography>;
+  const getOrderStep = (orderStatus) => {
+    const statusMap = {
+      "Pending": 0,
+      "Processing": 1,
+      "Shipped": 2,
+      "Delivered": 3,
+      "Cancelled": 0
+    };
+    return statusMap[orderStatus] || 0;
+  };
+
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
+  };
+
+  if (loading && orders.length === 0) {
+    return (
+      <Container className="p-6 mt-6 flex justify-center">
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="p-6 mt-6">
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container className="p-6 mt-6">
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+      >
+        <Alert onClose={handleCloseNotification} severity={notification.severity}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
+
       {orders.length > 0 && (
         <Box className="bg-gray-100 py-4 px-6 w-full mb-6 rounded-lg shadow-md">
           <Typography variant="h5" align="center" fontWeight="bold">
@@ -77,6 +122,9 @@ const Orders = () => {
                         <StepLabel>Placed On ({new Date(order.createdAt).toLocaleDateString()})</StepLabel>
                       </Step>
                       <Step>
+                        <StepLabel>Processing</StepLabel>
+                      </Step>
+                      <Step>
                         <StepLabel>Shipped ({order.shippedAt ? new Date(order.shippedAt).toLocaleDateString() : "Pending"})</StepLabel>
                       </Step>
                       <Step>
@@ -87,9 +135,6 @@ const Orders = () => {
 
                   <Typography variant="h6" fontWeight="bold">
                     Order ID: {order._id}
-                  </Typography>
-                  <Typography variant="subtitle1" fontWeight="bold">
-                    Placed On: {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "Invalid Date"}
                   </Typography>
                   <Typography variant="subtitle1" fontWeight="bold">
                     Status: {order.orderStatus}
@@ -130,7 +175,7 @@ const Orders = () => {
                   ) : (
                     <Button
                       variant="contained"
-                      onClick={() => navigate("/shop/details")}
+                      onClick={() => navigate(`/shop/order-details/${order._id}`)}
                       className="mt-4 w-full"
                       style={{ backgroundColor: "#ff9800" }}
                     >

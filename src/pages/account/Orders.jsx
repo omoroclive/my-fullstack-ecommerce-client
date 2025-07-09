@@ -121,7 +121,7 @@ const Orders = () => {
                     Placed On: {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "Invalid Date"}
                   </Typography>
                   <Typography variant="subtitle1" fontWeight="bold">
-                    Status: {order.status}
+                    Status: {order.orderStatus}
                   </Typography>
 
                   <Typography variant="h6" fontWeight="bold" className="mb-4">

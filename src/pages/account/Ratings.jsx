@@ -1,31 +1,53 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Container, Typography, Card, CardContent, CardMedia, TextField, Button, Rating, Box } from "@mui/material";
+import { 
+  Container, 
+  Typography, 
+  Card, 
+  CardContent, 
+  CardMedia, 
+  TextField, 
+  Button, 
+  Rating, 
+  Box,
+  Alert,
+  Snackbar,
+  CircularProgress
+} from "@mui/material";
 
 const Ratings = () => {
   const [deliveredProducts, setDeliveredProducts] = useState([]);
   const [reviews, setReviews] = useState({});
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     const fetchDeliveredProducts = async () => {
       try {
+        setLoading(true);
         const token = localStorage.getItem("token");
-        const response = await axios.get(`${API_BASE_URL}/api/orders`, {
+        if (!token) throw new Error("No authentication token found");
+        
+        const response = await axios.get(`${API_BASE_URL}/api/orders/delivered`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // Filter only orders that have orderStatus === "Delivered"
-        const deliveredOrders = response.data.filter(order => order.orderStatus === "Delivered");
-
-        // Extract products from delivered orders
-        const deliveredProductsList = deliveredOrders.flatMap(order => order.products || []);
-
-        setDeliveredProducts(deliveredProductsList);
+        // Extract products from delivered orders with order reference
+        const productsWithOrder = response.data.flatMap(order => 
+          (order.products || []).map(product => ({
+            ...product,
+            orderId: order._id // Include order ID for reference
+          }))
+        ); // Fixed the missing parenthesis here
+        
+        setDeliveredProducts(productsWithOrder);
       } catch (error) {
-        setError("Failed to fetch delivered products.");
+        setError(error.response?.data?.message || "Failed to fetch delivered products");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -34,32 +56,53 @@ const Ratings = () => {
 
   const handleReviewSubmit = async (productId) => {
     try {
+      setError(null);
       const token = localStorage.getItem("token");
-      const { rating, comment } = reviews[productId] || {};
+      const review = reviews[productId];
+      
+      if (!review?.rating || !review?.comment) {
+        setError("Please add both a rating and a comment");
+        return;
+      }
 
-      if (!rating || !comment) return alert("Please add both a rating and a comment.");
-
-      await axios.post(
+      const response = await axios.post(
         `${API_BASE_URL}/api/reviews`,
-        { product: productId, rating, comment },
+        { 
+          product: productId, 
+          rating: review.rating, 
+          comment: review.comment,
+          order: deliveredProducts.find(p => p._id === productId)?.orderId 
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert("Review submitted successfully!");
-      setReviews((prev) => ({ ...prev, [productId]: { rating: 0, comment: "" } }));
+      setSuccess("Review submitted successfully!");
+      // Clear the review for this product
+      setReviews(prev => ({ ...prev, [productId]: { rating: 0, comment: "" } }));
     } catch (error) {
-      setError("Failed to submit review.");
+      setError(error.response?.data?.message || "Failed to submit review");
     }
   };
 
   const handleChange = (productId, field, value) => {
-    setReviews((prev) => ({
+    setReviews(prev => ({
       ...prev,
       [productId]: { ...prev[productId], [field]: value },
     }));
   };
 
-  if (error) return <Typography color="error">{error}</Typography>;
+  const handleCloseAlert = () => {
+    setError(null);
+    setSuccess(null);
+  };
+
+  if (loading) {
+    return (
+      <Container sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
 
   return (
     <Container>
@@ -67,52 +110,64 @@ const Ratings = () => {
         Rate and Review Your Delivered Products
       </Typography>
 
+      {/* Success/Error Alerts */}
+      <Snackbar open={!!error || !!success} autoHideDuration={6000} onClose={handleCloseAlert}>
+        <Alert 
+          onClose={handleCloseAlert} 
+          severity={error ? "error" : "success"}
+          sx={{ width: '100%' }}
+        >
+          {error || success}
+        </Alert>
+      </Snackbar>
+
       {deliveredProducts.length === 0 ? (
-        <Typography>No delivered products found.</Typography>
+        <Typography variant="body1" align="center">
+          {loading ? "Loading..." : "No delivered products found."}
+        </Typography>
       ) : (
         deliveredProducts.map((product) => (
-          <Card key={product._id} sx={{ display: "flex", marginBottom: 2, padding: 2 }}>
-            {/* Product Image */}
+          <Card key={`${product._id}-${product.orderId}`} sx={{ display: "flex", mb: 3, p: 2 }}>
             <CardMedia
               component="img"
-              sx={{ width: 120, height: 120, objectFit: "contain", marginRight: 2 }}
+              sx={{ width: 120, height: 120, objectFit: "contain", mr: 2 }}
               image={product.image || "https://via.placeholder.com/120"} 
-              alt={product.name || "Product Image"}
+              alt={product.name}
             />
             
-            {/* Product Details */}
             <CardContent sx={{ flex: 1 }}>
-              <Typography variant="h6">{product.name || "Unknown Product"}</Typography>
+              <Typography variant="h6">{product.name}</Typography>
               <Typography variant="body1" color="text.secondary">
-                Price: ${product.price ? product.price.toFixed(2) : "N/A"}
+                Price: ${product.price?.toFixed(2) || "N/A"}
               </Typography>
 
-              {/* Rating Input */}
-              <Box marginY={2}>
+              <Box my={2}>
                 <Typography variant="subtitle1">Your Rating:</Typography>
                 <Rating
+                  name={`rating-${product._id}`}
                   value={reviews[product._id]?.rating || 0}
                   onChange={(e, newValue) => handleChange(product._id, "rating", newValue)}
+                  precision={0.5}
                 />
               </Box>
 
-              {/* Review Text Field */}
               <TextField
                 label="Write your review"
                 fullWidth
                 multiline
                 rows={3}
+                variant="outlined"
                 value={reviews[product._id]?.comment || ""}
                 onChange={(e) => handleChange(product._id, "comment", e.target.value)}
                 margin="normal"
               />
 
-              {/* Submit Button */}
               <Button
                 variant="contained"
                 color="primary"
                 onClick={() => handleReviewSubmit(product._id)}
                 disabled={!reviews[product._id]?.rating || !reviews[product._id]?.comment}
+                sx={{ mt: 2 }}
               >
                 Submit Review
               </Button>
@@ -125,5 +180,3 @@ const Ratings = () => {
 };
 
 export default Ratings;
-
-

@@ -12,7 +12,6 @@ const Order = () => {
   const dispatch = useDispatch();
   const { orders, loading, error } = useSelector((state) => state.orders);
 
-  // Snackbar state
   const [open, setOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
@@ -23,12 +22,13 @@ const Order = () => {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      const payload = { orderId, orderStatus: newStatus };
+      // Updated to use 'status' instead of 'orderStatus'
+      const payload = { orderId, status: newStatus };
       console.log("Updating order status with payload:", payload);
 
       const updatedOrder = await dispatch(updateOrderStatus(payload)).unwrap();
 
-      setSnackbarMessage(`Order ${updatedOrder._id} status updated to ${updatedOrder.orderStatus}`);
+      setSnackbarMessage(`Order ${updatedOrder._id} status updated to ${updatedOrder.status}`);
       setSnackbarSeverity("success");
       setOpen(true);
     } catch (error) {
@@ -38,7 +38,6 @@ const Order = () => {
     }
   };
 
-  // Close the snackbar
   const handleCloseSnackbar = () => {
     setOpen(false);
   };
@@ -125,25 +124,25 @@ const Order = () => {
 
             <div className="order-status">
               <h3>Order Status</h3>
-              <p>Status: {order.orderStatus || "Pending"}</p>
+              {/* Updated to use 'status' instead of 'orderStatus' */}
+              <p>Status: {order.status || "Pending"}</p>
               <Select
-                value={order.orderStatus || "Processing"}
+                value={order.status || "Processing"}
                 onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                disabled={order.orderStatus === "Delivered" || order.orderStatus === "Cancelled"}
+                disabled={order.status === "Delivered" || order.status === "Cancelled"}
                 displayEmpty
                 className="status-select"
               >
                 <MenuItem value="Processing">Processing</MenuItem>
-                <MenuItem value="Shipped" disabled={order.orderStatus === "Shipped" || order.orderStatus === "Delivered"}>Shipped</MenuItem>
-                <MenuItem value="Delivered" disabled={order.orderStatus === "Delivered"}>Delivered</MenuItem>
-                <MenuItem value="Cancelled" disabled={order.orderStatus === "Cancelled"}>Cancelled</MenuItem>
+                <MenuItem value="Shipped" disabled={order.status === "Shipped" || order.status === "Delivered"}>Shipped</MenuItem>
+                <MenuItem value="Delivered" disabled={order.status === "Delivered"}>Delivered</MenuItem>
+                <MenuItem value="Cancelled" disabled={order.status === "Cancelled"}>Cancelled</MenuItem>
               </Select>
             </div>
           </div>
         ))
       )}
 
-      {/* Snackbar for status update */}
       <Snackbar open={open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
         <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
           {snackbarMessage}
@@ -154,4 +153,3 @@ const Order = () => {
 };
 
 export default Order;
-

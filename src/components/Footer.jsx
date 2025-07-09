@@ -119,13 +119,13 @@ function Footer() {
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Phone sx={{ color: "primary.main", fontSize: 20 }} />
                   <Typography variant="body2" sx={{ color: "grey.400" }}>
-                    +1 234 567 890
+                    +254 791 150 726
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Email sx={{ color: "primary.main", fontSize: 20 }} />
                   <Typography variant="body2" sx={{ color: "grey.400" }}>
-                    contact@example.com
+                    omoroclive16@gmail.com
                   </Typography>
                 </Box>
               </Box>

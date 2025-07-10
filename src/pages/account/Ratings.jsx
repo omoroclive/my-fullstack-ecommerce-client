@@ -20,55 +20,34 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
 const getToken = () => localStorage.getItem("token");
 
 const Ratings = () => {
-  const [products, setProducts] = useState([]); // Changed from deliveredProducts
+  const [deliveredProducts, setDeliveredProducts] = useState([]);
   const [reviews, setReviews] = useState({});
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState({ type: "", message: "" });
 
-  // Fetch products available for review
-  const fetchProducts = useCallback(async () => {
+  // Fetch delivered products (no changes needed here)
+  const fetchDeliveredProducts = useCallback(async () => {
     setLoading(true);
     try {
       const token = getToken();
       if (!token) throw new Error("No authentication token found");
 
-      // Fetch both delivered and regular products
-      const [ordersResponse, productsResponse] = await Promise.all([
-        axios.get(`${API_BASE_URL}/api/orders/delivered`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get(`${API_BASE_URL}/api/products`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-      ]);
+      const response = await axios.get(`${API_BASE_URL}/api/orders/delivered`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      // Combine products from orders with all products
-      const orderedProducts = ordersResponse.data.flatMap(order =>
+      const productsWithOrder = response.data.flatMap(order =>
         (order.products || []).map(product => ({
           ...product,
-          orderId: order._id,
-          purchased: true
+          orderId: order._id
         }))
       );
 
-      const allProducts = productsResponse.data.map(product => ({
-        ...product,
-        purchased: false
-      }));
-
-      // Merge and deduplicate products
-      const mergedProducts = [...orderedProducts, ...allProducts].reduce((acc, product) => {
-        if (!acc.some(p => p._id === product._id)) {
-          acc.push(product);
-        }
-        return acc;
-      }, []);
-
-      setProducts(mergedProducts);
+      setDeliveredProducts(productsWithOrder);
     } catch (error) {
       setAlert({
         type: "error",
-        message: error.response?.data?.message || "Failed to fetch products"
+        message: error.response?.data?.message || "Failed to fetch delivered products"
       });
     } finally {
       setLoading(false);
@@ -76,8 +55,8 @@ const Ratings = () => {
   }, []);
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    fetchDeliveredProducts();
+  }, [fetchDeliveredProducts]);
 
   const handleReviewChange = (productId, field, value) => {
     setReviews(prev => ({
@@ -86,6 +65,7 @@ const Ratings = () => {
     }));
   };
 
+  // Modified submit handler - removed delivery validation
   const handleReviewSubmit = useCallback(async (productId) => {
     const token = getToken();
     const review = reviews[productId];
@@ -96,19 +76,19 @@ const Ratings = () => {
     }
 
     try {
-      const product = products.find(p => String(p._id) === String(productId));
+      const product = deliveredProducts.find(p => String(p._id) === String(productId));
 
       await axios.post(`${API_BASE_URL}/api/reviews`, {
         product: productId,
         rating: review.rating,
         comment: review.comment,
-        order: product?.orderId || null, // Now optional
+        // Order ID is now optional - include if available
+        ...(product?.orderId && { order: product.orderId })
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       setAlert({ type: "success", message: "Review submitted successfully!" });
-
       setReviews(prev => ({
         ...prev,
         [productId]: { rating: 0, comment: "" }
@@ -119,7 +99,7 @@ const Ratings = () => {
         message: error.response?.data?.message || "Failed to submit review"
       });
     }
-  }, [reviews, products]);
+  }, [reviews, deliveredProducts]);
 
   const handleCloseAlert = () => setAlert({ type: "", message: "" });
 
@@ -134,7 +114,7 @@ const Ratings = () => {
   return (
     <Container>
       <Typography variant="h4" align="center" marginY={3}>
-        Rate and Review Products
+        Rate Your Purchased Products
       </Typography>
 
       <Snackbar open={!!alert.message} autoHideDuration={6000} onClose={handleCloseAlert}>
@@ -143,13 +123,13 @@ const Ratings = () => {
         </Alert>
       </Snackbar>
 
-      {products.length === 0 ? (
+      {deliveredProducts.length === 0 ? (
         <Typography variant="body1" align="center">
-          No products found.
+          No delivered products available for review.
         </Typography>
       ) : (
-        products.map(product => (
-          <Card key={`${product._id}-${product.orderId || 'no-order'}`} sx={{ display: "flex", mb: 3, p: 2 }}>
+        deliveredProducts.map(product => (
+          <Card key={`${product._id}-${product.orderId}`} sx={{ display: "flex", mb: 3, p: 2 }}>
             <CardMedia
               component="img"
               sx={{ width: 120, height: 120, objectFit: "contain", mr: 2 }}
@@ -160,7 +140,6 @@ const Ratings = () => {
               <Typography variant="h6">{product.name}</Typography>
               <Typography variant="body2" color="text.secondary">
                 Price: ${product.price?.toFixed(2) || "N/A"}
-                {product.purchased && " • Purchased"}
               </Typography>
 
               <Box my={2}>

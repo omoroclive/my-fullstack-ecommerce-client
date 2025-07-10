@@ -113,7 +113,7 @@ function Footer() {
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <LocationOn sx={{ color: "primary.main", fontSize: 20 }} />
                   <Typography variant="body2" sx={{ color: "grey.400" }}>
-                    123 Fashion Street, NY 10001
+                    Smartshop Fashion Streets, Nairobi, Kenya 00100
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

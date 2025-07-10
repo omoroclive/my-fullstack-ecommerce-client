@@ -94,33 +94,26 @@ const Details = () => {
 
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
         const reviewsResponse = await axios.get(
-          `${API_BASE_URL}/api/reviews/product/${id}`,
+          `${API_BASE_URL}/api/reviews/simple/${id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
 
-        const reviewsData = reviewsResponse.data || [];
+        const reviewsData = response.data.reviews || [];
         setReviews(reviewsData);
 
-        // Calculate average rating
-        const totalRatings = reviewsData.reduce(
-          (sum, review) => sum + (review.rating || 0),
-          0
-        );
-        const avgRating = reviewsData.length
-          ? totalRatings / reviewsData.length
-          : 0;
-        setAverageRating(Number(avgRating.toFixed(1))); // ensure it's a number
-      } catch (err) {
-        console.error("Failed to fetch reviews:", err);
-      }
-    };
-
-    if (id) {
-      fetchReviews();
+            // Calculate average
+      const total = reviewsData.reduce((sum, r) => sum + r.rating, 0);
+      setAverageRating(reviewsData.length ? total / reviewsData.length : 0);
+      
+    } catch (err) {
+      console.error("Review fetch error:", err);
     }
-  }, [id]);
+  };
+
+  if (id) fetchReviews();
+}, [id]);
 
 
   // Add to Recently Viewed

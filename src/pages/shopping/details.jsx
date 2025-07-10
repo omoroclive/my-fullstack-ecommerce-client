@@ -85,7 +85,7 @@ const Details = () => {
     fetchProduct();
   }, [id]);
 
-  // ✅ Simplified: Fetch only the reviews (user is already populated)
+  //  Simplified: Fetch only the reviews (user is already populated)
   useEffect(() => {
     const fetchReviews = async () => {
       try {
@@ -94,7 +94,7 @@ const Details = () => {
 
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
         const reviewsResponse = await axios.get(
-          `${API_BASE_URL}/api/reviews/product${id}`,
+          `${API_BASE_URL}/api/reviews/product/${id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -128,7 +128,7 @@ const Details = () => {
     if (product) {
       dispatch(
         addToRecentlyViewed({
-          id: product._id,
+          _id: product._id,
           title: product.title,
           image: product.images[0]?.url || placeholderImage,
           price: product.price,
@@ -151,7 +151,7 @@ const Details = () => {
   const handleAddToWishlist = () => {
     dispatch(
       addToSavedItems({
-        id: product._id,
+        _id: product._id,
         title: product.title,
         image: mainImage,
         price: product.price,

@@ -89,6 +89,7 @@ const Details = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
+        console.log("Fetching reviews for product ID:", id); // Add this
         const token = localStorage.getItem("token");
         if (!token) throw new Error("No token found. Please log in.");
 

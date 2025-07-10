@@ -100,7 +100,7 @@ const Details = () => {
           }
         );
 
-        const reviewsData = response.data.reviews || [];
+        const reviewsData = reviewsResponse.data.reviews || [];
         setReviews(reviewsData);
 
             // Calculate average

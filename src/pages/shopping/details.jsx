@@ -94,7 +94,7 @@ const Details = () => {
 
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
         const reviewsResponse = await axios.get(
-          `${API_BASE_URL}/api/reviews/product${productId}`,
+          `${API_BASE_URL}/api/reviews/product${id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

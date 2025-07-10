@@ -106,6 +106,8 @@ const Details = () => {
         console.log("Reviews data:", reviewsResponse.data?.reviews);
 
         const reviewsData = reviewsResponse.data?.reviews || [];
+
+        console.log("Number of reviews found:", reviewsData.length);
         setReviews(reviewsData);
 
         // Calculate average rating

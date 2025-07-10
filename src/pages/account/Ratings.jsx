@@ -1,100 +1,106 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { 
-  Container, 
-  Typography, 
-  Card, 
-  CardContent, 
-  CardMedia, 
-  TextField, 
-  Button, 
-  Rating, 
+import {
+  Container,
+  Typography,
+  Card,
+  CardContent,
+  CardMedia,
+  TextField,
+  Button,
+  Rating,
   Box,
   Alert,
   Snackbar,
   CircularProgress
 } from "@mui/material";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+const getToken = () => localStorage.getItem("token");
+
 const Ratings = () => {
   const [deliveredProducts, setDeliveredProducts] = useState([]);
   const [reviews, setReviews] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [alert, setAlert] = useState({ type: "", message: "" });
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
-  useEffect(() => {
-    const fetchDeliveredProducts = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("No authentication token found");
-        
-        const response = await axios.get(`${API_BASE_URL}/api/orders/delivered`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        // Extract products from delivered orders with order reference
-        const productsWithOrder = response.data.flatMap(order => 
-          (order.products || []).map(product => ({
-            ...product,
-            orderId: order._id // Include order ID for reference
-          }))
-        ); // Fixed the missing parenthesis here
-        
-        setDeliveredProducts(productsWithOrder);
-      } catch (error) {
-        setError(error.response?.data?.message || "Failed to fetch delivered products");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDeliveredProducts();
-  }, []);
-
-  const handleReviewSubmit = async (productId) => {
+  // Fetch delivered products
+  const fetchDeliveredProducts = useCallback(async () => {
+    setLoading(true);
     try {
-      setError(null);
-      const token = localStorage.getItem("token");
-      const review = reviews[productId];
-      
-      if (!review?.rating || !review?.comment) {
-        setError("Please add both a rating and a comment");
-        return;
-      }
+      const token = getToken();
+      if (!token) throw new Error("No authentication token found");
 
-      const response = await axios.post(
-        `${API_BASE_URL}/api/reviews`,
-        { 
-          product: productId, 
-          rating: review.rating, 
-          comment: review.comment,
-          order: deliveredProducts.find(p => p._id === productId)?.orderId 
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await axios.get(`${API_BASE_URL}/api/orders/delivered`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const productsWithOrder = response.data.flatMap(order =>
+        (order.products || []).map(product => ({
+          ...product,
+          orderId: order._id
+        }))
       );
 
-      setSuccess("Review submitted successfully!");
-      // Clear the review for this product
-      setReviews(prev => ({ ...prev, [productId]: { rating: 0, comment: "" } }));
+      setDeliveredProducts(productsWithOrder);
     } catch (error) {
-      setError(error.response?.data?.message || "Failed to submit review");
+      setAlert({
+        type: "error",
+        message: error.response?.data?.message || "Failed to fetch delivered products"
+      });
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const handleChange = (productId, field, value) => {
+  useEffect(() => {
+    fetchDeliveredProducts();
+  }, [fetchDeliveredProducts]);
+
+  const handleReviewChange = (productId, field, value) => {
     setReviews(prev => ({
       ...prev,
-      [productId]: { ...prev[productId], [field]: value },
+      [productId]: { ...prev[productId], [field]: value }
     }));
   };
 
-  const handleCloseAlert = () => {
-    setError(null);
-    setSuccess(null);
-  };
+  const handleReviewSubmit = useCallback(async (productId) => {
+    const token = getToken();
+    const review = reviews[productId];
+
+    if (!review?.rating || !review?.comment) {
+      setAlert({ type: "error", message: "Please add both a rating and a comment" });
+      return;
+    }
+
+    try {
+      const product = deliveredProducts.find(p => String(p._id) === String(productId));
+
+      await axios.post(`${API_BASE_URL}/api/reviews`, {
+        product: productId,
+        rating: review.rating,
+        comment: review.comment,
+        order: product?.orderId,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setAlert({ type: "success", message: "Review submitted successfully!" });
+
+      setReviews(prev => ({
+        ...prev,
+        [productId]: { rating: 0, comment: "" }
+      }));
+    } catch (error) {
+      setAlert({
+        type: "error",
+        message: error.response?.data?.message || "Failed to submit review"
+      });
+    }
+  }, [reviews, deliveredProducts]);
+
+  const handleCloseAlert = () => setAlert({ type: "", message: "" });
 
   if (loading) {
     return (
@@ -110,34 +116,29 @@ const Ratings = () => {
         Rate and Review Your Delivered Products
       </Typography>
 
-      {/* Success/Error Alerts */}
-      <Snackbar open={!!error || !!success} autoHideDuration={6000} onClose={handleCloseAlert}>
-        <Alert 
-          onClose={handleCloseAlert} 
-          severity={error ? "error" : "success"}
-          sx={{ width: '100%' }}
-        >
-          {error || success}
+      {/* Alert Message */}
+      <Snackbar open={!!alert.message} autoHideDuration={6000} onClose={handleCloseAlert}>
+        <Alert onClose={handleCloseAlert} severity={alert.type || "info"} sx={{ width: "100%" }}>
+          {alert.message}
         </Alert>
       </Snackbar>
 
       {deliveredProducts.length === 0 ? (
         <Typography variant="body1" align="center">
-          {loading ? "Loading..." : "No delivered products found."}
+          No delivered products found.
         </Typography>
       ) : (
-        deliveredProducts.map((product) => (
+        deliveredProducts.map(product => (
           <Card key={`${product._id}-${product.orderId}`} sx={{ display: "flex", mb: 3, p: 2 }}>
             <CardMedia
               component="img"
               sx={{ width: 120, height: 120, objectFit: "contain", mr: 2 }}
-              image={product.image || "https://via.placeholder.com/120"} 
+              image={product.image || "https://via.placeholder.com/120"}
               alt={product.name}
             />
-            
             <CardContent sx={{ flex: 1 }}>
               <Typography variant="h6">{product.name}</Typography>
-              <Typography variant="body1" color="text.secondary">
+              <Typography variant="body2" color="text.secondary">
                 Price: ${product.price?.toFixed(2) || "N/A"}
               </Typography>
 
@@ -146,7 +147,7 @@ const Ratings = () => {
                 <Rating
                   name={`rating-${product._id}`}
                   value={reviews[product._id]?.rating || 0}
-                  onChange={(e, newValue) => handleChange(product._id, "rating", newValue)}
+                  onChange={(e, newValue) => handleReviewChange(product._id, "rating", newValue)}
                   precision={0.5}
                 />
               </Box>
@@ -158,7 +159,7 @@ const Ratings = () => {
                 rows={3}
                 variant="outlined"
                 value={reviews[product._id]?.comment || ""}
-                onChange={(e) => handleChange(product._id, "comment", e.target.value)}
+                onChange={(e) => handleReviewChange(product._id, "comment", e.target.value)}
                 margin="normal"
               />
 

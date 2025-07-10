@@ -100,20 +100,26 @@ const Details = () => {
           }
         );
 
-        const reviewsData = reviewsResponse.data.reviews || [];
+        // Debugging logs
+        console.log("Full API response:", reviewsResponse);
+        console.log("Reviews data:", reviewsResponse.data?.reviews);
+
+        const reviewsData = reviewsResponse.data?.reviews || [];
         setReviews(reviewsData);
 
-            // Calculate average
-      const total = reviewsData.reduce((sum, r) => sum + r.rating, 0);
-      setAverageRating(reviewsData.length ? total / reviewsData.length : 0);
-      
-    } catch (err) {
-      console.error("Review fetch error:", err);
-    }
-  };
+        // Calculate average rating
+        const total = reviewsData.reduce((sum, r) => sum + r.rating, 0);
+        setAverageRating(reviewsData.length ? total / reviewsData.length : 0);
 
-  if (id) fetchReviews();
-}, [id]);
+      } catch (err) {
+        console.error("Review fetch error:", err);
+        console.error("Error response:", err.response?.data);
+        setError(err.response?.data?.message || "Failed to load reviews");
+      }
+    };
+
+    if (id) fetchReviews();
+  }, [id]);
 
 
   // Add to Recently Viewed
@@ -362,13 +368,9 @@ const Details = () => {
                 </Typography>
               ) : (
                 reviews.map((review) => (
-                  <Box
-                    key={review._id}
-                    className="border-b border-gray-200 pb-4 mb-4"
-                  >
+                  <Box key={review._id} className="border-b border-gray-200 pb-4 mb-4">
                     <Typography variant="subtitle1" className="font-medium">
                       {review.user?.fullName || "Anonymous User"}
-
                     </Typography>
                     <Rating
                       value={review.rating || 0}
@@ -376,6 +378,9 @@ const Details = () => {
                       size="small"
                       precision={0.5}
                     />
+                    <Typography variant="body2" color="textSecondary" className="mt-1">
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </Typography>
                     <Typography variant="body1" className="mt-2">
                       {review.comment}
                     </Typography>

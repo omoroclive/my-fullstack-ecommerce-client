@@ -66,40 +66,70 @@ const Ratings = () => {
   };
 
   // Modified submit handler - removed delivery validation
-  const handleReviewSubmit = useCallback(async (productId) => {
-    const token = getToken();
-    const review = reviews[productId];
+  // Enhanced handleReviewSubmit with debugging
+const handleReviewSubmit = useCallback(async (productId) => {
+  const token = getToken();
+  const review = reviews[productId];
 
-    if (!review?.rating || !review?.comment) {
-      setAlert({ type: "error", message: "Please add both a rating and a comment" });
+  if (!review?.rating || !review?.comment) {
+    setAlert({ type: "error", message: "Please add both a rating and a comment" });
+    return;
+  }
+
+  try {
+    const product = deliveredProducts.find(p => String(p._id) === String(productId));
+    
+    // Debug logging
+    console.log('Submitting review for product:', {
+      productId,
+      product,
+      review,
+      deliveredProducts: deliveredProducts.map(p => ({ id: p._id, name: p.name }))
+    });
+
+    // Validate that product exists in delivered products
+    if (!product) {
+      setAlert({ 
+        type: "error", 
+        message: "Product not found in delivered products. Please refresh the page." 
+      });
       return;
     }
 
-    try {
-      const product = deliveredProducts.find(p => String(p._id) === String(productId));
+    const reviewData = {
+      product: productId,
+      rating: review.rating,
+      comment: review.comment,
+      // Order ID is now optional - include if available
+      ...(product?.orderId && { order: product.orderId })
+    };
 
-      await axios.post(`${API_BASE_URL}/api/reviews`, {
-        product: productId,
-        rating: review.rating,
-        comment: review.comment,
-        // Order ID is now optional - include if available
-        ...(product?.orderId && { order: product.orderId })
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+    console.log('Review data being sent:', reviewData);
 
-      setAlert({ type: "success", message: "Review submitted successfully!" });
-      setReviews(prev => ({
-        ...prev,
-        [productId]: { rating: 0, comment: "" }
-      }));
-    } catch (error) {
-      setAlert({
-        type: "error",
-        message: error.response?.data?.message || "Failed to submit review"
-      });
-    }
-  }, [reviews, deliveredProducts]);
+    const response = await axios.post(`${API_BASE_URL}/api/reviews`, reviewData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    console.log('Review submission response:', response.data);
+
+    setAlert({ type: "success", message: "Review submitted successfully!" });
+    setReviews(prev => ({
+      ...prev,
+      [productId]: { rating: 0, comment: "" }
+    }));
+  } catch (error) {
+    console.error('Review submission error:', {
+      error,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    
+    setAlert({
+      type: "error",
+      message: error.response?.data?.message || "Failed to submit review"
+    });
+  }
+}, [reviews, deliveredProducts]);
 
   const handleCloseAlert = () => setAlert({ type: "", message: "" });
 

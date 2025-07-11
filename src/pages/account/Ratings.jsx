@@ -66,7 +66,7 @@ const Ratings = () => {
   };
 
   // Modified submit handler - removed delivery validation
-  // Enhanced handleReviewSubmit with debugging
+ // Fixed handleReviewSubmit - use the actual product ID
 const handleReviewSubmit = useCallback(async (productId) => {
   const token = getToken();
   const review = reviews[productId];
@@ -77,18 +77,9 @@ const handleReviewSubmit = useCallback(async (productId) => {
   }
 
   try {
-    const product = deliveredProducts.find(p => String(p._id) === String(productId));
+    const orderItem = deliveredProducts.find(p => String(p._id) === String(productId));
     
-    // Debug logging
-    console.log('Submitting review for product:', {
-      productId,
-      product,
-      review,
-      deliveredProducts: deliveredProducts.map(p => ({ id: p._id, name: p.name }))
-    });
-
-    // Validate that product exists in delivered products
-    if (!product) {
+    if (!orderItem) {
       setAlert({ 
         type: "error", 
         message: "Product not found in delivered products. Please refresh the page." 
@@ -96,12 +87,18 @@ const handleReviewSubmit = useCallback(async (productId) => {
       return;
     }
 
+    // Use the actual product ID from the product field, not the order item ID
+    const actualProductId = orderItem.product;
+    
+    console.log('Order item ID:', productId);
+    console.log('Actual product ID:', actualProductId);
+    console.log('Order item details:', orderItem);
+
     const reviewData = {
-      product: productId,
+      product: actualProductId, // Use the actual product ID
       rating: review.rating,
       comment: review.comment,
-      // Order ID is now optional - include if available
-      ...(product?.orderId && { order: product.orderId })
+      ...(orderItem?.orderId && { order: orderItem.orderId })
     };
 
     console.log('Review data being sent:', reviewData);
@@ -110,7 +107,7 @@ const handleReviewSubmit = useCallback(async (productId) => {
       headers: { Authorization: `Bearer ${token}` }
     });
 
-    console.log('Review submission response:', response.data);
+    console.log('Review submission successful:', response.data);
 
     setAlert({ type: "success", message: "Review submitted successfully!" });
     setReviews(prev => ({
@@ -118,11 +115,7 @@ const handleReviewSubmit = useCallback(async (productId) => {
       [productId]: { rating: 0, comment: "" }
     }));
   } catch (error) {
-    console.error('Review submission error:', {
-      error,
-      response: error.response?.data,
-      status: error.response?.status
-    });
+    console.error('Review submission error:', error);
     
     setAlert({
       type: "error",

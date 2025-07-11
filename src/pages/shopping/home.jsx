@@ -15,6 +15,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 // Components
 import Chatbot from "./Chatbot";
 import Footer from "../../components/Footer";
+import { Helmet } from "react-helmet";
 
 // Brand Images
 import pumaIcon from "../../assets/images/puma1.png";

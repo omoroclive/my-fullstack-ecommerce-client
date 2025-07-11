@@ -78,7 +78,7 @@ function App() {
   return (
     <Routes>
       {/* Redirect root "/" to /shop/home */}
-      <Route path="/" element={<Navigate to="/shop/home" replace />} />
+      
       {/* Authentication Routes */}
       <Route path="/auth" element={<AuthLayout />}>
         <Route path="login" element={<Login />} />

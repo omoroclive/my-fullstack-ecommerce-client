@@ -144,7 +144,21 @@ const Home = () => {
 
   return (
     <div className="p-4">
+
+       <Helmet>
+        <title>Home | My E-Commerce Store</title>
+        <meta name="description" content="Shop top brands and featured products at unbeatable prices. Find fashion for Men, Women, Kids, and more!" />
+        <meta name="keywords" content="ecommerce, fashion, men, women, kids, footwear, accessories, adidas, puma, nike, zara" />
+        <link rel="canonical" href="https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/home" />
+        <meta property="og:title" content="Home | Smartshop" />
+        <meta property="og:description" content="Shop top brands and featured products at unbeatable prices." />
+        <meta property="og:image" content=" https://res.cloudinary.com/dddb5giq5/image/upload/v1737639873/products/qbljupnugi8egtctmxi9.png" />
+        <meta property="og:url" content= 'https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/home' />
+        <meta name="twitter:image" content="https://res.cloudinary.com/dddb5giq5/image/upload/v1737639873/products/qbljupnugi8egtctmxi9.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Helmet>
       {/* Top Brands Section */}
+
       <section className="mt-8 text-center bg-gray-100 p-6 rounded-lg">
         <Typography variant="h4" className="font-bold mb-8">
           Top Brands

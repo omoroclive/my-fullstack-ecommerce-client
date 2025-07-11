@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 // Admin Pages
@@ -77,6 +77,8 @@ function App() {
 
   return (
     <Routes>
+      {/* Redirect root "/" to /shop/home */}
+      <Route path="/" element={<Navigate to="/shop/home" replace />} />
       {/* Authentication Routes */}
       <Route path="/auth" element={<AuthLayout />}>
         <Route path="login" element={<Login />} />

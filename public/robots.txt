@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/home/sitemap.xml

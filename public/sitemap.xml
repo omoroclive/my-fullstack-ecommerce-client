@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset 
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Homepage -->
+  <url>
+    <loc>https://my-fullstack-ecommerce-client-uznw.vercel.app/auth/login/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Shop -->
+  <url>
+    <loc>https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/shopping</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Brands -->
+  <url>
+    <loc>https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/brands/nike</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/brands/adidas</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/brands/zara</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+
+  <!-- Categories -->
+  <url>
+    <loc>https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/categories/Men</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://<?xml version="1.0" encoding="UTF-8"?>
+<urlset 
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Homepage -->
+  <url>
+    <loc>https://my-fullstack-ecommerce-client-uznw.vercel.app/auth/login/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Shop -->
+  <url>
+    <loc>https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/shopping</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Brands -->
+  <url>
+    <loc>https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/brands/nike</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/brands/adidas</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/brands/zara</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+
+  <!-- Categories -->
+  <url>
+    <loc>https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/categories/Men</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/categories/Women</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+
+</urlset>https://my-fullstack-ecommerce-client-uznw.vercel.app/shop/categories/Women</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+
+</urlset>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { 
+import {
   fetchInventory,
   initializeInventory,
   updateInventory
@@ -8,13 +8,6 @@ import {
 import {
   Box,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   TextField,
   Button,
   Select,
@@ -26,7 +19,6 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   Pagination,
   Chip,
   Grid,
@@ -39,74 +31,90 @@ import InventoryForm from '../../components/inventoryForm';
 
 const Inventory = () => {
   const dispatch = useDispatch();
-  const { 
-    items, 
-    status, 
-    error, 
-    totalPages, 
-    currentPage, 
-    totalItems 
+  const {
+    items,
+    status,
+    error,
+    totalPages,
+    currentPage,
+    totalItems
   } = useSelector((state) => state.inventory);
+
   const [openForm, setOpenForm] = useState(false);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    dispatch(fetchInventory({ page, search, status: filter !== 'all' ? filter : undefined }));
+    const token = localStorage.getItem('token');
+    if (token) {
+      dispatch(fetchInventory({
+        page,
+        search,
+        status: filter !== 'all' ? filter : undefined,
+        token
+      }));
+    }
   }, [dispatch, page, search, filter]);
 
   const columns = [
     { field: 'sku', headerName: 'SKU', width: 150 },
-    { 
-      field: 'product', 
-      headerName: 'Product', 
+    {
+      field: 'product',
+      headerName: 'Product',
       width: 200,
       renderCell: (params) => params.row.product?.name || 'N/A'
     },
     { field: 'brand', headerName: 'Brand', width: 150 },
     { field: 'category', headerName: 'Category', width: 150 },
-    { 
-      field: 'availableStock', 
-      headerName: 'Available', 
+    {
+      field: 'availableStock',
+      headerName: 'Available',
       width: 120,
       renderCell: (params) => (
-        <Chip 
-          label={params.value} 
+        <Chip
+          label={params.value}
           color={
-            params.value <= 0 ? 'error' : 
-            params.value <= params.row.reorderLevel ? 'warning' : 'success'
+            params.value <= 0
+              ? 'error'
+              : params.value <= params.row.reorderLevel
+              ? 'warning'
+              : 'success'
           }
         />
       )
     },
     { field: 'soldItems', headerName: 'Sold', width: 100 },
     { field: 'reservedItems', headerName: 'Reserved', width: 120 },
-    { 
-      field: 'status', 
-      headerName: 'Status', 
+    {
+      field: 'status',
+      headerName: 'Status',
       width: 130,
       renderCell: (params) => (
-        <Chip 
-          label={params.value} 
+        <Chip
+          label={params.value}
           color={
-            params.value === 'Out of Stock' ? 'error' : 
-            params.value === 'Low Stock' ? 'warning' : 'success'
+            params.value === 'Out of Stock'
+              ? 'error'
+              : params.value === 'Low Stock'
+              ? 'warning'
+              : 'success'
           }
         />
       )
     },
-    { 
-      field: 'amountSold', 
-      headerName: 'Revenue', 
+    {
+      field: 'amountSold',
+      headerName: 'Revenue',
       width: 120,
       renderCell: (params) => `$${params.value.toFixed(2)}`
     },
-    { 
-      field: 'lastRestockDate', 
-      headerName: 'Last Restock', 
+    {
+      field: 'lastRestockDate',
+      headerName: 'Last Restock',
       width: 150,
-      renderCell: (params) => params.value ? new Date(params.value).toLocaleDateString() : 'N/A'
+      renderCell: (params) =>
+        params.value ? new Date(params.value).toLocaleDateString() : 'N/A'
     }
   ];
 
@@ -146,7 +154,7 @@ const Inventory = () => {
             <CardContent>
               <Typography variant="h6">In Stock</Typography>
               <Typography variant="h4" color="success.main">
-                {items.filter(i => i.status === 'In Stock').length}
+                {items.filter((i) => i.status === 'In Stock').length}
               </Typography>
             </CardContent>
           </Card>
@@ -156,7 +164,7 @@ const Inventory = () => {
             <CardContent>
               <Typography variant="h6">Low Stock</Typography>
               <Typography variant="h4" color="warning.main">
-                {items.filter(i => i.status === 'Low Stock').length}
+                {items.filter((i) => i.status === 'Low Stock').length}
               </Typography>
             </CardContent>
           </Card>
@@ -166,7 +174,7 @@ const Inventory = () => {
             <CardContent>
               <Typography variant="h6">Out of Stock</Typography>
               <Typography variant="h4" color="error.main">
-                {items.filter(i => i.status === 'Out of Stock').length}
+                {items.filter((i) => i.status === 'Out of Stock').length}
               </Typography>
             </CardContent>
           </Card>
@@ -212,7 +220,7 @@ const Inventory = () => {
         <Pagination
           count={totalPages}
           page={currentPage}
-          onChange={(e, page) => setPage(page)}
+          onChange={(e, value) => setPage(value)}
           color="primary"
         />
       </Box>
@@ -226,11 +234,11 @@ const Inventory = () => {
       <Dialog open={openForm} onClose={() => setOpenForm(false)} maxWidth="md" fullWidth>
         <DialogTitle>Add New Inventory</DialogTitle>
         <DialogContent>
-          <InventoryForm 
+          <InventoryForm
             onSuccess={() => {
               setOpenForm(false);
               dispatch(fetchInventory({ page: 1 }));
-            }} 
+            }}
           />
         </DialogContent>
       </Dialog>

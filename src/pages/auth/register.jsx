@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import CommonForm from "../../components/common/form";
 import { registerFormControls } from "../../config/index";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, CircularProgress } from "@mui/material";
+import { CircularProgress } from "@mui/material";
 import { registerUser } from "../../store/auth-slice";
 
 function Register() {
@@ -28,28 +28,41 @@ function Register() {
         Create Your Account
       </h1>
 
-      {/* Terms and Conditions - moved above form */}
-      <div className="mb-4 text-sm text-gray-500">
-        <label className="flex items-center space-x-2">
-          <input type="checkbox" className="form-checkbox text-red-600" required />
-          <span>
-            I agree to the{" "}
-            <a href="/auth/terms" className="text-red-600 font-medium hover:underline">
-              Smartshop Terms & Conditions
-            </a>{" "}
-            and{" "}
-            <a href="/auth/privacy" className="text-red-600 font-medium hover:underline">
-              Privacy Policy
-            </a>.
-          </span>
-        </label>
-      </div>
-
       {/* Registration Form */}
       <CommonForm
         formControls={registerFormControls}
         onSubmit={handleRegisterSubmit}
-        submitButtonText={isLoading ? <CircularProgress size={24} /> : "Sign Up"}
+        submitButtonText={
+          <>
+            {/* Terms and Conditions placed right before Sign Up */}
+            <div className="mb-4 text-sm text-gray-500">
+              <label className="flex items-start space-x-2">
+                <input
+                  type="checkbox"
+                  className="form-checkbox mt-1 text-red-600"
+                  required
+                />
+                <span>
+                  I agree to the{" "}
+                  <a
+                    href="/auth/terms"
+                    className="text-red-600 font-medium hover:underline"
+                  >
+                    Smartshop Terms & Conditions
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href="/auth/privacy"
+                    className="text-red-600 font-medium hover:underline"
+                  >
+                    Privacy Policy
+                  </a>.
+                </span>
+              </label>
+            </div>
+            {isLoading ? <CircularProgress size={24} /> : "Sign Up"}
+          </>
+        }
       />
 
       {/* Error Message */}
@@ -59,7 +72,10 @@ function Register() {
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
           Already have an account?{" "}
-          <Link to="/auth/login" className="text-red-600 font-bold hover:underline">
+          <Link
+            to="/auth/login"
+            className="text-red-600 font-bold hover:underline"
+          >
             Login here
           </Link>.
         </p>

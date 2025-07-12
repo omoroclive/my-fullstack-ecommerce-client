@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import CommonForm from "../../components/common/form";
 import { registerFormControls } from "../../config/index";
@@ -10,6 +10,7 @@ function Register() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isLoading, error } = useSelector((state) => state.auth);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleRegisterSubmit = (formValues) => {
     dispatch(registerUser(formValues)).then((action) => {
@@ -27,47 +28,44 @@ function Register() {
       <h1 className="text-2xl font-semibold text-center text-gray-800 mb-6">
         Create Your Account
       </h1>
-
       {/* Registration Form */}
       <CommonForm
         formControls={registerFormControls}
         onSubmit={handleRegisterSubmit}
         submitButtonText={
-          <>
-            {/* Terms and Conditions placed right before Sign Up */}
-            <div className="mb-4 text-sm text-gray-500">
-              <label className="flex items-start space-x-2">
-                <input
-                  type="checkbox"
-                  className="form-checkbox mt-1 text-red-600"
-                  required
-                />
-                <span>
-                  I agree to the{" "}
-                  <a
-                    href="/auth/terms"
-                    className="text-red-600 font-medium hover:underline"
-                  >
-                    Smartshop Terms & Conditions
-                  </a>{" "}
-                  and{" "}
-                  <a
-                    href="/auth/privacy"
-                    className="text-red-600 font-medium hover:underline"
-                  >
-                    Privacy Policy
-                  </a>.
-                </span>
-              </label>
-            </div>
-            {isLoading ? <CircularProgress size={24} /> : "Sign Up"}
-          </>
+          isLoading ? <CircularProgress size={24} /> : "Sign Up"
         }
       />
-
+      {/* Terms and Conditions */}
+      <div className="mb-4 text-sm text-gray-500">
+        <label className="flex items-start space-x-2">
+          <input
+            type="checkbox"
+            className="form-checkbox mt-1 text-red-600"
+            required
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+          />
+          <span>
+            I agree to the{" "}
+            <a
+              href="/auth/terms"
+              className="text-red-600 font-medium hover:underline"
+            >
+              Smartshop Terms & Conditions
+            </a>{" "}
+            and{" "}
+            <a
+              href="/auth/privacy"
+              className="text-red-600 font-medium hover:underline"
+            >
+              Privacy Policy
+            </a>.
+          </span>
+        </label>
+      </div>
       {/* Error Message */}
       {error && <p className="text-center text-red-500 mt-4">{error}</p>}
-
       {/* Login Link */}
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">

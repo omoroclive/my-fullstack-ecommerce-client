@@ -28,54 +28,28 @@ function Register() {
         Create Your Account
       </h1>
 
+      {/* Terms and Conditions - moved above form */}
+      <div className="mb-4 text-sm text-gray-500">
+        <label className="flex items-center space-x-2">
+          <input type="checkbox" className="form-checkbox text-red-600" required />
+          <span>
+            I agree to the{" "}
+            <a href="/auth/terms" className="text-red-600 font-medium hover:underline">
+              Smartshop Terms & Conditions
+            </a>{" "}
+            and{" "}
+            <a href="/auth/privacy" className="text-red-600 font-medium hover:underline">
+              Privacy Policy
+            </a>.
+          </span>
+        </label>
+      </div>
+
       {/* Registration Form */}
       <CommonForm
         formControls={registerFormControls}
         onSubmit={handleRegisterSubmit}
-        // Move Sign Up button outside so we can position checkbox above it
-        renderFooter={() => (
-          <>
-            {/* Terms and Conditions */}
-            <div className="mt-4 text-sm text-gray-500">
-              <label className="flex items-start space-x-2">
-                <input
-                  type="checkbox"
-                  className="mt-1 form-checkbox text-red-600"
-                  required
-                />
-                <span>
-                  I agree to the{" "}
-                  <a
-                    href="/auth/terms"
-                    className="text-red-600 font-medium hover:underline"
-                  >
-                    Smartshop Terms & Conditions
-                  </a>{" "}
-                  and{" "}
-                  <a
-                    href="/auth/privacy"
-                    className="text-red-600 font-medium hover:underline"
-                  >
-                    Privacy Policy
-                  </a>.
-                </span>
-              </label>
-            </div>
-
-            {/* Submit Button */}
-            <div className="mt-6">
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                color="error"
-                disabled={isLoading}
-              >
-                {isLoading ? <CircularProgress size={24} /> : "Sign Up"}
-              </Button>
-            </div>
-          </>
-        )}
+        submitButtonText={isLoading ? <CircularProgress size={24} /> : "Sign Up"}
       />
 
       {/* Error Message */}
@@ -87,8 +61,7 @@ function Register() {
           Already have an account?{" "}
           <Link to="/auth/login" className="text-red-600 font-bold hover:underline">
             Login here
-          </Link>
-          .
+          </Link>.
         </p>
       </div>
     </div>

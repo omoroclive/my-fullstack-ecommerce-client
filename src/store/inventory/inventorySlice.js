@@ -1,20 +1,27 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
+// Base API URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
+// Helper: Auth headers
+const getAuthConfig = (getState, contentType = 'application/json', params = {}) => {
+  const { userInfo } = getState().auth;
+  return {
+    headers: {
+      Authorization: `Bearer ${userInfo.token}`,
+      'Content-Type': contentType,
+    },
+    params,
+  };
+};
+
+// Fetch Inventory
 export const fetchInventory = createAsyncThunk(
   'inventory/fetchInventory',
   async ({ page = 1, search = '', status }, { getState, rejectWithValue }) => {
     try {
-      const { userInfo } = getState().auth;
-      const config = {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-        params: { page, search, status }
-      };
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-      
+      const config = getAuthConfig(getState, 'application/json', { page, search, status });
       const { data } = await axios.get(`${API_BASE_URL}/api/inventory`, config);
       return data;
     } catch (error) {
@@ -23,22 +30,13 @@ export const fetchInventory = createAsyncThunk(
   }
 );
 
+// Initialize Inventory
 export const initializeInventory = createAsyncThunk(
   'inventory/initializeInventory',
   async (inventoryData, { getState, rejectWithValue }) => {
     try {
-      const { userInfo } = getState().auth;
-      const config = {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-          'Content-Type': 'application/json',
-        },
-      };
-      const { data } = await axios.post(
-        `${API_BASE_URL}/api/inventory`, 
-        inventoryData, 
-        config
-      );
+      const config = getAuthConfig(getState);
+      const { data } = await axios.post(`${API_BASE_URL}/api/inventory`, inventoryData, config);
       return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -46,22 +44,13 @@ export const initializeInventory = createAsyncThunk(
   }
 );
 
+// Update Inventory Item
 export const updateInventoryItem = createAsyncThunk(
   'inventory/updateInventory',
   async ({ id, updateData }, { getState, rejectWithValue }) => {
     try {
-      const { userInfo } = getState().auth;
-      const config = {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-          'Content-Type': 'application/json',
-        },
-      };
-      const { data } = await axios.put(
-        `${API_BASE_URL}/api/inventory/${id}`,
-        updateData,
-        config
-      );
+      const config = getAuthConfig(getState);
+      const { data } = await axios.put(`${API_BASE_URL}/api/inventory/${id}`, updateData, config);
       return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -69,20 +58,13 @@ export const updateInventoryItem = createAsyncThunk(
   }
 );
 
+// Get Low Stock Items
 export const getLowStockItems = createAsyncThunk(
   'inventory/getLowStock',
   async (_, { getState, rejectWithValue }) => {
     try {
-      const { userInfo } = getState().auth;
-      const config = {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-      };
-      const { data } = await axios.get(
-        `${API_BASE_URL}/api/inventory/low-stock`, 
-        config
-      );
+      const config = getAuthConfig(getState);
+      const { data } = await axios.get(`${API_BASE_URL}/api/inventory/low-stock`, config);
       return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -90,6 +72,7 @@ export const getLowStockItems = createAsyncThunk(
   }
 );
 
+// Inventory Slice
 const inventorySlice = createSlice({
   name: 'inventory',
   initialState: {
@@ -123,7 +106,7 @@ const inventorySlice = createSlice({
         state.status = 'failed';
         state.error = action.payload;
       })
-      
+
       // Initialize Inventory
       .addCase(initializeInventory.pending, (state) => {
         state.status = 'loading';
@@ -137,7 +120,7 @@ const inventorySlice = createSlice({
         state.status = 'failed';
         state.error = action.payload;
       })
-      
+
       // Update Inventory
       .addCase(updateInventoryItem.pending, (state) => {
         state.status = 'loading';
@@ -155,7 +138,7 @@ const inventorySlice = createSlice({
         state.status = 'failed';
         state.error = action.payload;
       })
-      
+
       // Get Low Stock Items
       .addCase(getLowStockItems.pending, (state) => {
         state.status = 'loading';
@@ -172,5 +155,4 @@ const inventorySlice = createSlice({
 });
 
 export const { resetInventoryError } = inventorySlice.actions;
-
 export default inventorySlice.reducer;

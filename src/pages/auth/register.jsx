@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import CommonForm from "../../components/common/form";
@@ -13,6 +14,10 @@ function Register() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleRegisterSubmit = (formValues) => {
+    if (!agreedToTerms) {
+      alert("Please agree to the Terms & Conditions and Privacy Policy to proceed.");
+      return;
+    }
     dispatch(registerUser(formValues)).then((action) => {
       if (action.meta.requestStatus === "fulfilled") {
         navigate("/auth/login");

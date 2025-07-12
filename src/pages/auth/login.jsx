@@ -100,7 +100,7 @@ function Login() {
   </Button>
 
   {/* Facebook Button */}
-  <Button
+  {/*<Button
     variant="outlined"
     fullWidth
     disabled
@@ -108,7 +108,7 @@ function Login() {
   >
     <img src={facebookLogo} alt="Facebook Logo" className="w-6 h-6" />
     <span>Login with Facebook</span>
-  </Button>
+  </Button>*/}
 </div>
 
 

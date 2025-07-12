@@ -1,86 +1,176 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
 
-// Fetch inventory
+
 export const fetchInventory = createAsyncThunk(
-  "inventory/fetchInventory",
-  async (_, { rejectWithValue }) => {
+  'inventory/fetchInventory',
+  async ({ page = 1, search = '', status }, { getState, rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
-      const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-      const response = await axios.get(`${BASE_URL}/api/inventory`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      return response.data;
+      const { userInfo } = getState().auth;
+      const config = {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+        params: { page, search, status }
+      };
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+      
+      const { data } = await axios.get(`${API_BASE_URL}/api/inventory`, config);
+      return data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Error fetching inventory");
+      return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
 
-// Update inventory after order placement
-export const updateInventory = createAsyncThunk(
-  "inventory/updateInventory",
-  async ({ id, sold_items, amount_sold }, { dispatch, rejectWithValue }) => {
+export const initializeInventory = createAsyncThunk(
+  'inventory/initializeInventory',
+  async (inventoryData, { getState, rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
-      const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-
-      const response = await axios.put(
-        `${BASE_URL}/api/inventory/${id}`,
-        { sold_items, amount_sold },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const { userInfo } = getState().auth;
+      const config = {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+      const { data } = await axios.post(
+        `${API_BASE_URL}/api/inventory`, 
+        inventoryData, 
+        config
       );
-
-      // Refresh inventory after update
-      dispatch(fetchInventory());
-
-      return response.data;
+      return data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Error updating inventory");
+      return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
 
-const initialState = {
-  items: [],
-  status: "idle",
-  error: null,
-};
+export const updateInventoryItem = createAsyncThunk(
+  'inventory/updateInventory',
+  async ({ id, updateData }, { getState, rejectWithValue }) => {
+    try {
+      const { userInfo } = getState().auth;
+      const config = {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+      const { data } = await axios.put(
+        `${API_BASE_URL}/api/inventory/${id}`,
+        updateData,
+        config
+      );
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const getLowStockItems = createAsyncThunk(
+  'inventory/getLowStock',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const { userInfo } = getState().auth;
+      const config = {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      };
+      const { data } = await axios.get(
+        `${API_BASE_URL}/api/inventory/low-stock`, 
+        config
+      );
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
 
 const inventorySlice = createSlice({
-  name: "inventory",
-  initialState,
-  reducers: {},
+  name: 'inventory',
+  initialState: {
+    items: [],
+    lowStockItems: [],
+    status: 'idle',
+    error: null,
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0
+  },
+  reducers: {
+    resetInventoryError: (state) => {
+      state.error = null;
+    }
+  },
   extraReducers: (builder) => {
     builder
-      // Fetch inventory
+      // Fetch Inventory
       .addCase(fetchInventory.pending, (state) => {
-        state.status = "loading";
+        state.status = 'loading';
       })
       .addCase(fetchInventory.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.items = action.payload;
+        state.status = 'succeeded';
+        state.items = action.payload.inventory;
+        state.currentPage = action.payload.currentPage;
+        state.totalPages = action.payload.totalPages;
+        state.totalItems = action.payload.totalItems;
       })
       .addCase(fetchInventory.rejected, (state, action) => {
-        state.status = "failed";
+        state.status = 'failed';
         state.error = action.payload;
       })
-
-      // Update inventory
-      .addCase(updateInventory.pending, (state) => {
-        state.status = "loading";
+      
+      // Initialize Inventory
+      .addCase(initializeInventory.pending, (state) => {
+        state.status = 'loading';
       })
-      .addCase(updateInventory.fulfilled, (state) => {
-        state.status = "succeeded";
+      .addCase(initializeInventory.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.items.unshift(action.payload.inventory);
+        state.totalItems += 1;
       })
-      .addCase(updateInventory.rejected, (state, action) => {
-        state.status = "failed";
+      .addCase(initializeInventory.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      
+      // Update Inventory
+      .addCase(updateInventoryItem.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(updateInventoryItem.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        const index = state.items.findIndex(
+          item => item._id === action.payload.inventory._id
+        );
+        if (index !== -1) {
+          state.items[index] = action.payload.inventory;
+        }
+      })
+      .addCase(updateInventoryItem.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      
+      // Get Low Stock Items
+      .addCase(getLowStockItems.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(getLowStockItems.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.lowStockItems = action.payload.items;
+      })
+      .addCase(getLowStockItems.rejected, (state, action) => {
+        state.status = 'failed';
         state.error = action.payload;
       });
-  },
+  }
 });
+
+export const { resetInventoryError } = inventorySlice.actions;
 
 export default inventorySlice.reducer;

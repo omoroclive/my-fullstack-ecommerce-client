@@ -88,28 +88,29 @@ function Login() {
 
       {/* Social Login Buttons */}
       <div className="space-y-4">
-        <Button
-          variant="outlined"
-          fullWidth
-          onClick={handleGoogleLogin}
-          startIcon={
-            <img src={googleLogo} alt="Google Logo" className="w-6 h-6" />
-          }
-        >
-          Login with Google
-        </Button>
+  {/* Google Button */}
+  <Button
+    variant="outlined"
+    fullWidth
+    onClick={handleGoogleLogin}
+    className="flex items-center justify-center gap-2"
+  >
+    <img src={googleLogo} alt="Google Logo" className="w-6 h-6" />
+    <span>Login with Google</span>
+  </Button>
 
-        <Button
-          variant="outlined"
-          fullWidth
-          startIcon={
-            <img src={facebookLogo} alt="Facebook Logo" className="w-6 h-6" />
-          }
-          disabled
-        >
-          Login with Facebook
-        </Button>
-      </div>
+  {/* Facebook Button */}
+  <Button
+    variant="outlined"
+    fullWidth
+    disabled
+    className="flex items-center justify-center gap-2"
+  >
+    <img src={facebookLogo} alt="Facebook Logo" className="w-6 h-6" />
+    <span>Login with Facebook</span>
+  </Button>
+</div>
+
 
       {/* Register Link */}
       <div className="mt-6 text-center">

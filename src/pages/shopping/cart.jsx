@@ -32,6 +32,8 @@ const Cart = () => {
   const cart = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+
 
   const handleRemove = (id) => {
     dispatch(removeFromCart(id));

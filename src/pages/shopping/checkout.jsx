@@ -37,7 +37,7 @@ const Checkout = () => {
     message: "",
     severity: "success",
   });
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
   // Fetch user addresses
   useEffect(() => {
     const fetchAddresses = async () => {
@@ -62,7 +62,7 @@ const Checkout = () => {
 
   // Update shipping cost based on the selected address
   useEffect(() => {
-    navigate(`/auth/login?redirectTo=/checkout`);
+    ;
 
     if (selectedAddress) {
       const address = addresses.find((addr) => addr._id === selectedAddress);
@@ -175,7 +175,7 @@ const Checkout = () => {
         paymentMethod: paymentGateway === "mpesa" ? "Mpesa" : "PayPal",
       };
 
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
 
       // Send order details to the server
       await axios.post(`${API_BASE_URL}/api/orders`, orderDetails, {

@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import Button from "@mui/material/Button";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -14,6 +15,8 @@ const Header = ({ toggleSidebar, isSidebarOpen }) => {
   const [openSnackbar, setOpenSnackbar] = React.useState(false);
 
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  
+
 
 
   const handleLogout = () => {

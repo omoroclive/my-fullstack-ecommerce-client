@@ -4,17 +4,49 @@ import Button from "@mui/material/Button";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import IconButton from '@mui/material/IconButton';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 
 const Header = ({ toggleSidebar, isSidebarOpen }) => {
   const navigate = useNavigate();
+  const [openSnackbar, setOpenSnackbar] = React.useState(false);
+
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     navigate("/auth/login");
   };
 
+  const handleUserClick = () => {
+    if (!isAuthenticated) {
+      setOpenSnackbar(true);
+      setTimeout(() => navigate("/auth/login"), 1500);
+    } else {
+      navigate("/account"); // or wherever the user dashboard is
+    }
+  };
+
+  const Alert = React.forwardRef(function Alert(props, ref) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+  });
+
   return (
     <header className="flex justify-between items-center p-4 bg-gray-900 text-white shadow-md z-50">
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setOpenSnackbar(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="warning" onClose={() => setOpenSnackbar(false)} sx={{ width: '100%', backgroundColor: '#ea580c', color: '#fff' }}>
+          You must be logged in to access your account.
+        </Alert>
+      </Snackbar>
+
       {/* Hamburger Menu */}
       <button
         onClick={toggleSidebar}
@@ -31,16 +63,24 @@ const Header = ({ toggleSidebar, isSidebarOpen }) => {
         <h1 className="ml-4 text-xl font-semibold">Dashboard</h1>
       </div>
 
-      {/* Logout Button */}
-      <Button
-        variant="contained"
-        color="error"
-        startIcon={<LogoutIcon />}
-        onClick={handleLogout}
-        className="capitalize"
-      >
-        Logout
-      </Button>
+      {/* Right-side icons */}
+      <div className="flex items-center gap-4">
+        {/* User Icon */}
+        <IconButton onClick={handleUserClick} sx={{ color: 'white' }}>
+          <AccountCircleIcon fontSize="large" />
+        </IconButton>
+
+        {/* Logout Button */}
+        <Button
+          variant="contained"
+          color="error"
+          startIcon={<LogoutIcon />}
+          onClick={handleLogout}
+          className="capitalize"
+        >
+          Logout
+        </Button>
+      </div>
     </header>
   );
 };

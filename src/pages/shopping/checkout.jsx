@@ -62,6 +62,8 @@ const Checkout = () => {
 
   // Update shipping cost based on the selected address
   useEffect(() => {
+    navigate(`/auth/login?redirectTo=/checkout`);
+
     if (selectedAddress) {
       const address = addresses.find((addr) => addr._id === selectedAddress);
       if (address?.country.toLowerCase() === "kenya") {

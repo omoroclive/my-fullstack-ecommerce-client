@@ -40,6 +40,7 @@ const Checkout = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
   // Fetch user addresses
   useEffect(() => {
+    
     const fetchAddresses = async () => {
       try {
         const token = localStorage.getItem("token");

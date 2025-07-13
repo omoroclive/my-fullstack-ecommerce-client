@@ -356,6 +356,7 @@ const Details = () => {
                 reviews.map((review) => (
                   <Box key={review._id} className="border-b border-gray-200 pb-4 mb-4">
                     <Typography variant="subtitle1" className="font-medium">
+                      console.log("Review user:", review.user);
                       {review.user?.fullName || "Anonymous User"}
                     </Typography>
                     <Rating

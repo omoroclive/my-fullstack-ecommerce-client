@@ -55,7 +55,7 @@ const Details = () => {
   // Fetch product details
   useEffect(() => {
     const fetchProduct = async () => {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL ;
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
       try {
        const response = await axios.get(`${API_BASE_URL}/api/products/${id}`);
 
@@ -79,7 +79,7 @@ const Details = () => {
   //  Simplified: Fetch only the reviews (user is already populated)
   useEffect(() => {
     const fetchReviews = async () => {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL ;
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
       try {
         const reviewsResponse = await axios.get(`${API_BASE_URL}/api/reviews/simple/${id}`);
 

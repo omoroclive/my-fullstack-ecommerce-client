@@ -56,18 +56,8 @@ const Details = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const token = localStorage.getItem("token");
-        console.log("Token:", token); // Debugging line
-        if (!token) throw new Error("No token found. Please log in.");
+       const response = await axios.get(`${API_BASE_URL}/api/products/${id}`);
 
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-
-        const response = await axios.get(
-          `${API_BASE_URL}/api/products/${id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
 
 
         setProduct(response.data.product);
@@ -89,17 +79,8 @@ const Details = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        console.log("Fetching reviews for product ID:", id); // Add this
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("No token found. Please log in.");
+        const reviewsResponse = await axios.get(`${API_BASE_URL}/api/reviews/simple/${id}`);
 
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-        const reviewsResponse = await axios.get(
-          `${API_BASE_URL}/api/reviews/simple/${id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
 
         // Debugging logs
         console.log("Full API response:", reviewsResponse);

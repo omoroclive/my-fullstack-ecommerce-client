@@ -16,6 +16,7 @@ import {
   Link,
   Paper,
   Divider,
+  Avatar,
 } from "@mui/material";
 import Rating from "@mui/material/Rating";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -55,12 +56,9 @@ const Details = () => {
   // Fetch product details
   useEffect(() => {
     const fetchProduct = async () => {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
       try {
-       const response = await axios.get(`${API_BASE_URL}/api/products/${id}`);
-
-
-
+        const response = await axios.get(`${API_BASE_URL}/api/products/${id}`);
         setProduct(response.data.product);
         setMainImage(
           response.data.product?.images?.[0]?.url || placeholderImage
@@ -76,13 +74,12 @@ const Details = () => {
     fetchProduct();
   }, [id]);
 
-  //  Simplified: Fetch only the reviews (user is already populated)
+  // Simplified: Fetch only the reviews (user is already populated)
   useEffect(() => {
     const fetchReviews = async () => {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
       try {
         const reviewsResponse = await axios.get(`${API_BASE_URL}/api/reviews/simple/${id}`);
-
 
         // Debugging logs
         console.log("Full API response:", reviewsResponse);
@@ -106,7 +103,6 @@ const Details = () => {
 
     if (id) fetchReviews();
   }, [id]);
-
 
   // Add to Recently Viewed
   useEffect(() => {
@@ -309,7 +305,6 @@ const Details = () => {
                 </IconButton>
               </Box>
             </Box>
-
           </Grid>
         </Grid>
       </Paper>
@@ -353,26 +348,47 @@ const Details = () => {
                   No reviews yet. Be the first to write one!
                 </Typography>
               ) : (
-                reviews.map((review) => (
-                  <Box key={review._id} className="border-b border-gray-200 pb-4 mb-4">
-                    <Typography variant="subtitle1" className="font-medium">
-                      console.log("Review user:", review.user);
-                      {review.user?.fullName || "Anonymous User"}
-                    </Typography>
-                    <Rating
-                      value={review.rating || 0}
-                      readOnly
-                      size="small"
-                      precision={0.5}
-                    />
-                    <Typography variant="body2" color="textSecondary" className="mt-1">
-                      {new Date(review.createdAt).toLocaleDateString()}
-                    </Typography>
-                    <Typography variant="body1" className="mt-2">
-                      {review.comment}
-                    </Typography>
-                  </Box>
-                ))
+                reviews.map((review) => {
+                  const email = review.user?.email || "";
+                  const nameFromEmail = email.split("@")[0];
+                  const displayName =
+                    review.user?.fullName ||
+                    (nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1)) ||
+                    "Anonymous User";
+                  const userAvatar =
+                    review.user?.avatar ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}`;
+
+                  return (
+                    <Box
+                      key={review._id}
+                      className="border-b border-gray-200 pb-4 mb-4 flex gap-4"
+                    >
+                      <Avatar alt={displayName} src={userAvatar} />
+                      <Box>
+                        <Typography variant="subtitle1" className="font-medium">
+                          {displayName}
+                        </Typography>
+                        <Rating
+                          value={review.rating || 0}
+                          readOnly
+                          size="small"
+                          precision={0.5}
+                        />
+                        <Typography
+                          variant="body2"
+                          color="textSecondary"
+                          className="mt-1"
+                        >
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </Typography>
+                        <Typography variant="body1" className="mt-2">
+                          {review.comment}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                })
               )}
             </Box>
           )}
@@ -384,18 +400,11 @@ const Details = () => {
         open={snackbar.open}
         autoHideDuration={3000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
           {snackbar.message}
         </Alert>
       </Snackbar>
-
-      <Footer />
     </Box>
   );
 };

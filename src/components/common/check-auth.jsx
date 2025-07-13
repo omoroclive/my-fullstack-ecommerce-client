@@ -5,7 +5,6 @@ const CheckAuth = ({ children }) => {
   const location = useLocation();
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
-  // Define route-based access rules
   const routes = {
     admin: "/admin/dashboard",
     shop: "/shop/home",
@@ -13,8 +12,13 @@ const CheckAuth = ({ children }) => {
     login: "/auth/login",
   };
 
-  // Redirect unauthenticated users attempting to access protected routes
-  if (!isAuthenticated && !location.pathname.startsWith("/auth")) {
+  // List of public paths accessible to everyone
+  const publicPaths = ["/", "/home", "/product", "/details", "/category", "/brand"];
+
+  const isPublicPath = publicPaths.some((path) => location.pathname.startsWith(path));
+
+  // Allow access to public pages even if not authenticated
+  if (!isAuthenticated && !location.pathname.startsWith("/auth") && !isPublicPath) {
     return <Navigate to={routes.login} replace />;
   }
 
@@ -33,7 +37,6 @@ const CheckAuth = ({ children }) => {
     return <Navigate to={routes.admin} replace />;
   }
 
-  // If all checks pass, render the child components
   return <>{children}</>;
 };
 

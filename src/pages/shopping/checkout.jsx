@@ -20,7 +20,7 @@ import paypalLogo from "../../assets/images/paypalLogo.jpg";
 import Footer from "../../components/Footer";
 import Payment from "./payment";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -138,74 +138,117 @@ const Checkout = () => {
   };
 
 
+const handlePlaceOrder = async () => {
+  if (!selectedAddress) {
+    setSnackbar({
+      open: true,
+      message: "Please select an address before placing your order.",
+      severity: "error",
+    });
+    return;
+  }
 
+  // Validate cart items
+  if (!cartItems || cartItems.length === 0) {
+    setSnackbar({
+      open: true,
+      message: "Your cart is empty. Please add items before placing an order.",
+      severity: "error",
+    });
+    return;
+  }
 
-  const handlePlaceOrder = async () => {
-    if (!selectedAddress) {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("User not logged in");
+
+    // Find the selected address
+    const address = addresses.find((addr) => addr._id === selectedAddress);
+    if (!address) {
       setSnackbar({
         open: true,
-        message: "Please select an address before placing your order.",
+        message: "Selected address not found. Please select a valid address.",
         severity: "error",
       });
       return;
     }
 
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("User not logged in");
+    // Validate cart items have required fields
+    const validatedProducts = cartItems.map((item) => {
+      const productId = item._id || item.id || item.product;
+      const productName = item.title || item.name;
+      
+      if (!productId || !productName || !item.quantity || !item.price || !item.image) {
+        throw new Error(`Missing required product data for: ${productName || 'Unknown product'}`);
+      }
 
-      // Prepare order details
-      const address = addresses.find((addr) => addr._id === selectedAddress);
-      const orderDetails = {
-        shippingAddress: {
-          fullName: address.fullName,
-          streetAddress: address.streetAddress,
-          city: address.city,
-          state: address.state,
-          zipCode: address.zipCode,
-          country: address.country,
-        },
-        products: cartItems.map((item) => ({
-          product: item._id || item.id,
-          name: item.title || item.name,
-          quantity: item.quantity,
-          price: item.price,
-          image: item.image,
-        })),
-        totalAmount: cartTotal + shippingCost,
-        paymentMethod: paymentGateway === "mpesa" ? "Mpesa" : "PayPal",
+      return {
+        product: productId,
+        name: productName,
+        quantity: item.quantity,
+        price: item.price,
+        image: item.image,
+        size: item.size || '', // Optional fields
+        color: item.color || '' // Optional fields
       };
+    });
 
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+    // Prepare order details with all required fields
+    const orderDetails = {
+      shippingAddress: {
+        fullName: address.fullName,
+        streetAddress: address.streetAddress,
+        city: address.city,
+        state: address.state || '',
+        zipCode: address.zipCode || '',
+        country: address.country,
+      },
+      products: validatedProducts,
+      totalAmount: cartTotal + shippingCost,
+      paymentMethod: paymentGateway === "mpesa" ? "Mpesa" : "PayPal",
+    };
 
-      // Send order details to the server
-      await axios.post(`${API_BASE_URL}/api/orders`, orderDetails, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    // Log the order details for debugging
+    console.log("Order details being sent:", orderDetails);
 
+    // Send order details to the server
+    const response = await axios.post(`${API_BASE_URL}/api/orders`, orderDetails, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+    });
 
+    console.log("Order response:", response.data);
 
+    setSnackbar({
+      open: true,
+      message: "Order placed successfully! Redirecting to orders page...",
+      severity: "success",
+    });
 
-      setSnackbar({
-        open: true,
-        message: "Order placed successfully! Redirecting to orders page...",
-        severity: "success",
-      });
+    // Redirect to the orders page
+    setTimeout(() => {
+      navigate("/account/orders");
+    }, 2000);
 
-      // Redirect to the orders page
-      setTimeout(() => {
-        navigate("/account/orders");
-      }, 2000);
-    } catch (error) {
-      console.error("Error placing order:", error.response?.data);
-      setSnackbar({
-        open: true,
-        message:
-          error.response?.data?.message || "Failed to place the order. Try again.",
-        severity: "error",
-      });
-    }
-  };
+  } catch (error) {
+    console.error("Error placing order:", error.response?.data || error.message);
+    
+    // More specific error handling
+    const errorMessage = error.response?.data?.message || 
+                        error.message || 
+                        "Failed to place the order. Please try again.";
+    
+    setSnackbar({
+      open: true,
+      message: errorMessage,
+      severity: "error",
+    });
+  }
+};
+
+  
 
   return (
     <Box sx={{ maxWidth: "600px", margin: "0 auto", padding: 4 }}>

@@ -78,6 +78,7 @@ const AdminOrder = () => {
 
         try {
             const response = await axios.get(`${API_BASE_URL}/api/address/${addressId}`);
+            console.log("Fetched address data:", response.data);
             setAddressDetails(prev => ({
                 ...prev,
                 [addressId]: response.data
@@ -219,8 +220,7 @@ const AdminOrder = () => {
                                         <div className="address-item">
                                             <span className="address-label">Phone Number:</span>
                                             <span className="address-value">
-                                                {addressDetails[order.shippingAddress.addressId]?.phoneNumber || 
-                                                 order.shippingAddress.phoneNumber || 'N/A'}
+                                                {order.shippingAddress.phoneNumber}
                                             </span>
                                         </div>
                                     </div>

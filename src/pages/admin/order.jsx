@@ -11,7 +11,7 @@ const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-const adminOrder = () => {
+const AdminOrder = () => {
     const dispatch = useDispatch();
     const { orders, loading, error } = useSelector((state) => state.orders);
 
@@ -24,78 +24,82 @@ const adminOrder = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [ordersPerPage] = useState(5);
 
-    // Product data state
+    // Data states
     const [productDetails, setProductDetails] = useState({});
     const [addressDetails, setAddressDetails] = useState({});
     const [expandedDescriptions, setExpandedDescriptions] = useState({});
+    const [loadingProducts, setLoadingProducts] = useState({});
+    const [loadingAddresses, setLoadingAddresses] = useState({});
 
     useEffect(() => {
         dispatch(fetchOrders());
     }, [dispatch]);
 
-    // Fetch product details
+    // Fetch product details with loading state
     const fetchProductDetails = async (productId) => {
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+        setLoadingProducts(prev => ({ ...prev, [productId]: true }));
         try {
-            console.log(`Fetching product details for ID: ${productId}`);
             const response = await axios.get(`${API_BASE_URL}/api/products/${productId}`);
-            const productData = response.data;
-            console.log('Product data received:', productData);
-
             setProductDetails(prev => ({
                 ...prev,
-                [productId]: productData
+                [productId]: response.data
             }));
         } catch (error) {
             console.error('Error fetching product details:', error);
+        } finally {
+            setLoadingProducts(prev => ({ ...prev, [productId]: false }));
         }
     };
 
-
-    // Fetch address details
+    // Fetch address details with loading state
     const fetchAddressDetails = async (addressId) => {
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+        setLoadingAddresses(prev => ({ ...prev, [addressId]: true }));
         try {
-            console.log(`Fetching address details for ID: ${addressId}`);
             const response = await axios.get(`${API_BASE_URL}/api/address/${addressId}`);
-            const addressData = response.data;
-            
-            
-            console.log('Address data received:', addressData);
-
             setAddressDetails(prev => ({
                 ...prev,
-                [addressId]: addressData
+                [addressId]: response.data
             }));
         } catch (error) {
             console.error('Error fetching address details:', error);
+        } finally {
+            setLoadingAddresses(prev => ({ ...prev, [addressId]: false }));
         }
     };
 
-    // Fetch additional data when orders change
+    // Optimized data fetching
     useEffect(() => {
         if (orders.length > 0) {
+            const productIdsToFetch = [];
+            const addressIdsToFetch = [];
+            
             orders.forEach(order => {
-                // Fetch product details for each product in the order
                 order.products.forEach(product => {
-                    if (product.productId && !productDetails[product.productId]) {
-                        fetchProductDetails(product.productId);
+                    if (product.productId && !productDetails[product.productId] && !loadingProducts[product.productId]) {
+                        productIdsToFetch.push(product.productId);
                     }
                 });
 
-                // Fetch address details if not already fetched
-                if (order.shippingAddress && order.shippingAddress.addressId && !addressDetails[order.shippingAddress.addressId]) {
-                    fetchAddressDetails(order.shippingAddress.addressId);
+                if (order.shippingAddress?.addressId && 
+                    !addressDetails[order.shippingAddress.addressId] && 
+                    !loadingAddresses[order.shippingAddress.addressId]) {
+                    addressIdsToFetch.push(order.shippingAddress.addressId);
                 }
             });
+
+            // Fetch unique product IDs
+            productIdsToFetch.forEach(fetchProductDetails);
+            
+            // Fetch unique address IDs
+            addressIdsToFetch.forEach(fetchAddressDetails);
         }
-    }, [orders, productDetails, addressDetails]);
+    }, [orders]); // Only depend on orders
 
     const handleStatusChange = async (orderId, newStatus) => {
         try {
             const payload = { orderId, orderStatus: newStatus };
-            console.log("Updating order status with payload:", payload);
-
             const updatedOrder = await dispatch(updateOrderStatus(payload)).unwrap();
 
             setSnackbarMessage(`Order ${updatedOrder._id} status updated to ${updatedOrder.orderStatus}`);
@@ -109,12 +113,8 @@ const adminOrder = () => {
         }
     };
 
-    // Close the snackbar
-    const handleCloseSnackbar = () => {
-        setOpen(false);
-    };
+    const handleCloseSnackbar = () => setOpen(false);
 
-    // Toggle description visibility
     const toggleDescription = (orderId, productIndex) => {
         const key = `${orderId}-${productIndex}`;
         setExpandedDescriptions(prev => ({
@@ -131,10 +131,9 @@ const adminOrder = () => {
 
     const handlePageChange = (event, value) => {
         setCurrentPage(value);
-        console.log(`Page changed to: ${value}`);
     };
 
-    if (loading) return <div className="loading">Loading...</div>;
+    if (loading) return <div className="loading">Loading orders...</div>;
     if (error) return <div className="error">Error fetching orders: {error}</div>;
 
     return (
@@ -196,14 +195,13 @@ const adminOrder = () => {
                                             <span className="address-label">Zip Code:</span>
                                             <span className="address-value">{order.shippingAddress.zipCode}</span>
                                         </div>
-                                        {addressDetails[order.shippingAddress.addressId] && (
-                                            <div className="address-item">
-                                                <span className="address-label">Phone Number:</span>
-                                                <span className="address-value">
-                                                    {addressDetails[order.shippingAddress.addressId].phoneNumber}
-                                                </span>
-                                            </div>
-                                        )}
+                                        <div className="address-item">
+                                            <span className="address-label">Phone Number:</span>
+                                            <span className="address-value">
+                                                {addressDetails[order.shippingAddress.addressId]?.phoneNumber || 
+                                                 order.shippingAddress.phoneNumber || 'N/A'}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -218,7 +216,7 @@ const adminOrder = () => {
                                             return (
                                                 <div key={index} className="product-item">
                                                     <div className="product-main">
-                                                        {productDetail?.images?.[0] && (
+                                                        {productDetail?.images?.[0] ? (
                                                             <div className="product-image">
                                                                 <img
                                                                     src={productDetail.images[0]}
@@ -229,6 +227,10 @@ const adminOrder = () => {
                                                                     }}
                                                                 />
                                                             </div>
+                                                        ) : (
+                                                            <div className="product-image placeholder">
+                                                                No Image
+                                                            </div>
                                                         )}
                                                         <div className="product-info">
                                                             <div className="product-name">{product.name}</div>
@@ -236,17 +238,21 @@ const adminOrder = () => {
                                                                 <span className="product-quantity">Qty: {product.quantity}</span>
                                                                 <span className="product-price">${product.price}</span>
                                                             </div>
-                                                            {productDetail?.description && (
-                                                                <div className="product-description-toggle">
-                                                                    <IconButton
-                                                                        onClick={() => toggleDescription(order._id, index)}
-                                                                        size="small"
-                                                                        className="description-toggle-btn"
-                                                                    >
-                                                                        {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                                                                        <span>Description</span>
-                                                                    </IconButton>
-                                                                </div>
+                                                            {loadingProducts[product.productId] ? (
+                                                                <div className="loading-small">Loading details...</div>
+                                                            ) : (
+                                                                productDetail?.description && (
+                                                                    <div className="product-description-toggle">
+                                                                        <IconButton
+                                                                            onClick={() => toggleDescription(order._id, index)}
+                                                                            size="small"
+                                                                            className="description-toggle-btn"
+                                                                        >
+                                                                            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                                                            <span>Description</span>
+                                                                        </IconButton>
+                                                                    </div>
+                                                                )
                                                             )}
                                                         </div>
                                                     </div>
@@ -319,339 +325,355 @@ const adminOrder = () => {
             </Snackbar>
 
             <style jsx>{`
-        .order-container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 20px;
-        }
+                .order-container {
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }
 
-        .order-title {
-          text-align: center;
-          margin-bottom: 30px;
-          color: #333;
-          font-size: 2rem;
-        }
+                .order-title {
+                    text-align: center;
+                    margin-bottom: 30px;
+                    color: #333;
+                    font-size: 2rem;
+                }
 
-        .loading, .error {
-          text-align: center;
-          padding: 40px;
-          font-size: 1.2rem;
-        }
+                .loading, .error {
+                    text-align: center;
+                    padding: 40px;
+                    font-size: 1.2rem;
+                }
 
-        .no-orders {
-          text-align: center;
-          color: #666;
-          font-size: 1.1rem;
-        }
+                .loading-small {
+                    font-size: 0.8rem;
+                    color: #666;
+                    margin-top: 8px;
+                }
 
-        .order-card {
-          background: #fff;
-          border-radius: 12px;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          margin-bottom: 30px;
-          overflow: hidden;
-        }
+                .no-orders {
+                    text-align: center;
+                    color: #666;
+                    font-size: 1.1rem;
+                }
 
-        .order-header {
-          background: #f8f9fa;
-          padding: 20px;
-          border-bottom: 1px solid #e9ecef;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-wrap: wrap;
-        }
+                .order-card {
+                    background: #fff;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    margin-bottom: 30px;
+                    overflow: hidden;
+                }
 
-        .order-id {
-          margin: 0;
-          color: #495057;
-          font-size: 1.3rem;
-        }
+                .order-header {
+                    background: #f8f9fa;
+                    padding: 20px;
+                    border-bottom: 1px solid #e9ecef;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    flex-wrap: wrap;
+                }
 
-        .order-date {
-          color: #6c757d;
-          font-size: 0.9rem;
-        }
+                .order-id {
+                    margin: 0;
+                    color: #495057;
+                    font-size: 1.3rem;
+                }
 
-        .order-content {
-          padding: 20px;
-        }
+                .order-date {
+                    color: #6c757d;
+                    font-size: 0.9rem;
+                }
 
-        .order-info-section, .shipping-section, .products-section, .status-section {
-          margin-bottom: 25px;
-        }
+                .order-content {
+                    padding: 20px;
+                }
 
-        .order-info-section h3, .shipping-section h3, .products-section h3, .status-section h3 {
-          color: #333;
-          margin-bottom: 15px;
-          font-size: 1.2rem;
-          border-bottom: 2px solid #007bff;
-          padding-bottom: 5px;
-        }
+                .order-info-section, .shipping-section, .products-section, .status-section {
+                    margin-bottom: 25px;
+                }
 
-        .info-grid, .address-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 12px;
-        }
+                .order-info-section h3, .shipping-section h3, .products-section h3, .status-section h3 {
+                    color: #333;
+                    margin-bottom: 15px;
+                    font-size: 1.2rem;
+                    border-bottom: 2px solid #007bff;
+                    padding-bottom: 5px;
+                }
 
-        .info-item, .address-item {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
+                .info-grid, .address-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 12px;
+                }
 
-        .info-label, .address-label {
-          font-weight: 600;
-          color: #495057;
-          font-size: 0.9rem;
-        }
+                .info-item, .address-item {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
 
-        .info-value, .address-value {
-          color: #212529;
-          font-size: 1rem;
-        }
+                .info-label, .address-label {
+                    font-weight: 600;
+                    color: #495057;
+                    font-size: 0.9rem;
+                }
 
-        .products-list {
-          display: flex;
-          flex-direction: column;
-          gap: 15px;
-        }
+                .info-value, .address-value {
+                    color: #212529;
+                    font-size: 1rem;
+                }
 
-        .product-item {
-          border: 1px solid #e9ecef;
-          border-radius: 8px;
-          overflow: hidden;
-        }
+                .products-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 15px;
+                }
 
-        .product-main {
-          display: flex;
-          gap: 15px;
-          padding: 15px;
-        }
+                .product-item {
+                    border: 1px solid #e9ecef;
+                    border-radius: 8px;
+                    overflow: hidden;
+                }
 
-        .product-image {
-          width: 80px;
-          height: 80px;
-          flex-shrink: 0;
-          border-radius: 6px;
-          overflow: hidden;
-          background: #f8f9fa;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
+                .product-main {
+                    display: flex;
+                    gap: 15px;
+                    padding: 15px;
+                }
 
-        .product-image img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
+                .product-image {
+                    width: 80px;
+                    height: 80px;
+                    flex-shrink: 0;
+                    border-radius: 6px;
+                    overflow: hidden;
+                    background: #f8f9fa;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
 
-        .product-info {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
+                .product-image.placeholder {
+                    background: #e9ecef;
+                    color: #6c757d;
+                    font-size: 0.8rem;
+                    text-align: center;
+                    padding: 5px;
+                }
 
-        .product-name {
-          font-weight: 600;
-          font-size: 1.1rem;
-          color: #212529;
-        }
+                .product-image img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                    max-width: 100%;
+                    max-height: 100%;
+                }
 
-        .product-details {
-          display: flex;
-          gap: 20px;
-          font-size: 0.9rem;
-          color: #6c757d;
-        }
+                .product-info {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
 
-        .product-quantity, .product-price {
-          font-weight: 500;
-        }
+                .product-name {
+                    font-weight: 600;
+                    font-size: 1.1rem;
+                    color: #212529;
+                }
 
-        .product-description-toggle {
-          margin-top: 8px;
-        }
+                .product-details {
+                    display: flex;
+                    gap: 20px;
+                    font-size: 0.9rem;
+                    color: #6c757d;
+                }
 
-        .description-toggle-btn {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          color: #007bff;
-          padding: 4px 8px;
-        }
+                .product-quantity, .product-price {
+                    font-weight: 500;
+                }
 
-        .description-toggle-btn span {
-          font-size: 0.85rem;
-        }
+                .product-description-toggle {
+                    margin-top: 8px;
+                }
 
-        .product-description {
-          padding: 15px;
-          background: #f8f9fa;
-          border-top: 1px solid #e9ecef;
-          color: #495057;
-          line-height: 1.5;
-        }
+                .description-toggle-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    color: #007bff;
+                    padding: 4px 8px;
+                }
 
-        .status-section {
-          background: #f8f9fa;
-          padding: 20px;
-          border-radius: 8px;
-        }
+                .description-toggle-btn span {
+                    font-size: 0.85rem;
+                }
 
-        .status-controls {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          flex-wrap: wrap;
-        }
+                .product-description {
+                    padding: 15px;
+                    background: #f8f9fa;
+                    border-top: 1px solid #e9ecef;
+                    color: #495057;
+                    line-height: 1.5;
+                }
 
-        .current-status {
-          font-weight: 500;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
+                .status-section {
+                    background: #f8f9fa;
+                    padding: 20px;
+                    border-radius: 8px;
+                }
 
-        .status-badge {
-          padding: 4px 12px;
-          border-radius: 20px;
-          font-size: 0.8rem;
-          font-weight: 600;
-          text-transform: uppercase;
-        }
+                .status-controls {
+                    display: flex;
+                    align-items: center;
+                    gap: 20px;
+                    flex-wrap: wrap;
+                }
 
-        .status-processing {
-          background: #fff3cd;
-          color: #856404;
-        }
+                .current-status {
+                    font-weight: 500;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
 
-        .status-shipped {
-          background: #d4edda;
-          color: #155724;
-        }
+                .status-badge {
+                    padding: 4px 12px;
+                    border-radius: 20px;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                }
 
-        .status-delivered {
-          background: #d1ecf1;
-          color: #0c5460;
-        }
+                .status-processing {
+                    background: #fff3cd;
+                    color: #856404;
+                }
 
-        .status-cancelled {
-          background: #f8d7da;
-          color: #721c24;
-        }
+                .status-shipped {
+                    background: #d4edda;
+                    color: #155724;
+                }
 
-        .status-pending {
-          background: #e2e3e5;
-          color: #383d41;
-        }
+                .status-delivered {
+                    background: #d1ecf1;
+                    color: #0c5460;
+                }
 
-        .status-select {
-          min-width: 150px;
-        }
+                .status-cancelled {
+                    background: #f8d7da;
+                    color: #721c24;
+                }
 
-        .pagination-container {
-          display: flex;
-          justify-content: center;
-          margin-top: 40px;
-          padding: 20px;
-        }
+                .status-pending {
+                    background: #e2e3e5;
+                    color: #383d41;
+                }
 
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-          .order-container {
-            padding: 10px;
-          }
+                .status-select {
+                    min-width: 150px;
+                }
 
-          .order-title {
-            font-size: 1.5rem;
-          }
+                .pagination-container {
+                    display: flex;
+                    justify-content: center;
+                    margin-top: 40px;
+                    padding: 20px;
+                }
 
-          .order-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-          }
+                /* Mobile responsiveness */
+                @media (max-width: 768px) {
+                    .order-container {
+                        padding: 10px;
+                    }
 
-          .order-id {
-            font-size: 1.1rem;
-          }
+                    .order-title {
+                        font-size: 1.5rem;
+                    }
 
-          .order-content {
-            padding: 15px;
-          }
+                    .order-header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 10px;
+                    }
 
-          .info-grid, .address-grid {
-            grid-template-columns: 1fr;
-          }
+                    .order-id {
+                        font-size: 1.1rem;
+                    }
 
-          .product-main {
-            flex-direction: column;
-            gap: 10px;
-          }
+                    .order-content {
+                        padding: 15px;
+                    }
 
-          .product-image {
-            width: 60px;
-            height: 60px;
-            align-self: flex-start;
-          }
+                    .info-grid, .address-grid {
+                        grid-template-columns: 1fr;
+                    }
 
-          .product-details {
-            flex-direction: column;
-            gap: 5px;
-          }
+                    .product-main {
+                        flex-direction: column;
+                        gap: 10px;
+                    }
 
-          .status-controls {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-          }
+                    .product-image {
+                        width: 60px;
+                        height: 60px;
+                        align-self: flex-start;
+                    }
 
-          .status-select {
-            width: 100%;
-          }
-        }
+                    .product-details {
+                        flex-direction: column;
+                        gap: 5px;
+                    }
 
-        @media (max-width: 480px) {
-          .order-container {
-            padding: 5px;
-          }
+                    .status-controls {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 15px;
+                    }
 
-          .order-card {
-            margin-bottom: 20px;
-          }
+                    .status-select {
+                        width: 100%;
+                    }
+                }
 
-          .order-header {
-            padding: 15px;
-          }
+                @media (max-width: 480px) {
+                    .order-container {
+                        padding: 5px;
+                    }
 
-          .order-content {
-            padding: 10px;
-          }
+                    .order-card {
+                        margin-bottom: 20px;
+                    }
 
-          .product-main {
-            padding: 10px;
-          }
+                    .order-header {
+                        padding: 15px;
+                    }
 
-          .product-image {
-            width: 50px;
-            height: 50px;
-          }
+                    .order-content {
+                        padding: 10px;
+                    }
 
-          .product-name {
-            font-size: 1rem;
-          }
+                    .product-main {
+                        padding: 10px;
+                    }
 
-          .status-section {
-            padding: 15px;
-          }
-        }
-      `}</style>
+                    .product-image {
+                        width: 50px;
+                        height: 50px;
+                    }
+
+                    .product-name {
+                        font-size: 1rem;
+                    }
+
+                    .status-section {
+                        padding: 15px;
+                    }
+                }
+            `}</style>
         </div>
     );
 };
 
-export default adminOrder;
+export default AdminOrder;

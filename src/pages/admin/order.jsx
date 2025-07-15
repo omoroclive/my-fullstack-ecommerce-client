@@ -1,76 +1,56 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
 import { fetchOrders, updateOrderStatus } from "../../store/order/orderSlice";
-import { 
-  Snackbar, 
-  MenuItem, 
-  Select, 
-  TablePagination, 
-  IconButton, 
-  Collapse,
-  useMediaQuery,
-  useTheme 
-} from "@mui/material";
+import { Snackbar, MenuItem, Select, IconButton } from "@mui/material";
 import MuiAlert from "@mui/material/Alert";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import axios from "axios";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
+const ITEMS_PER_PAGE = 5;
+
 const adminOrder = () => {
-  const { id } = useParams();
   const dispatch = useDispatch();
   const { orders, loading, error } = useSelector((state) => state.orders);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Snackbar state
   const [open, setOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-
-  // Pagination state
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-
-  // Expanded descriptions state
+  const [productDetails, setProductDetails] = useState({});
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
-  const [phoneNumbers, setPhoneNumbers] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     dispatch(fetchOrders());
   }, [dispatch]);
 
+  // Fetch product details on orders load
   useEffect(() => {
-    // Fetch phone numbers for each order
-    const fetchPhoneNumbers = async () => {
-      const phoneData = {};
-      for (const order of orders) {
-        try {
-          const response = await fetch(`/api/address/${id}`);
-          const data = await response.json();
-          phoneData[id] = data.phoneNumber;
-        } catch (error) {
-          console.error(`Failed to fetch phone number for order ${id}:`, error);
-          phoneData[id] = "N/A";
-        }
+    const fetchAllProductDetails = async () => {
+      try {
+        const allProductIds = [...new Set(orders.flatMap(order => order.products.map(p => p.productId)))];
+        const { data } = await axios.get("/api/products"); // or specific fetch route
+        const productMap = {};
+        data.forEach(product => {
+          productMap[product._id] = product;
+        });
+        setProductDetails(productMap);
+      } catch (err) {
+        console.error("Error fetching product details:", err);
       }
-      setPhoneNumbers(phoneData);
     };
 
-    if (orders.length > 0) {
-      fetchPhoneNumbers();
-    }
+    if (orders.length > 0) fetchAllProductDetails();
   }, [orders]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       const payload = { orderId, orderStatus: newStatus };
       const updatedOrder = await dispatch(updateOrderStatus(payload)).unwrap();
-
       setSnackbarMessage(`Order ${updatedOrder._id} status updated to ${updatedOrder.orderStatus}`);
       setSnackbarSeverity("success");
       setOpen(true);
@@ -81,225 +61,137 @@ const adminOrder = () => {
     }
   };
 
-  const toggleDescription = (orderId, productIndex) => {
+  const toggleDescription = (id) => {
     setExpandedDescriptions(prev => ({
       ...prev,
-      [`${orderId}-${productIndex}`]: !prev[`${orderId}-${productIndex}`]
+      [id]: !prev[id],
     }));
   };
 
-  // Close the snackbar
-  const handleCloseSnackbar = () => {
-    setOpen(false);
-  };
+  const handleCloseSnackbar = () => setOpen(false);
 
-  // Pagination handlers
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  // Pagination logic
+  const paginatedOrders = orders.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(orders.length / ITEMS_PER_PAGE);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error fetching orders: {error}</div>;
 
   return (
-    <div className="order-container" style={{ padding: isMobile ? '10px' : '20px' }}>
-      <h1 className="text-center" style={{ fontSize: isMobile ? '1.5rem' : '2rem' }}>
-        Order Details
-      </h1>
-      
-      {orders.length === 0 ? (
+    <div className="order-container p-2 sm:p-4 max-w-6xl mx-auto">
+      <h1 className="text-center text-2xl font-bold mb-4">Order Details</h1>
+
+      {paginatedOrders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
-        <>
-          {orders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((order) => (
-            <div 
-              key={order._id} 
-              className="order-card" 
-              style={{
-                marginBottom: '20px',
-                padding: isMobile ? '10px' : '20px',
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}
-            >
-              <h2 style={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }}>
-                Order ID: {order._id}
-              </h2>
-              
-              <div style={{ 
-                display: isMobile ? 'block' : 'flex', 
-                justifyContent: 'space-between',
-                flexWrap: 'wrap'
-              }}>
-                <table className="order-table" style={{ 
-                  width: isMobile ? '100%' : '48%',
-                  marginBottom: isMobile ? '15px' : '0'
-                }}>
-                  <thead>
-                    <tr>
-                      <th colSpan="2">Order Information</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><strong>Created at:</strong></td>
-                      <td>{new Date(order.createdAt).toLocaleString()}</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Payment Method:</strong></td>
-                      <td>{order.paymentMethod}</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Total Amount:</strong></td>
-                      <td>${order.totalAmount}</td>
-                    </tr>
-                  </tbody>
-                </table>
+        paginatedOrders.map((order) => (
+          <div key={order._id} className="order-card mb-6 border p-4 rounded shadow-md bg-white">
+            <h2 className="font-semibold text-lg mb-2">Order ID: {order._id}</h2>
 
-                <table className="address-table" style={{ 
-                  width: isMobile ? '100%' : '48%',
-                  marginBottom: '15px'
-                }}>
-                  <thead>
-                    <tr>
-                      <th colSpan="2">Shipping Address</th>
-                    </tr>
-                  </thead>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <table className="w-full text-sm">
                   <tbody>
-                    <tr>
-                      <td><strong>Full Name:</strong></td>
-                      <td>{order.shippingAddress.fullName}</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Phone:</strong></td>
-                      <td>{phoneNumbers[order._id] || "Loading..."}</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Street Address:</strong></td>
-                      <td>{order.shippingAddress.streetAddress}</td>
-                    </tr>
-                    <tr>
-                      <td><strong>City:</strong></td>
-                      <td>{order.shippingAddress.city}</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Country:</strong></td>
-                      <td>{order.shippingAddress.country}</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Zip Code:</strong></td>
-                      <td>{order.shippingAddress.zipCode}</td>
-                    </tr>
+                    <tr><td><strong>Created at:</strong></td><td>{new Date(order.createdAt).toLocaleString()}</td></tr>
+                    <tr><td><strong>Payment Method:</strong></td><td>{order.paymentMethod}</td></tr>
+                    <tr><td><strong>Total Amount:</strong></td><td>${order.totalAmount}</td></tr>
+                    <tr><td><strong>Phone Number:</strong></td><td>{order.shippingAddress.phoneNumber}</td></tr>
                   </tbody>
                 </table>
               </div>
 
-              <h3 style={{ marginTop: '15px' }}>Products</h3>
-              <div style={{ overflowX: 'auto' }}>
-                <table className="products-table" style={{ width: '100%' }}>
-                  <thead>
-                    <tr>
-                      <th>Image</th>
-                      <th>Product Name</th>
-                      <th>Quantity</th>
-                      <th>Price</th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
+              <div>
+                <table className="w-full text-sm">
                   <tbody>
-                    {order.products.map((product, index) => (
-                      <React.Fragment key={index}>
-                        <tr>
-                          <td>
-                            {product.images && product.images[0] && (
-                              <img 
-                                src={product.images[0]} 
-                                alt={product.name} 
-                                style={{ 
-                                  width: '50px', 
-                                  height: '50px',
-                                  objectFit: 'cover',
-                                  borderRadius: '4px'
-                                }} 
-                              />
-                            )}
-                          </td>
-                          <td>{product.name}</td>
-                          <td>{product.quantity}</td>
-                          <td>${product.price}</td>
-                          <td>
-                            <IconButton 
-                              size="small" 
-                              onClick={() => toggleDescription(order._id, index)}
-                              aria-label="toggle description"
-                            >
-                              {expandedDescriptions[`${order._id}-${index}`] ? (
-                                <ExpandLessIcon />
-                              ) : (
-                                <ExpandMoreIcon />
-                              )}
-                            </IconButton>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td colSpan={5} style={{ padding: 0 }}>
-                            <Collapse in={expandedDescriptions[`${order._id}-${index}`]}>
-                              <div style={{ 
-                                padding: '10px',
-                                backgroundColor: '#f5f5f5',
-                                borderRadius: '4px',
-                                margin: '5px 0'
-                              }}>
-                                <strong>Description:</strong> {product.description || 'No description available'}
-                              </div>
-                            </Collapse>
-                          </td>
-                        </tr>
-                      </React.Fragment>
-                    ))}
+                    <tr><td><strong>Full Name:</strong></td><td>{order.shippingAddress.fullName}</td></tr>
+                    <tr><td><strong>Street:</strong></td><td>{order.shippingAddress.streetAddress}</td></tr>
+                    <tr><td><strong>City:</strong></td><td>{order.shippingAddress.city}</td></tr>
+                    <tr><td><strong>Country:</strong></td><td>{order.shippingAddress.country}</td></tr>
+                    <tr><td><strong>Zip:</strong></td><td>{order.shippingAddress.zipCode}</td></tr>
                   </tbody>
                 </table>
               </div>
+            </div>
 
-              <div className="order-status" style={{ marginTop: '15px' }}>
-                <h3>Order Status</h3>
-                <p>Status: {order.orderStatus || "Pending"}</p>
+            <h3 className="mt-4 font-semibold">Products</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm mt-2">
+                <thead>
+                  <tr className="border-b">
+                    <th className="p-2 text-left">Image</th>
+                    <th className="p-2 text-left">Name</th>
+                    <th className="p-2 text-left">Quantity</th>
+                    <th className="p-2 text-left">Price</th>
+                    <th className="p-2 text-left">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {order.products.map((product, index) => {
+                    const fullProduct = productDetails[product.productId];
+                    return (
+                      <tr key={index} className="border-b">
+                        <td className="p-2">
+                          {fullProduct?.images?.[0] ? (
+                            <img src={fullProduct.images[0]} alt={product.name} className="w-16 h-16 object-cover rounded" />
+                          ) : (
+                            "N/A"
+                          )}
+                        </td>
+                        <td className="p-2">{product.name}</td>
+                        <td className="p-2">{product.quantity}</td>
+                        <td className="p-2">${product.price}</td>
+                        <td className="p-2">
+                          <IconButton size="small" onClick={() => toggleDescription(`${order._id}-${index}`)}>
+                            {expandedDescriptions[`${order._id}-${index}`] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                          </IconButton>
+                          {expandedDescriptions[`${order._id}-${index}`] && (
+                            <div className="mt-1 text-gray-700">{fullProduct?.description || "No description"}</div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-4">
+              <h3 className="font-semibold">Order Status</h3>
+              <div className="flex items-center gap-4 mt-2">
+                <span>Status: {order.orderStatus || "Pending"}</span>
                 <Select
+                  size="small"
                   value={order.orderStatus || "Processing"}
                   onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                  disabled={order.orderStatus === "Delivered" || order.orderStatus === "Cancelled"}
-                  displayEmpty
-                  className="status-select"
-                  style={{ minWidth: '150px' }}
+                  disabled={["Delivered", "Cancelled"].includes(order.orderStatus)}
                 >
                   <MenuItem value="Processing">Processing</MenuItem>
-                  <MenuItem value="Shipped" disabled={order.orderStatus === "Shipped" || order.orderStatus === "Delivered"}>Shipped</MenuItem>
+                  <MenuItem value="Shipped" disabled={["Shipped", "Delivered"].includes(order.orderStatus)}>Shipped</MenuItem>
                   <MenuItem value="Delivered" disabled={order.orderStatus === "Delivered"}>Delivered</MenuItem>
                   <MenuItem value="Cancelled" disabled={order.orderStatus === "Cancelled"}>Cancelled</MenuItem>
                 </Select>
               </div>
             </div>
-          ))}
-          
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={orders.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            style={{ marginTop: '20px' }}
-          />
-        </>
+          </div>
+        ))
       )}
 
-      {/* Snackbar for status update */}
+      {/* Pagination Controls */}
+      {orders.length > ITEMS_PER_PAGE && (
+        <div className="flex justify-center gap-2 mt-6">
+          {[...Array(totalPages)].map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentPage(idx + 1)}
+              className={`px-3 py-1 border rounded ${currentPage === idx + 1 ? "bg-black text-white" : "bg-gray-200"}`}
+            >
+              {idx + 1}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Snackbar */}
       <Snackbar open={open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
         <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
           {snackbarMessage}

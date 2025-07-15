@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOrders, updateOrderStatus } from "../../store/order/orderSlice";
 import { Snackbar, MenuItem, Select, Pagination, Box, IconButton, Collapse } from "@mui/material";
@@ -34,18 +35,12 @@ const adminOrder = () => {
 
   // Fetch product details
   const fetchProductDetails = async (productId) => {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
     try {
       console.log(`Fetching product details for ID: ${productId}`);
-      const response = await fetch(`/api/products/${productId}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
+      const response = await axios.get(`${API_BASE_URL}/api/products/${productId}`);
       const productData = await response.json();
       console.log('Product data received:', productData);
-      console.log('Product images:', productData.images);
-      console.log('Product description:', productData.description);
       
       setProductDetails(prev => ({
         ...prev,
@@ -53,7 +48,6 @@ const adminOrder = () => {
       }));
     } catch (error) {
       console.error('Error fetching product details:', error);
-      console.error('Product ID that failed:', productId);
     }
   };
 
@@ -62,14 +56,8 @@ const adminOrder = () => {
     try {
       console.log(`Fetching address details for ID: ${addressId}`);
       const response = await fetch(`/api/address/${addressId}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
       const addressData = await response.json();
       console.log('Address data received:', addressData);
-      console.log('Phone number:', addressData.phoneNumber);
       
       setAddressDetails(prev => ({
         ...prev,
@@ -77,55 +65,27 @@ const adminOrder = () => {
       }));
     } catch (error) {
       console.error('Error fetching address details:', error);
-      console.error('Address ID that failed:', addressId);
     }
   };
 
   // Fetch additional data when orders change
   useEffect(() => {
-    console.log('Orders data:', orders);
-    
     if (orders.length > 0) {
       orders.forEach(order => {
-        console.log('Processing order:', order._id);
-        console.log('Order products:', order.products);
-        console.log('Order shipping address:', order.shippingAddress);
-        
         // Fetch product details for each product in the order
-        order.products.forEach((product, index) => {
-          console.log(`Product ${index}:`, product);
-          
-          // Try different possible property names for product ID
-          const productId = product.productId || product._id || product.id;
-          console.log(`Product ID found: ${productId}`);
-          
-          if (productId && !productDetails[productId]) {
-            fetchProductDetails(productId);
-          } else if (!productId) {
-            console.warn('No product ID found for product:', product);
+        order.products.forEach(product => {
+          if (product.productId && !productDetails[product.productId]) {
+            fetchProductDetails(product.productId);
           }
         });
 
-        // Fetch address details - try different approaches
-        const shippingAddress = order.shippingAddress;
-        if (shippingAddress) {
-          // Try different possible property names for address ID
-          const addressId = shippingAddress.addressId || shippingAddress._id || shippingAddress.id;
-          console.log(`Address ID found: ${addressId}`);
-          
-          if (addressId && !addressDetails[addressId]) {
-            fetchAddressDetails(addressId);
-          } else if (!addressId) {
-            console.warn('No address ID found, trying to fetch with order ID');
-            // If no address ID, try using order ID as fallback
-            if (!addressDetails[order._id]) {
-              fetchAddressDetails(order._id);
-            }
-          }
+        // Fetch address details if not already fetched
+        if (order.shippingAddress && order.shippingAddress.addressId && !addressDetails[order.shippingAddress.addressId]) {
+          fetchAddressDetails(order.shippingAddress.addressId);
         }
       });
     }
-  }, [orders]);
+  }, [orders, productDetails, addressDetails]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
@@ -232,26 +192,14 @@ const adminOrder = () => {
                       <span className="address-label">Zip Code:</span>
                       <span className="address-value">{order.shippingAddress.zipCode}</span>
                     </div>
-                    {(() => {
-                      const addressId = order.shippingAddress.addressId || order.shippingAddress._id || order.shippingAddress.id || order._id;
-                      const addressData = addressDetails[addressId];
-                      console.log('Rendering phone number for address ID:', addressId);
-                      console.log('Address data available:', addressData);
-                      
-                      if (addressData && addressData.phoneNumber) {
-                        return (
-                          <div className="address-item">
-                            <span className="address-label">Phone Number:</span>
-                            <span className="address-value">
-                              {addressData.phoneNumber}
-                            </span>
-                          </div>
-                        );
-                      } else {
-                        console.log('No phone number found for this address');
-                        return null;
-                      }
-                    })()}
+                    {addressDetails[order.shippingAddress.addressId] && (
+                      <div className="address-item">
+                        <span className="address-label">Phone Number:</span>
+                        <span className="address-value">
+                          {addressDetails[order.shippingAddress.addressId].phoneNumber}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -259,73 +207,43 @@ const adminOrder = () => {
                   <h3>Products</h3>
                   <div className="products-list">
                     {order.products.map((product, index) => {
-                      const productId = product.productId || product._id || product.id;
-                      const productDetail = productDetails[productId];
+                      const productDetail = productDetails[product.productId];
                       const descriptionKey = `${order._id}-${index}`;
                       const isExpanded = expandedDescriptions[descriptionKey];
-
-                      console.log(`Rendering product ${index}:`, product);
-                      console.log(`Product ID: ${productId}`);
-                      console.log(`Product detail:`, productDetail);
-                      console.log(`Product images:`, productDetail?.images);
-                      console.log(`Product description:`, productDetail?.description);
 
                       return (
                         <div key={index} className="product-item">
                           <div className="product-main">
-                            {(() => {
-                              if (productDetail?.images && productDetail.images.length > 0 && productDetail.images[0]) {
-                                console.log('Rendering image:', productDetail.images[0]);
-                                return (
-                                  <div className="product-image">
-                                    <img 
-                                      src={productDetail.images[0]} 
-                                      alt={product.name}
-                                      onError={(e) => {
-                                        e.target.style.display = 'none';
-                                        console.log('Image failed to load:', productDetail.images[0]);
-                                      }}
-                                      onLoad={() => {
-                                        console.log('Image loaded successfully:', productDetail.images[0]);
-                                      }}
-                                    />
-                                  </div>
-                                );
-                              } else {
-                                console.log('No image available for product:', productId);
-                                return (
-                                  <div className="product-image">
-                                    <div className="no-image">No Image</div>
-                                  </div>
-                                );
-                              }
-                            })()}
+                            {productDetail?.images?.[0] && (
+                              <div className="product-image">
+                                <img 
+                                  src={productDetail.images[0]} 
+                                  alt={product.name}
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    console.log('Image failed to load:', productDetail.images[0]);
+                                  }}
+                                />
+                              </div>
+                            )}
                             <div className="product-info">
                               <div className="product-name">{product.name}</div>
                               <div className="product-details">
                                 <span className="product-quantity">Qty: {product.quantity}</span>
                                 <span className="product-price">${product.price}</span>
                               </div>
-                              {(() => {
-                                if (productDetail?.description) {
-                                  console.log('Rendering description toggle for:', productId);
-                                  return (
-                                    <div className="product-description-toggle">
-                                      <IconButton
-                                        onClick={() => toggleDescription(order._id, index)}
-                                        size="small"
-                                        className="description-toggle-btn"
-                                      >
-                                        {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                                        <span>Description</span>
-                                      </IconButton>
-                                    </div>
-                                  );
-                                } else {
-                                  console.log('No description available for product:', productId);
-                                  return null;
-                                }
-                              })()}
+                              {productDetail?.description && (
+                                <div className="product-description-toggle">
+                                  <IconButton
+                                    onClick={() => toggleDescription(order._id, index)}
+                                    size="small"
+                                    className="description-toggle-btn"
+                                  >
+                                    {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                    <span>Description</span>
+                                  </IconButton>
+                                </div>
+                              )}
                             </div>
                           </div>
                           {productDetail?.description && (
@@ -524,18 +442,6 @@ const adminOrder = () => {
           width: 100%;
           height: 100%;
           object-fit: cover;
-        }
-
-        .no-image {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 100%;
-          height: 100%;
-          background: #e9ecef;
-          color: #6c757d;
-          font-size: 0.8rem;
-          text-align: center;
         }
 
         .product-info {

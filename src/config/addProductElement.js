@@ -8,12 +8,14 @@ export const addProductFormElements = [
     componentType: "input",
     type: "text",
     placeholder: "Enter product title",
+    required: true,
   },
   {
     label: "Description",
     name: "description",
     componentType: "textarea",
     placeholder: "Enter product description",
+    required: true,
   },
   {
     label: "Category",
@@ -26,6 +28,7 @@ export const addProductFormElements = [
       { id: "Accessories", label: "Accessories" },
       { id: "Footwear", label: "Footwear" },
     ],
+    required: true,
   },
   {
     label: "Brand",
@@ -39,6 +42,7 @@ export const addProductFormElements = [
       { id: "Zara", label: "Zara" },
       { id: "H&M", label: "H&M" },
     ],
+    required: true,
   },
   {
     label: "Price",
@@ -46,6 +50,7 @@ export const addProductFormElements = [
     componentType: "input",
     type: "number",
     placeholder: "Enter product price",
+    required: true,
   },
   {
     label: "Sale Price",
@@ -60,12 +65,64 @@ export const addProductFormElements = [
     componentType: "input",
     type: "number",
     placeholder: "Enter total stock",
+    required: true,
+  },
+  // New Color Field (Optional)
+  {
+    label: "Color",
+    name: "color",
+    componentType: "select",
+    options: [
+      { id: "", label: "Select color (optional)" },
+      { id: "Red", label: "Red" },
+      { id: "Blue", label: "Blue" },
+      { id: "Green", label: "Green" },
+      { id: "Black", label: "Black" },
+      { id: "White", label: "White" },
+      { id: "Yellow", label: "Yellow" },
+      { id: "Purple", label: "Purple" },
+      { id: "Orange", label: "Orange" },
+      { id: "Pink", label: "Pink" },
+      { id: "Gray", label: "Gray" },
+      { id: "Brown", label: "Brown" },
+      { id: "Multi", label: "Multi-color" },
+    ],
+  },
+  // New Size Field (Optional)
+  {
+    label: "Size",
+    name: "size",
+    componentType: "select",
+    options: [
+      { id: "", label: "Select size (optional)" },
+      // Clothing sizes
+      { id: "XS", label: "XS" },
+      { id: "S", label: "S" },
+      { id: "M", label: "M" },
+      { id: "L", label: "L" },
+      { id: "XL", label: "XL" },
+      { id: "XXL", label: "XXL" },
+      // Shoe sizes
+      { id: "36", label: "36" },
+      { id: "37", label: "37" },
+      { id: "38", label: "38" },
+      { id: "39", label: "39" },
+      { id: "40", label: "40" },
+      { id: "41", label: "41" },
+      { id: "42", label: "42" },
+      { id: "43", label: "43" },
+      { id: "44", label: "44" },
+      { id: "45", label: "45" },
+      // One size
+      { id: "One Size", label: "One Size" },
+    ],
   },
   {
     label: "Product Images",
     name: "images",  
     componentType: "file",  
     placeholder: "Upload product images",
-    multiple: true,  // Allow multiple images
+    multiple: true,
+    required: true,
   },
 ];

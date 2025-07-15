@@ -17,6 +17,9 @@ import {
   Paper,
   Divider,
   Avatar,
+  Chip,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import Rating from "@mui/material/Rating";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -30,14 +33,11 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "../../store/cart/cartSlice";
 import { addToRecentlyViewed } from "../../store/recentlyViewed/recentlyViewedSlice";
 import { addToSavedItems } from "../../store/savedItems/savedItemsSlice";
-import Footer from "../../components/Footer";
-import RecentlyViewed from "../../pages/account/RecentlyViewed";
 
 const Details = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [reviewUsers, setReviewUsers] = useState({});
   const [averageRating, setAverageRating] = useState(0);
   const [tabValue, setTabValue] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -51,6 +51,8 @@ const Details = () => {
   });
 
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const placeholderImage = "https://via.placeholder.com/300";
 
   // Fetch product details
@@ -74,29 +76,20 @@ const Details = () => {
     fetchProduct();
   }, [id]);
 
-  // Simplified: Fetch only the reviews (user is already populated)
+  // Fetch reviews
   useEffect(() => {
     const fetchReviews = async () => {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
       try {
         const reviewsResponse = await axios.get(`${API_BASE_URL}/api/reviews/simple/${id}`);
-
-        // Debugging logs
-        console.log("Full API response:", reviewsResponse);
-        console.log("Reviews data:", reviewsResponse.data?.reviews);
-
         const reviewsData = reviewsResponse.data?.reviews || [];
-
-        console.log("Number of reviews found:", reviewsData.length);
         setReviews(reviewsData);
 
-        // Calculate average rating
         const total = reviewsData.reduce((sum, r) => sum + r.rating, 0);
         setAverageRating(reviewsData.length ? total / reviewsData.length : 0);
 
       } catch (err) {
         console.error("Review fetch error:", err);
-        console.error("Error response:", err.response?.data);
         setError(err.response?.data?.message || "Failed to load reviews");
       }
     };
@@ -124,7 +117,9 @@ const Details = () => {
       title: product.title,
       price: product.price,
       quantity: quantity,
-      image: product.images[0]?.url || placeholderImage
+      image: product.images[0]?.url || placeholderImage,
+      color: product.color,
+      size: product.size
     }));
     setSnackbar({ open: true, message: "Added to cart!", severity: "success" });
   };
@@ -136,6 +131,8 @@ const Details = () => {
         title: product.title,
         image: mainImage,
         price: product.price,
+        color: product.color,
+        size: product.size
       })
     );
     setSnackbar({
@@ -170,18 +167,21 @@ const Details = () => {
   const decrementQuantity = () =>
     setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
 
-  if (isLoading) return <CircularProgress color="warning" />;
-  if (error)
-    return (
-      <Typography color="error" variant="h6">
-        {error}
-      </Typography>
-    );
+  if (isLoading) return (
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+      <CircularProgress color="warning" />
+    </Box>
+  );
+  if (error) return (
+    <Typography color="error" variant="h6" align="center" sx={{ mt: 4 }}>
+      {error}
+    </Typography>
+  );
 
   return (
-    <Box className="p-6">
+    <Box sx={{ px: isMobile ? 2 : 6, py: 4 }}>
       {/* Breadcrumbs */}
-      <Breadcrumbs aria-label="breadcrumb" className="mb-4">
+      <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
         <Link underline="hover" color="inherit" href="/">
           Home
         </Link>
@@ -192,22 +192,41 @@ const Details = () => {
       </Breadcrumbs>
 
       {/* Product Section */}
-      <Paper elevation={3} className="p-6 rounded-lg">
-        <Grid container spacing={6}>
+      <Paper elevation={3} sx={{ p: isMobile ? 2 : 4, borderRadius: 2 }}>
+        <Grid container spacing={4}>
           {/* Product Images */}
           <Grid item xs={12} md={6}>
-            <img
+            <Box
+              component="img"
               src={mainImage}
               alt={product?.title || "Product"}
-              className="w-full h-[400px] object-cover rounded-lg shadow-md"
+              sx={{
+                width: '100%',
+                height: isMobile ? 300 : 400,
+                objectFit: 'cover',
+                borderRadius: 2,
+                boxShadow: 2
+              }}
             />
-            <Grid container spacing={2} className="mt-4">
+            <Grid container spacing={1} sx={{ mt: 2 }}>
               {product?.images?.map((image, index) => (
                 <Grid item xs={4} sm={3} key={index}>
-                  <img
+                  <Box
+                    component="img"
                     src={image.url || placeholderImage}
                     alt={`Thumbnail ${index}`}
-                    className="w-full h-20 object-cover border border-gray-200 rounded cursor-pointer"
+                    sx={{
+                      width: '100%',
+                      height: 80,
+                      objectFit: 'cover',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        borderColor: 'primary.main'
+                      }
+                    }}
                     onClick={() => setMainImage(image.url || placeholderImage)}
                   />
                 </Grid>
@@ -217,119 +236,169 @@ const Details = () => {
 
           {/* Product Details */}
           <Grid item xs={12} md={6}>
-            <Typography variant="h4" gutterBottom className="font-bold">
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
               {product?.title || "No title available"}
             </Typography>
 
             {/* Average Rating */}
-            <Box className="flex items-center gap-2 mb-4">
+            <Box display="flex" alignItems="center" gap={1} mb={2}>
               <Rating
                 value={parseFloat(averageRating)}
                 readOnly
                 precision={0.1}
+                size={isMobile ? "small" : "medium"}
               />
-              <Typography variant="body1">({averageRating} stars)</Typography>
+              <Typography variant="body1">
+                ({averageRating.toFixed(1)} stars)
+              </Typography>
             </Box>
 
-            <Typography variant="h5" className="mb-4 font-bold text-orange-600">
+            {/* Price */}
+            <Typography variant="h5" fontWeight="bold" color="orange.600" mb={3}>
               ${product?.price?.toFixed(2) || "N/A"}
             </Typography>
-            <Typography variant="body1" className="mb-4 text-gray-600">
+
+            {/* Color and Size (if available) */}
+            <Box display="flex" gap={2} mb={3}>
+              {product?.color && (
+                <Chip 
+                  label={`Color: ${product.color}`} 
+                  variant="outlined" 
+                  sx={{ 
+                    borderColor: 'orange.500',
+                    color: 'orange.800'
+                  }} 
+                />
+              )}
+              {product?.size && (
+                <Chip 
+                  label={`Size: ${product.size}`} 
+                  variant="outlined" 
+                  sx={{ 
+                    borderColor: 'orange.500',
+                    color: 'orange.800'
+                  }} 
+                />
+              )}
+            </Box>
+
+            <Typography variant="body1" color="text.secondary" mb={3}>
               {product?.description || "No description available"}
             </Typography>
 
             {/* Quantity Selector */}
-            <Typography variant="body2" className="mb-2">
-              Quantity:
-            </Typography>
-            <Box className="flex items-center gap-4 mb-4">
-              <IconButton onClick={decrementQuantity}>
-                <RemoveIcon />
-              </IconButton>
-              <Typography className="text-lg">{quantity}</Typography>
-              <IconButton onClick={incrementQuantity}>
-                <AddIcon />
-              </IconButton>
+            <Box mb={4}>
+              <Typography variant="body2" mb={1}>
+                Quantity:
+              </Typography>
+              <Box display="flex" alignItems="center" gap={2}>
+                <IconButton 
+                  onClick={decrementQuantity}
+                  size={isMobile ? "small" : "medium"}
+                >
+                  <RemoveIcon />
+                </IconButton>
+                <Typography variant="h6">{quantity}</Typography>
+                <IconButton 
+                  onClick={incrementQuantity}
+                  size={isMobile ? "small" : "medium"}
+                >
+                  <AddIcon />
+                </IconButton>
+              </Box>
             </Box>
 
             {/* Action Buttons */}
-            <Box className="flex flex-col sm:flex-row md:justify-start items-stretch sm:items-center gap-4 mt-6">
+            <Box 
+              display="flex" 
+              flexDirection={isMobile ? "column" : "row"} 
+              gap={2}
+              alignItems="stretch"
+              mb={2}
+            >
               <Button
                 variant="contained"
-                sx={{
-                  backgroundColor: "#ea580c",
-                  "&:hover": { backgroundColor: "#c2410c" },
-                  whiteSpace: "nowrap",
-                  width: "100%", // Full width on mobile
-                  sm: { width: "auto" },
-                  md: { width: "200px" }, // Fixed width for medium screens
-                }}
+                color="warning"
                 startIcon={<ShoppingCartIcon />}
                 onClick={handleAddToCart}
+                fullWidth={isMobile}
+                sx={{
+                  whiteSpace: 'nowrap',
+                  py: 1.5,
+                  '&:hover': { bgcolor: 'orange.800' }
+                }}
               >
                 Add to Cart
               </Button>
 
               <Button
                 variant="outlined"
-                sx={{
-                  borderColor: "#ea580c",
-                  color: "#ea580c",
-                  "&:hover": {
-                    borderColor: "#c2410c",
-                    backgroundColor: "#c2410c",
-                    color: "white",
-                  },
-                  whiteSpace: "nowrap",
-                  width: "100%",
-                  sm: { width: "auto" },
-                  md: { width: "200px" }, // Fixed width for consistency
-                }}
+                color="warning"
                 startIcon={<FavoriteBorderIcon />}
                 onClick={handleAddToWishlist}
+                fullWidth={isMobile}
+                sx={{
+                  whiteSpace: 'nowrap',
+                  py: 1.5,
+                  borderWidth: 2,
+                  '&:hover': { 
+                    borderWidth: 2,
+                    bgcolor: 'orange.800',
+                    color: 'white'
+                  }
+                }}
               >
-                Add to Wishlist
+                Wishlist
               </Button>
+            </Box>
 
-              <Box className="flex justify-center md:justify-start gap-2">
-                <IconButton className="text-orange-600 hover:text-orange-700" onClick={handleShare}>
-                  <ShareIcon />
-                </IconButton>
-
-                <IconButton className="text-orange-600 hover:text-orange-700" onClick={handleCall}>
-                  <PhoneIcon />
-                </IconButton>
-
-                <IconButton className="text-green-600 hover:text-green-700">
-                  <WhatsAppIcon />
-                </IconButton>
-              </Box>
+            {/* Social Buttons */}
+            <Box display="flex" gap={1} mt={isMobile ? 2 : 0}>
+              <IconButton 
+                onClick={handleShare}
+                sx={{ color: 'orange.600', '&:hover': { color: 'orange.800' } }}
+              >
+                <ShareIcon />
+              </IconButton>
+              <IconButton 
+                onClick={handleCall}
+                sx={{ color: 'orange.600', '&:hover': { color: 'orange.800' } }}
+              >
+                <PhoneIcon />
+              </IconButton>
+              <IconButton 
+                sx={{ color: 'green.600', '&:hover': { color: 'green.800' } }}
+              >
+                <WhatsAppIcon />
+              </IconButton>
             </Box>
           </Grid>
         </Grid>
       </Paper>
 
       {/* Tabs */}
-      <Box className="mt-8">
+      <Box sx={{ mt: 4 }}>
         <Tabs
           value={tabValue}
           onChange={(e, newValue) => setTabValue(newValue)}
-          className="border-b border-gray-300"
+          variant={isMobile ? "scrollable" : "standard"}
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+          sx={{
+            borderBottom: 1,
+            borderColor: 'divider',
+            '& .MuiTab-root': {
+              minWidth: 'unset',
+              px: 2,
+              mx: 1
+            }
+          }}
         >
-          <Tab
-            label="Product Info"
-            className="hover:text-orange-500 hover:underline transition"
-          />
-          <Tab
-            label="Delivery & Returns"
-            className="hover:text-orange-500 hover:underline transition"
-          />
-          <Tab
-            label="Reviews"
-            className="hover:text-orange-500 hover:underline transition"
-          />
+          <Tab label="Details" />
+          <Tab label="Shipping" />
+          <Tab label={`Reviews (${reviews.length})`} />
         </Tabs>
-        <Box className="p-4">
+        <Box sx={{ p: 2 }}>
           {tabValue === 0 && (
             <Typography variant="body1">
               {product?.description || "No details available."}
@@ -344,51 +413,72 @@ const Details = () => {
           {tabValue === 2 && (
             <Box>
               {reviews.length === 0 ? (
-                <Typography variant="body1">
+                <Typography variant="body1" textAlign="center" py={4}>
                   No reviews yet. Be the first to write one!
                 </Typography>
               ) : (
-                reviews.map((review) => {
-                  const email = review.user?.email || "";
-                  const nameFromEmail = email.split("@")[0];
-                  const displayName =
-                    review.user?.fullName ||
-                    (nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1)) ||
-                    "Anonymous User";
-                  const userAvatar =
-                    review.user?.avatar ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}`;
+                <Box>
+                  {reviews.map((review) => {
+                    const email = review.user?.email || "";
+                    const nameFromEmail = email.split("@")[0];
+                    const displayName =
+                      review.user?.fullName ||
+                      (nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1)) ||
+                      "Anonymous User";
+                    const userAvatar =
+                      review.user?.avatar ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}`;
 
-                  return (
-                    <Box
-                      key={review._id}
-                      className="border-b border-gray-200 pb-4 mb-4 flex gap-4"
-                    >
-                      <Avatar alt={displayName} src={userAvatar} />
-                      <Box>
-                        <Typography variant="subtitle1" className="font-medium">
-                          {displayName}
-                        </Typography>
-                        <Rating
-                          value={review.rating || 0}
-                          readOnly
-                          size="small"
-                          precision={0.5}
-                        />
-                        <Typography
-                          variant="body2"
-                          color="textSecondary"
-                          className="mt-1"
-                        >
-                          {new Date(review.createdAt).toLocaleDateString()}
-                        </Typography>
-                        <Typography variant="body1" className="mt-2">
-                          {review.comment}
-                        </Typography>
+                    return (
+                      <Box
+                        key={review._id}
+                        sx={{
+                          display: 'flex',
+                          gap: 2,
+                          py: 3,
+                          borderBottom: 1,
+                          borderColor: 'divider',
+                          flexDirection: isMobile ? 'column' : 'row'
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" gap={2}>
+                          <Avatar 
+                            alt={displayName} 
+                            src={userAvatar} 
+                            sx={{ width: 56, height: 56 }} 
+                          />
+                          <Box>
+                            <Typography variant="subtitle1" fontWeight="medium">
+                              {displayName}
+                            </Typography>
+                            <Rating
+                              value={review.rating || 0}
+                              readOnly
+                              precision={0.5}
+                              size={isMobile ? "small" : "medium"}
+                            />
+                          </Box>
+                        </Box>
+                        <Box sx={{ ml: isMobile ? 0 : 2 }}>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            mb={1}
+                          >
+                            {new Date(review.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </Typography>
+                          <Typography variant="body1">
+                            {review.comment}
+                          </Typography>
+                        </Box>
                       </Box>
-                    </Box>
-                  );
-                })
+                    );
+                  })}
+                </Box>
               )}
             </Box>
           )}
@@ -400,8 +490,13 @@ const Details = () => {
         open={snackbar.open}
         autoHideDuration={3000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+        <Alert 
+          severity={snackbar.severity} 
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          sx={{ width: '100%' }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

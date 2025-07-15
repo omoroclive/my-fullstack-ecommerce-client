@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   TextField,
-  TextareaAutosize,
   Select,
   MenuItem,
   FormControl,
@@ -11,6 +10,8 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
+  Chip,
+  Stack,
 } from "@mui/material";
 import axios from "axios";
 import { addProductFormElements } from "../../config/addProductElement";
@@ -24,14 +25,28 @@ const AddProductForm = () => {
     price: "",
     salePrice: "",
     totalStock: "",
+    color: "",
+    size: "",
     images: [],
   });
+
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({
     open: false,
     message: "",
     severity: "success",
   });
+
+  // Predefined options for colors and sizes
+  const colorOptions = [
+    "Red", "Blue", "Green", "Black", "White", "Yellow", 
+    "Purple", "Orange", "Pink", "Gray", "Brown"
+  ];
+
+  const sizeOptions = [
+    "XS", "S", "M", "L", "XL", "XXL",
+    "32", "34", "36", "38", "40", "42", "44"
+  ];
 
   const handleChange = (e) => {
     const { name, value, files, type } = e.target;
@@ -54,13 +69,24 @@ const AddProductForm = () => {
       return;
     }
 
+    // Validate required fields
+    if (!formData.title || !formData.description || !formData.category || 
+        !formData.brand || !formData.price || !formData.totalStock) {
+      setNotification({
+        open: true,
+        message: "Please fill all required fields",
+        severity: "error",
+      });
+      return;
+    }
+
     const formDataToSubmit = new FormData();
     Object.keys(formData).forEach((key) => {
       if (key === "images") {
         Array.from(formData.images).forEach((file) => {
           formDataToSubmit.append("images", file);
         });
-      } else {
+      } else if (formData[key] !== "") { // Only append if value exists
         formDataToSubmit.append(key, formData[key]);
       }
     });
@@ -73,14 +99,18 @@ const AddProductForm = () => {
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
+            "Content-Type": "multipart/form-data",
           },
         }
       );
+      
       setNotification({
         open: true,
         message: "Product added successfully!",
         severity: "success",
       });
+      
+      // Reset form
       setFormData({
         title: "",
         description: "",
@@ -89,12 +119,15 @@ const AddProductForm = () => {
         price: "",
         salePrice: "",
         totalStock: "",
+        color: "",
+        size: "",
         images: [],
       });
     } catch (error) {
+      console.error("Error adding product:", error);
       setNotification({
         open: true,
-        message: "Failed to add product. Please try again.",
+        message: error.response?.data?.message || "Failed to add product. Please try again.",
         severity: "error",
       });
     } finally {
@@ -117,6 +150,7 @@ const AddProductForm = () => {
           gap: 2,
           maxWidth: 500,
           margin: "0 auto",
+          padding: 3,
         }}
       >
         {addProductFormElements.map((field) => {
@@ -133,6 +167,7 @@ const AddProductForm = () => {
                   placeholder={field.placeholder}
                   fullWidth
                   variant="outlined"
+                  required={field.required}
                 />
               );
             case "textarea":
@@ -148,11 +183,12 @@ const AddProductForm = () => {
                   multiline
                   rows={4}
                   variant="outlined"
+                  required={field.required}
                 />
               );
             case "select":
               return (
-                <FormControl fullWidth variant="outlined" key={field.name}>
+                <FormControl fullWidth variant="outlined" key={field.name} required={field.required}>
                   <InputLabel>{field.label}</InputLabel>
                   <Select
                     name={field.name}
@@ -175,8 +211,11 @@ const AddProductForm = () => {
                   variant="outlined"
                   component="label"
                   fullWidth
+                  sx={{ height: 56 }}
                 >
-                  {field.label}
+                  {formData.images.length > 0 
+                    ? `${formData.images.length} file(s) selected`
+                    : field.label}
                   <input
                     name={field.name}
                     type="file"
@@ -190,6 +229,54 @@ const AddProductForm = () => {
               return null;
           }
         })}
+
+        {/* Color Select Field */}
+        <FormControl fullWidth variant="outlined">
+          <InputLabel>Color (Optional)</InputLabel>
+          <Select
+            name="color"
+            value={formData.color}
+            onChange={handleChange}
+            label="Color (Optional)"
+            renderValue={(selected) => (
+              selected ? <Chip label={selected} sx={{ backgroundColor: selected.toLowerCase() }} /> : ""
+            )}
+          >
+            {colorOptions.map((color) => (
+              <MenuItem key={color} value={color}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Box
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      backgroundColor: color.toLowerCase(),
+                      border: "1px solid #ccc",
+                    }}
+                  />
+                  <span>{color}</span>
+                </Stack>
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Size Select Field */}
+        <FormControl fullWidth variant="outlined">
+          <InputLabel>Size (Optional)</InputLabel>
+          <Select
+            name="size"
+            value={formData.size}
+            onChange={handleChange}
+            label="Size (Optional)"
+          >
+            {sizeOptions.map((size) => (
+              <MenuItem key={size} value={size}>
+                {size}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
         <Button
           type="submit"
           variant="contained"
@@ -199,6 +286,8 @@ const AddProductForm = () => {
             "&:hover": {
               backgroundColor: "#45a049",
             },
+            height: 50,
+            mt: 2,
           }}
           disabled={loading}
           fullWidth

@@ -23,69 +23,80 @@ const AddProductForm = () => {
     price: "",
     salePrice: "",
     totalStock: "",
+    color: "",
+    size: "",
     images: [],
   });
+
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
+  const [notification, setNotification] = useState({ 
+    open: false, 
+    message: "", 
+    severity: "success" 
+  });
 
   const handleChange = (e) => {
-    if (e.target.type === "file") {
-      setFormData({
-        ...formData,
-        [e.target.name]: e.target.files,
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [e.target.name]: e.target.value,
-      });
-    }
+    const { name, value, files } = e.target;
+    setFormData({
+      ...formData,
+      [name]: files ? files : value,
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const authToken = localStorage.getItem("token");
 
-    // Check for authentication token
     if (!authToken) {
-      setNotification({ open: true, message: "No authentication token found", severity: "error" });
+      setNotification({ 
+        open: true, 
+        message: "No authentication token found", 
+        severity: "error" 
+      });
       return;
     }
-    console.log("Auth Token:", authToken); 
 
-    
+    // Validate required fields
+    if (!formData.title || !formData.description || !formData.category || 
+        !formData.brand || !formData.price || !formData.totalStock) {
+      setNotification({
+        open: true,
+        message: "Please fill all required fields",
+        severity: "error",
+      });
+      return;
+    }
+
     const formDataToSubmit = new FormData();
     Object.keys(formData).forEach((key) => {
       if (key === "images") {
-        console.log("Selected images:", formData.images); 
-
-        for (let i = 0; i < formData.images.length; i++) {
-          formDataToSubmit.append("images", formData.images[i]);
-        }
-      } else {
+        Array.from(formData.images).forEach((file) => {
+          formDataToSubmit.append("images", file);
+        });
+      } else if (formData[key] !== "") { // Only append if value exists
         formDataToSubmit.append(key, formData[key]);
       }
     });
 
-    
-    for (let [key, value] of formDataToSubmit.entries()) {
-      console.log(key, value);
-    }
-
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/products" || "https://ecommerce-server-c6w5.onrender.com/api/products",
+         "https://ecommerce-server-c6w5.onrender.com/api/products",
         formDataToSubmit,
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
-            // axios handle the Content-Type for multipart/form-data
           },
         }
       );
-      console.log('Response data:', response.data); 
-      setNotification({ open: true, message: "Product added successfully!", severity: "success" });
+      
+      setNotification({ 
+        open: true, 
+        message: "Product added successfully!", 
+        severity: "success" 
+      });
+      
+      // Reset form
       setFormData({
         title: "",
         description: "",
@@ -94,12 +105,17 @@ const AddProductForm = () => {
         price: "",
         salePrice: "",
         totalStock: "",
+        color: "",
+        size: "",
         images: [],
       });
     } catch (error) {
-      // Log full error response for debugging
-      console.error("Error adding product:", error.response || error.message);
-      setNotification({ open: true, message: "Failed to add product. Please try again.", severity: "error" });
+      console.error("Error adding product:", error);
+      setNotification({
+        open: true,
+        message: error.response?.data?.message || "Failed to add product. Please try again.",
+        severity: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -125,6 +141,7 @@ const AddProductForm = () => {
                 placeholder={field.placeholder}
                 fullWidth
                 margin="normal"
+                required={field.required}
               />
             );
           }
@@ -137,12 +154,18 @@ const AddProductForm = () => {
                 onChange={handleChange}
                 placeholder={field.placeholder}
                 style={{ width: "100%", margin: "10px 0", padding: "8px" }}
+                required={field.required}
               />
             );
           }
           if (field.componentType === "select") {
             return (
-              <FormControl fullWidth margin="normal" key={field.name}>
+              <FormControl 
+                fullWidth 
+                margin="normal" 
+                key={field.name}
+                required={field.required}
+              >
                 <InputLabel>{field.label}</InputLabel>
                 <Select
                   name={field.name}
@@ -170,17 +193,20 @@ const AddProductForm = () => {
                 onChange={handleChange}
                 fullWidth
                 margin="normal"
+                required={field.required}
               />
             );
           }
           return null;
         })}
+
         <Button
           type="submit"
           variant="contained"
           color="primary"
           disabled={loading}
           fullWidth
+          sx={{ mt: 2 }}
         >
           {loading ? <CircularProgress size={24} color="inherit" /> : "Add Product"}
         </Button>
@@ -190,7 +216,11 @@ const AddProductForm = () => {
         autoHideDuration={6000}
         onClose={handleNotificationClose}
       >
-        <Alert onClose={handleNotificationClose} severity={notification.severity}>
+        <Alert 
+          onClose={handleNotificationClose} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
           {notification.message}
         </Alert>
       </Snackbar>

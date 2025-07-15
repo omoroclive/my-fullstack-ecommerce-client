@@ -14,13 +14,17 @@ import {
   Step,
   StepLabel,
   Box,
-  Chip
+  Chip,
+  useMediaQuery,
+  useTheme
 } from "@mui/material";
 
-const Orders = () => {
+const UserOrders = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { orders, loading, error } = useSelector((state) => state.orders);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     dispatch(fetchOrders());
@@ -70,9 +74,16 @@ const Orders = () => {
   if (error) return <Typography color="error">{error}</Typography>;
 
   return (
-    <Container className="p-6 mt-6">
+    <Container sx={{ py: 4 }}>
       {orders.length > 0 && (
-        <Box className="bg-gray-100 py-4 px-6 w-full mb-6 rounded-lg shadow-md">
+        <Box sx={{ 
+          bgcolor: 'grey.100', 
+          py: 2, 
+          px: 3, 
+          mb: 4, 
+          borderRadius: 2,
+          boxShadow: 1
+        }}>
           <Typography variant="h5" align="center" fontWeight="bold">
             {orders[0]?.shippingAddress?.fullName || "Customer"}'s Orders
           </Typography>
@@ -80,14 +91,24 @@ const Orders = () => {
       )}
 
       {orders.length === 0 ? (
-        <Typography>No orders found.</Typography>
+        <Typography variant="body1" align="center">
+          No orders found.
+        </Typography>
       ) : (
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {orders.map((order) => (
-            <Grid item xs={12} md={6} lg={4} key={order._id}>
-              <Card className="shadow-lg p-4" style={{ borderRadius: "8px", border: "1px solid #ddd" }}>
-                <CardContent>
-                  <Box className="mb-4">
+            <Grid item xs={12} sm={6} md={4} key={order._id}>
+              <Card sx={{ 
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+                <CardContent sx={{ flexGrow: 1 }}>
+                  {/* Order Status Section */}
+                  <Box sx={{ mb: 3 }}>
                     <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
                       Order Tracking:
                       <Chip 
@@ -97,11 +118,15 @@ const Orders = () => {
                           order.orderStatus === "Shipped" ? "primary" :
                           order.orderStatus === "Processing" ? "warning" : "default"
                         }
-                        style={{ marginLeft: 10 }}
+                        sx={{ ml: 1 }}
                       />
                     </Typography>
                     
-                    <Stepper activeStep={getStatusSteps(order).findIndex(step => step.active)} alternativeLabel>
+                    <Stepper 
+                      activeStep={getStatusSteps(order).findIndex(step => step.active)} 
+                      alternativeLabel
+                      orientation={isMobile ? "vertical" : "horizontal"}
+                    >
                       {getStatusSteps(order).map((step, index) => (
                         <Step key={step.label} completed={step.completed}>
                           <StepLabel>
@@ -115,28 +140,118 @@ const Orders = () => {
                     </Stepper>
                   </Box>
 
-                  {/* Rest of your order details */}
-                  <Typography variant="h6" fontWeight="bold">
+                  {/* Order ID */}
+                  <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
                     Order ID: {order._id}
                   </Typography>
-                  
-                  {/* ... other order details ... */}
 
+                  {/* Products Section */}
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                      Products:
+                    </Typography>
+                    <Grid container spacing={1}>
+                      {order.orderItems.map((item) => (
+                        <Grid item xs={12} key={item._id}>
+                          <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center',
+                            gap: 2,
+                            mb: 1
+                          }}>
+                            <CardMedia
+                              component="img"
+                              image={item.image?.url || '/placeholder-product.jpg'}
+                              alt={item.name}
+                              sx={{ 
+                                width: 60, 
+                                height: 60,
+                                borderRadius: 1,
+                                objectFit: 'cover'
+                              }}
+                            />
+                            <Box>
+                              <Typography variant="body2" fontWeight="medium">
+                                {item.name}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                Qty: {item.quantity} × ${item.price.toFixed(2)}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
+
+                  {/* Order Summary */}
+                  <Box sx={{ 
+                    bgcolor: 'grey.50',
+                    p: 2,
+                    borderRadius: 1,
+                    mb: 2
+                  }}>
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                      Order Summary:
+                    </Typography>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      mb: 0.5
+                    }}>
+                      <Typography variant="body2">Subtotal:</Typography>
+                      <Typography variant="body2">${order.itemsPrice.toFixed(2)}</Typography>
+                    </Box>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      mb: 0.5
+                    }}>
+                      <Typography variant="body2">Shipping:</Typography>
+                      <Typography variant="body2">${order.shippingPrice.toFixed(2)}</Typography>
+                    </Box>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      mb: 0.5
+                    }}>
+                      <Typography variant="body2">Tax:</Typography>
+                      <Typography variant="body2">${order.taxPrice.toFixed(2)}</Typography>
+                    </Box>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      fontWeight: 'bold'
+                    }}>
+                      <Typography variant="body2">Total:</Typography>
+                      <Typography variant="body2">${order.totalPrice.toFixed(2)}</Typography>
+                    </Box>
+                  </Box>
+
+                  {/* Action Button */}
                   {order.orderStatus === "Delivered" ? (
                     <Button
+                      fullWidth
                       variant="contained"
                       onClick={() => navigate("/account/ratings")}
-                      className="mt-4 w-full"
-                      style={{ backgroundColor: "#ff9800" }}
+                      sx={{ 
+                        mt: 2,
+                        bgcolor: 'warning.main',
+                        '&:hover': { bgcolor: 'warning.dark' }
+                      }}
                     >
                       Rate Product
                     </Button>
                   ) : (
                     <Button
+                      fullWidth
                       variant="contained"
                       onClick={() => navigate(`/shop/order-details/${order._id}`)}
-                      className="mt-4 w-full"
-                      style={{ backgroundColor: "#ff9800" }}
+                      sx={{ 
+                        mt: 2,
+                        bgcolor: 'warning.main',
+                        '&:hover': { bgcolor: 'warning.dark' }
+                      }}
                     >
                       View Details
                     </Button>
@@ -151,4 +266,4 @@ const Orders = () => {
   );
 };
 
-export default Orders;
+export default UserOrders;

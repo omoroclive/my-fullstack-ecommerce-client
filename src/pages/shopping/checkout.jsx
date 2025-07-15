@@ -202,6 +202,7 @@ const handlePlaceOrder = async () => {
         state: address.state || '',
         zipCode: address.zipCode || '',
         country: address.country,
+        phoneNumber: address.phoneNumber || phoneNumber, // Use phone number from address or input
       },
       products: validatedProducts,
       totalAmount: cartTotal + shippingCost,

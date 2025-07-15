@@ -8,313 +8,314 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
 const adminOrder = () => {
-  const dispatch = useDispatch();
-  const { orders, loading, error } = useSelector((state) => state.orders);
+    const dispatch = useDispatch();
+    const { orders, loading, error } = useSelector((state) => state.orders);
 
-  // Snackbar state
-  const [open, setOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+    // Snackbar state
+    const [open, setOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [ordersPerPage] = useState(5);
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [ordersPerPage] = useState(5);
 
-  // Product data state
-  const [productDetails, setProductDetails] = useState({});
-  const [addressDetails, setAddressDetails] = useState({});
-  const [expandedDescriptions, setExpandedDescriptions] = useState({});
+    // Product data state
+    const [productDetails, setProductDetails] = useState({});
+    const [addressDetails, setAddressDetails] = useState({});
+    const [expandedDescriptions, setExpandedDescriptions] = useState({});
 
-  useEffect(() => {
-    dispatch(fetchOrders());
-  }, [dispatch]);
+    useEffect(() => {
+        dispatch(fetchOrders());
+    }, [dispatch]);
 
-  // Fetch product details
-  const fetchProductDetails = async (productId) => {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-    try {
-      console.log(`Fetching product details for ID: ${productId}`);
-      const response = await axios.get(`${API_BASE_URL}/api/products/${productId}`);
-      const productData = await response.json();
-      console.log('Product data received:', productData);
-      
-      setProductDetails(prev => ({
-        ...prev,
-        [productId]: productData
-      }));
-    } catch (error) {
-      console.error('Error fetching product details:', error);
-    }
-  };
+    // Fetch product details
+    const fetchProductDetails = async (productId) => {
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+        try {
+            console.log(`Fetching product details for ID: ${productId}`);
+            const response = await axios.get(`${API_BASE_URL}/api/products/${productId}`);
+            const productData = response.data;
+            console.log('Product data received:', productData);
 
-  // Fetch address details
-  const fetchAddressDetails = async (addressId) => {
-    try {
-      console.log(`Fetching address details for ID: ${addressId}`);
-      const response = await fetch(`/api/address/${addressId}`);
-      const addressData = await response.json();
-      console.log('Address data received:', addressData);
-      
-      setAddressDetails(prev => ({
-        ...prev,
-        [addressId]: addressData
-      }));
-    } catch (error) {
-      console.error('Error fetching address details:', error);
-    }
-  };
-
-  // Fetch additional data when orders change
-  useEffect(() => {
-    if (orders.length > 0) {
-      orders.forEach(order => {
-        // Fetch product details for each product in the order
-        order.products.forEach(product => {
-          if (product.productId && !productDetails[product.productId]) {
-            fetchProductDetails(product.productId);
-          }
-        });
-
-        // Fetch address details if not already fetched
-        if (order.shippingAddress && order.shippingAddress.addressId && !addressDetails[order.shippingAddress.addressId]) {
-          fetchAddressDetails(order.shippingAddress.addressId);
+            setProductDetails(prev => ({
+                ...prev,
+                [productId]: productData
+            }));
+        } catch (error) {
+            console.error('Error fetching product details:', error);
         }
-      });
-    }
-  }, [orders, productDetails, addressDetails]);
+    };
 
-  const handleStatusChange = async (orderId, newStatus) => {
-    try {
-      const payload = { orderId, orderStatus: newStatus };
-      console.log("Updating order status with payload:", payload);
 
-      const updatedOrder = await dispatch(updateOrderStatus(payload)).unwrap();
+    // Fetch address details
+    const fetchAddressDetails = async (addressId) => {
+        try {
+            console.log(`Fetching address details for ID: ${addressId}`);
+            const response = await fetch(`/api/address/${addressId}`);
+            const addressData = await response.json();
+            console.log('Address data received:', addressData);
 
-      setSnackbarMessage(`Order ${updatedOrder._id} status updated to ${updatedOrder.orderStatus}`);
-      setSnackbarSeverity("success");
-      setOpen(true);
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      setSnackbarMessage(`Failed to update order: ${error.message}`);
-      setSnackbarSeverity("error");
-      setOpen(true);
-    }
-  };
+            setAddressDetails(prev => ({
+                ...prev,
+                [addressId]: addressData
+            }));
+        } catch (error) {
+            console.error('Error fetching address details:', error);
+        }
+    };
 
-  // Close the snackbar
-  const handleCloseSnackbar = () => {
-    setOpen(false);
-  };
+    // Fetch additional data when orders change
+    useEffect(() => {
+        if (orders.length > 0) {
+            orders.forEach(order => {
+                // Fetch product details for each product in the order
+                order.products.forEach(product => {
+                    if (product.productId && !productDetails[product.productId]) {
+                        fetchProductDetails(product.productId);
+                    }
+                });
 
-  // Toggle description visibility
-  const toggleDescription = (orderId, productIndex) => {
-    const key = `${orderId}-${productIndex}`;
-    setExpandedDescriptions(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
+                // Fetch address details if not already fetched
+                if (order.shippingAddress && order.shippingAddress.addressId && !addressDetails[order.shippingAddress.addressId]) {
+                    fetchAddressDetails(order.shippingAddress.addressId);
+                }
+            });
+        }
+    }, [orders, productDetails, addressDetails]);
 
-  // Pagination logic
-  const indexOfLastOrder = currentPage * ordersPerPage;
-  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
-  const totalPages = Math.ceil(orders.length / ordersPerPage);
+    const handleStatusChange = async (orderId, newStatus) => {
+        try {
+            const payload = { orderId, orderStatus: newStatus };
+            console.log("Updating order status with payload:", payload);
 
-  const handlePageChange = (event, value) => {
-    setCurrentPage(value);
-    console.log(`Page changed to: ${value}`);
-  };
+            const updatedOrder = await dispatch(updateOrderStatus(payload)).unwrap();
 
-  if (loading) return <div className="loading">Loading...</div>;
-  if (error) return <div className="error">Error fetching orders: {error}</div>;
+            setSnackbarMessage(`Order ${updatedOrder._id} status updated to ${updatedOrder.orderStatus}`);
+            setSnackbarSeverity("success");
+            setOpen(true);
+        } catch (error) {
+            console.error('Error updating order status:', error);
+            setSnackbarMessage(`Failed to update order: ${error.message}`);
+            setSnackbarSeverity("error");
+            setOpen(true);
+        }
+    };
 
-  return (
-    <div className="order-container">
-      <h1 className="order-title">Order Management</h1>
-      
-      {orders.length === 0 ? (
-        <p className="no-orders">No orders found.</p>
-      ) : (
-        <>
-          {currentOrders.map((order) => (
-            <div key={order._id} className="order-card">
-              <div className="order-header">
-                <h2 className="order-id">Order ID: {order._id}</h2>
-                <div className="order-date">
-                  {new Date(order.createdAt).toLocaleDateString()}
-                </div>
-              </div>
+    // Close the snackbar
+    const handleCloseSnackbar = () => {
+        setOpen(false);
+    };
 
-              <div className="order-content">
-                <div className="order-info-section">
-                  <h3>Order Information</h3>
-                  <div className="info-grid">
-                    <div className="info-item">
-                      <span className="info-label">Created:</span>
-                      <span className="info-value">{new Date(order.createdAt).toLocaleString()}</span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Payment Method:</span>
-                      <span className="info-value">{order.paymentMethod}</span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Total Amount:</span>
-                      <span className="info-value">${order.totalAmount}</span>
-                    </div>
-                  </div>
-                </div>
+    // Toggle description visibility
+    const toggleDescription = (orderId, productIndex) => {
+        const key = `${orderId}-${productIndex}`;
+        setExpandedDescriptions(prev => ({
+            ...prev,
+            [key]: !prev[key]
+        }));
+    };
 
-                <div className="shipping-section">
-                  <h3>Shipping Address</h3>
-                  <div className="address-grid">
-                    <div className="address-item">
-                      <span className="address-label">Full Name:</span>
-                      <span className="address-value">{order.shippingAddress.fullName}</span>
-                    </div>
-                    <div className="address-item">
-                      <span className="address-label">Street Address:</span>
-                      <span className="address-value">{order.shippingAddress.streetAddress}</span>
-                    </div>
-                    <div className="address-item">
-                      <span className="address-label">City:</span>
-                      <span className="address-value">{order.shippingAddress.city}</span>
-                    </div>
-                    <div className="address-item">
-                      <span className="address-label">Country:</span>
-                      <span className="address-value">{order.shippingAddress.country}</span>
-                    </div>
-                    <div className="address-item">
-                      <span className="address-label">Zip Code:</span>
-                      <span className="address-value">{order.shippingAddress.zipCode}</span>
-                    </div>
-                    {addressDetails[order.shippingAddress.addressId] && (
-                      <div className="address-item">
-                        <span className="address-label">Phone Number:</span>
-                        <span className="address-value">
-                          {addressDetails[order.shippingAddress.addressId].phoneNumber}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+    // Pagination logic
+    const indexOfLastOrder = currentPage * ordersPerPage;
+    const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+    const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
+    const totalPages = Math.ceil(orders.length / ordersPerPage);
 
-                <div className="products-section">
-                  <h3>Products</h3>
-                  <div className="products-list">
-                    {order.products.map((product, index) => {
-                      const productDetail = productDetails[product.productId];
-                      const descriptionKey = `${order._id}-${index}`;
-                      const isExpanded = expandedDescriptions[descriptionKey];
+    const handlePageChange = (event, value) => {
+        setCurrentPage(value);
+        console.log(`Page changed to: ${value}`);
+    };
 
-                      return (
-                        <div key={index} className="product-item">
-                          <div className="product-main">
-                            {productDetail?.images?.[0] && (
-                              <div className="product-image">
-                                <img 
-                                  src={productDetail.images[0]} 
-                                  alt={product.name}
-                                  onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    console.log('Image failed to load:', productDetail.images[0]);
-                                  }}
-                                />
-                              </div>
-                            )}
-                            <div className="product-info">
-                              <div className="product-name">{product.name}</div>
-                              <div className="product-details">
-                                <span className="product-quantity">Qty: {product.quantity}</span>
-                                <span className="product-price">${product.price}</span>
-                              </div>
-                              {productDetail?.description && (
-                                <div className="product-description-toggle">
-                                  <IconButton
-                                    onClick={() => toggleDescription(order._id, index)}
-                                    size="small"
-                                    className="description-toggle-btn"
-                                  >
-                                    {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                                    <span>Description</span>
-                                  </IconButton>
+    if (loading) return <div className="loading">Loading...</div>;
+    if (error) return <div className="error">Error fetching orders: {error}</div>;
+
+    return (
+        <div className="order-container">
+            <h1 className="order-title">Order Management</h1>
+
+            {orders.length === 0 ? (
+                <p className="no-orders">No orders found.</p>
+            ) : (
+                <>
+                    {currentOrders.map((order) => (
+                        <div key={order._id} className="order-card">
+                            <div className="order-header">
+                                <h2 className="order-id">Order ID: {order._id}</h2>
+                                <div className="order-date">
+                                    {new Date(order.createdAt).toLocaleDateString()}
                                 </div>
-                              )}
                             </div>
-                          </div>
-                          {productDetail?.description && (
-                            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                              <div className="product-description">
-                                {productDetail.description}
-                              </div>
-                            </Collapse>
-                          )}
+
+                            <div className="order-content">
+                                <div className="order-info-section">
+                                    <h3>Order Information</h3>
+                                    <div className="info-grid">
+                                        <div className="info-item">
+                                            <span className="info-label">Created:</span>
+                                            <span className="info-value">{new Date(order.createdAt).toLocaleString()}</span>
+                                        </div>
+                                        <div className="info-item">
+                                            <span className="info-label">Payment Method:</span>
+                                            <span className="info-value">{order.paymentMethod}</span>
+                                        </div>
+                                        <div className="info-item">
+                                            <span className="info-label">Total Amount:</span>
+                                            <span className="info-value">${order.totalAmount}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="shipping-section">
+                                    <h3>Shipping Address</h3>
+                                    <div className="address-grid">
+                                        <div className="address-item">
+                                            <span className="address-label">Full Name:</span>
+                                            <span className="address-value">{order.shippingAddress.fullName}</span>
+                                        </div>
+                                        <div className="address-item">
+                                            <span className="address-label">Street Address:</span>
+                                            <span className="address-value">{order.shippingAddress.streetAddress}</span>
+                                        </div>
+                                        <div className="address-item">
+                                            <span className="address-label">City:</span>
+                                            <span className="address-value">{order.shippingAddress.city}</span>
+                                        </div>
+                                        <div className="address-item">
+                                            <span className="address-label">Country:</span>
+                                            <span className="address-value">{order.shippingAddress.country}</span>
+                                        </div>
+                                        <div className="address-item">
+                                            <span className="address-label">Zip Code:</span>
+                                            <span className="address-value">{order.shippingAddress.zipCode}</span>
+                                        </div>
+                                        {addressDetails[order.shippingAddress.addressId] && (
+                                            <div className="address-item">
+                                                <span className="address-label">Phone Number:</span>
+                                                <span className="address-value">
+                                                    {addressDetails[order.shippingAddress.addressId].phoneNumber}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="products-section">
+                                    <h3>Products</h3>
+                                    <div className="products-list">
+                                        {order.products.map((product, index) => {
+                                            const productDetail = productDetails[product.productId];
+                                            const descriptionKey = `${order._id}-${index}`;
+                                            const isExpanded = expandedDescriptions[descriptionKey];
+
+                                            return (
+                                                <div key={index} className="product-item">
+                                                    <div className="product-main">
+                                                        {productDetail?.images?.[0] && (
+                                                            <div className="product-image">
+                                                                <img
+                                                                    src={productDetail.images[0]}
+                                                                    alt={product.name}
+                                                                    onError={(e) => {
+                                                                        e.target.style.display = 'none';
+                                                                        console.log('Image failed to load:', productDetail.images[0]);
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                        <div className="product-info">
+                                                            <div className="product-name">{product.name}</div>
+                                                            <div className="product-details">
+                                                                <span className="product-quantity">Qty: {product.quantity}</span>
+                                                                <span className="product-price">${product.price}</span>
+                                                            </div>
+                                                            {productDetail?.description && (
+                                                                <div className="product-description-toggle">
+                                                                    <IconButton
+                                                                        onClick={() => toggleDescription(order._id, index)}
+                                                                        size="small"
+                                                                        className="description-toggle-btn"
+                                                                    >
+                                                                        {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                                                        <span>Description</span>
+                                                                    </IconButton>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {productDetail?.description && (
+                                                        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                                            <div className="product-description">
+                                                                {productDetail.description}
+                                                            </div>
+                                                        </Collapse>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div className="status-section">
+                                    <h3>Order Status</h3>
+                                    <div className="status-controls">
+                                        <div className="current-status">
+                                            Status: <span className={`status-badge status-${order.orderStatus?.toLowerCase()}`}>
+                                                {order.orderStatus || "Pending"}
+                                            </span>
+                                        </div>
+                                        <Select
+                                            value={order.orderStatus || "Processing"}
+                                            onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                                            disabled={order.orderStatus === "Delivered" || order.orderStatus === "Cancelled"}
+                                            displayEmpty
+                                            className="status-select"
+                                            size="small"
+                                        >
+                                            <MenuItem value="Processing">Processing</MenuItem>
+                                            <MenuItem value="Shipped" disabled={order.orderStatus === "Shipped" || order.orderStatus === "Delivered"}>
+                                                Shipped
+                                            </MenuItem>
+                                            <MenuItem value="Delivered" disabled={order.orderStatus === "Delivered"}>
+                                                Delivered
+                                            </MenuItem>
+                                            <MenuItem value="Cancelled" disabled={order.orderStatus === "Cancelled"}>
+                                                Cancelled
+                                            </MenuItem>
+                                        </Select>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                    ))}
 
-                <div className="status-section">
-                  <h3>Order Status</h3>
-                  <div className="status-controls">
-                    <div className="current-status">
-                      Status: <span className={`status-badge status-${order.orderStatus?.toLowerCase()}`}>
-                        {order.orderStatus || "Pending"}
-                      </span>
-                    </div>
-                    <Select
-                      value={order.orderStatus || "Processing"}
-                      onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                      disabled={order.orderStatus === "Delivered" || order.orderStatus === "Cancelled"}
-                      displayEmpty
-                      className="status-select"
-                      size="small"
-                    >
-                      <MenuItem value="Processing">Processing</MenuItem>
-                      <MenuItem value="Shipped" disabled={order.orderStatus === "Shipped" || order.orderStatus === "Delivered"}>
-                        Shipped
-                      </MenuItem>
-                      <MenuItem value="Delivered" disabled={order.orderStatus === "Delivered"}>
-                        Delivered
-                      </MenuItem>
-                      <MenuItem value="Cancelled" disabled={order.orderStatus === "Cancelled"}>
-                        Cancelled
-                      </MenuItem>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+                    {/* Pagination */}
+                    <Box className="pagination-container">
+                        <Pagination
+                            count={totalPages}
+                            page={currentPage}
+                            onChange={handlePageChange}
+                            color="primary"
+                            size="large"
+                            showFirstButton
+                            showLastButton
+                        />
+                    </Box>
+                </>
+            )}
 
-          {/* Pagination */}
-          <Box className="pagination-container">
-            <Pagination
-              count={totalPages}
-              page={currentPage}
-              onChange={handlePageChange}
-              color="primary"
-              size="large"
-              showFirstButton
-              showLastButton
-            />
-          </Box>
-        </>
-      )}
+            {/* Snackbar for status update */}
+            <Snackbar open={open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+                <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
 
-      {/* Snackbar for status update */}
-      <Snackbar open={open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
-        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
-
-      <style jsx>{`
+            <style jsx>{`
         .order-container {
           max-width: 1200px;
           margin: 0 auto;
@@ -646,8 +647,8 @@ const adminOrder = () => {
           }
         }
       `}</style>
-    </div>
-  );
+        </div>
+    );
 };
 
 export default adminOrder;

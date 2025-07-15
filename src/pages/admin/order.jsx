@@ -41,10 +41,16 @@ const AdminOrder = () => {
         setLoadingProducts(prev => ({ ...prev, [productId]: true }));
         try {
             const response = await axios.get(`${API_BASE_URL}/api/products/${productId}`);
+
+            // Log the whole response or specific description
+        console.log("Fetched product data:", response.data);
+        console.log("Product description:", response.data.description); 
             setProductDetails(prev => ({
                 ...prev,
                 [productId]: response.data
+
             }));
+            
         } catch (error) {
             console.error('Error fetching product details:', error);
         } finally {

@@ -189,7 +189,8 @@ const handlePlaceOrder = async () => {
         price: item.price,
         image: item.image,
         size: item.size || '', // Optional fields
-        color: item.color || '' // Optional fields
+        color: item.color || '', // Optional fields
+        description: item.description || '', // Optional fields
       };
     });
 
@@ -281,7 +282,7 @@ const handlePlaceOrder = async () => {
           </MenuItem>
           {addresses.map((address) => (
             <MenuItem key={address._id} value={address._id}>
-              {address.streetAddress}, {address.city}, {address.country}
+              {address.streetAddress}, {address.city}, {address.country}, {address.phoneNumber}
             </MenuItem>
           ))}
         </Select>

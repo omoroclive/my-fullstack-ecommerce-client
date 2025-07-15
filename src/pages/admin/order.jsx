@@ -240,7 +240,7 @@ const AdminOrder = () => {
                                                         {productDetail?.images?.[0] ? (
                                                             <div className="product-image">
                                                                 <img
-                                                                    src={product.images[0]}
+                                                                    src={product.images}
                                                                     alt={product.name}
                                                                     onError={(e) => {
                                                                         e.target.style.display = 'none';

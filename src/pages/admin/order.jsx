@@ -31,26 +31,39 @@ const AdminOrder = () => {
     const [loadingProducts, setLoadingProducts] = useState({});
     const [loadingAddresses, setLoadingAddresses] = useState({});
 
+   // Fetch orders once on mount
     useEffect(() => {
         dispatch(fetchOrders());
     }, [dispatch]);
+
+    // Fetch product and address details after orders are loaded
+    useEffect(() => {
+        if (orders && orders.length > 0) {
+            orders.forEach(order => {
+                if (order.productId && !productDetails[order.productId]) {
+                    fetchProductDetails(order.productId);
+                }
+                if (order.shippingAddressId && !addressDetails[order.shippingAddressId]) {
+                    fetchAddressDetails(order.shippingAddressId);
+                }
+            });
+        }
+    }, [orders]);
 
     // Fetch product details with loading state
     const fetchProductDetails = async (productId) => {
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
         setLoadingProducts(prev => ({ ...prev, [productId]: true }));
+
         try {
             const response = await axios.get(`${API_BASE_URL}/api/products/${productId}`);
+            console.log("Fetched product data:", response.data.product);
+            console.log("Product description:", response.data.product.description);
 
-            // Log the whole response or specific description
-        console.log("Fetched product data:", response);
-        console.log("Product description:", response.description); 
             setProductDetails(prev => ({
                 ...prev,
-                [productId]: response.data
-
+                [productId]: response.data.product
             }));
-            
         } catch (error) {
             console.error('Error fetching product details:', error);
         } finally {
@@ -62,6 +75,7 @@ const AdminOrder = () => {
     const fetchAddressDetails = async (addressId) => {
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
         setLoadingAddresses(prev => ({ ...prev, [addressId]: true }));
+
         try {
             const response = await axios.get(`${API_BASE_URL}/api/address/${addressId}`);
             setAddressDetails(prev => ({
@@ -74,6 +88,7 @@ const AdminOrder = () => {
             setLoadingAddresses(prev => ({ ...prev, [addressId]: false }));
         }
     };
+
 
     // Optimized data fetching
     useEffect(() => {

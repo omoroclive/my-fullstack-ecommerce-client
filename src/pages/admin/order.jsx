@@ -20,6 +20,7 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 });
 
 const adminOrder = () => {
+  const { id } = useParams();
   const dispatch = useDispatch();
   const { orders, loading, error } = useSelector((state) => state.orders);
   const theme = useTheme();
@@ -48,12 +49,12 @@ const adminOrder = () => {
       const phoneData = {};
       for (const order of orders) {
         try {
-          const response = await fetch(`/api/address/${order.shippingAddress._id}`);
+          const response = await fetch(`/api/address/${id}`);
           const data = await response.json();
-          phoneData[order._id] = data.phoneNumber;
+          phoneData[id] = data.phoneNumber;
         } catch (error) {
-          console.error(`Failed to fetch phone number for order ${order._id}:`, error);
-          phoneData[order._id] = "N/A";
+          console.error(`Failed to fetch phone number for order ${id}:`, error);
+          phoneData[id] = "N/A";
         }
       }
       setPhoneNumbers(phoneData);

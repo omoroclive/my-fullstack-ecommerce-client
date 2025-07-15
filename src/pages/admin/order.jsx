@@ -54,10 +54,13 @@ const adminOrder = () => {
 
     // Fetch address details
     const fetchAddressDetails = async (addressId) => {
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
         try {
             console.log(`Fetching address details for ID: ${addressId}`);
-            const response = await fetch(`/api/address/${addressId}`);
-            const addressData = await response.json();
+            const response = await axios.get(`${API_BASE_URL}/api/address/${addressId}`);
+            const addressData = response.data;
+            
+            
             console.log('Address data received:', addressData);
 
             setAddressDetails(prev => ({

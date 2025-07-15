@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-
 export const fetchProducts = createAsyncThunk("products/fetch", async () => {
   const token = localStorage.getItem("token"); // Get token from localStorage
 

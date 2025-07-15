@@ -258,6 +258,7 @@ const AdminOrder = () => {
                                                             <div className="product-details">
                                                                 <span className="product-quantity">Qty: {product.quantity}</span>
                                                                 <span className="product-price">${product.price}</span>
+                                                                <span className="product-description"> Description{product.description} </span>
                                                             </div>
                                                             {loadingProducts[product.productId] ? (
                                                                 <div className="loading-small">Loading details...</div>

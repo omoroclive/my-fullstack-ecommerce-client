@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginUserSuccess } from "../../store/auth-slice";
-
+import jwt_decode from "jwt-decode"; 
 
 function GoogleAuthHandler() {
   const navigate = useNavigate();
@@ -11,6 +11,13 @@ function GoogleAuthHandler() {
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const token = query.get("token");
+    const error = query.get("error");
+
+    if (error) {
+      console.error("Google login failed:", error);
+      navigate("/auth/login");
+      return;
+    }
 
     if (!token) {
       console.error("Google login failed: No token received");
@@ -18,11 +25,9 @@ function GoogleAuthHandler() {
       return;
     }
 
-    // ✅ Save token
     localStorage.setItem("token", token);
 
     try {
-      // ✅ Optionally decode token to get user info
       const decoded = jwt_decode(token);
       const user = {
         email: decoded.email,

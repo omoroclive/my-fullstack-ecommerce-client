@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginUserSuccess } from "../../store/auth-slice";
-import jwt_decode from "jwt-decode"; 
+import { jwtDecode } from "jwt-decode"; 
 
 function GoogleAuthHandler() {
   const navigate = useNavigate();

@@ -17,7 +17,6 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Chatbot from "./Chatbot";
 import Footer from "../../components/Footer";
 
-
 // Brand Images
 import pumaIcon from "../../assets/images/puma1.png";
 import nikeLogo from "../../assets/images/nike9.png";
@@ -55,28 +54,27 @@ const Home = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-  const fetchFeaturedProducts = async () => {
-    try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+    const fetchFeaturedProducts = async () => {
+      try {
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
-      const response = await fetch(`${API_BASE_URL}/api/products`);
+        const response = await fetch(`${API_BASE_URL}/api/products`);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch products");
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+
+        const data = await response.json();
+        setFeaturedProducts(data.products.slice(0, 6));
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      const data = await response.json();
-      setFeaturedProducts(data.products.slice(0, 6));
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  fetchFeaturedProducts();
-}, []);
-
+    fetchFeaturedProducts();
+  }, []);
 
   const handleBrandClick = (brand) => {
     dispatch(setBrandFilter(brand));
@@ -95,6 +93,7 @@ const Home = () => {
         alt={alt}
         className="w-24 h-24 object-contain rounded-full"
         style={{ backgroundColor: 'white' }}
+        loading="lazy"
       />
       <IconButton
         sx={{
@@ -124,6 +123,7 @@ const Home = () => {
         src={product.images[0]?.url || "/placeholder.png"}
         alt={product.title}
         className="w-full h-48 object-contain rounded-t-lg"
+        loading="lazy"
       />
       <CardContent>
         <Typography variant="h6" className="font-semibold">
@@ -131,7 +131,7 @@ const Home = () => {
         </Typography>
         <Typography variant="body1" className="text-black font-bold">
           <p className="text-gray-600">
-            <strong>Price:</strong> ${product.price}
+            <strong>Price:</strong> Ksh {product.price}
           </p>
         </Typography>
         <p className="text-gray-600">
@@ -146,9 +146,7 @@ const Home = () => {
 
   return (
     <div className="p-4">
-
       {/* Top Brands Section */}
-
       <section className="mt-8 text-center bg-gray-100 p-6 rounded-lg">
         <Typography variant="h4" className="font-bold mb-8">
           Top Brands

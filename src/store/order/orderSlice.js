@@ -5,16 +5,12 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const getToken = () => localStorage.getItem('token');
 
-const getAuthHeaders = () => {
-  const token = getToken();
-  if (!token) throw new Error('No authentication token found');
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  };
-};
+const getAuthHeaders = () => ({
+  headers: {
+    Authorization: `Bearer ${getToken()}`,
+    'Content-Type': 'application/json',
+  },
+});
 
 // Async thunks
 export const fetchUserOrders = createAsyncThunk(
@@ -22,7 +18,7 @@ export const fetchUserOrders = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${BASE_URL}/api/orders`, getAuthHeaders());
-      return response.data.orders;
+      return { orders: response.data.orders, type: 'user' };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch user orders');
     }
@@ -33,8 +29,8 @@ export const fetchAllOrders = createAsyncThunk(
   'orders/fetchAllOrders',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/orders/admin/all`, getAuthHeaders());
-      return response.data.orders;
+      const response = await axios.get(`${BASE_URL}/api/orders/all`, getAuthHeaders());
+      return { orders: response.data.orders, type: 'admin' };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch all orders');
     }
@@ -59,11 +55,9 @@ export const updateOrderStatus = createAsyncThunk(
 
 // Initial state
 const initialState = {
-  userOrders: [],    // Orders for regular users
-  adminOrders: [],   // All orders for admins
-  loadingUser: false,
-  loadingAdmin: false,
-  updating: false,
+  userOrders: [],
+  adminOrders: [],
+  loading: false,
   error: null,
   lastUpdated: null,
 };
@@ -80,57 +74,54 @@ const orderSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // User Orders
+      // Fetch User Orders
       .addCase(fetchUserOrders.pending, (state) => {
-        state.loadingUser = true;
+        state.loading = true;
         state.error = null;
       })
       .addCase(fetchUserOrders.fulfilled, (state, action) => {
-        state.loadingUser = false;
-        state.userOrders = action.payload;
+        state.loading = false;
+        state.userOrders = action.payload.orders;
         state.lastUpdated = new Date().toISOString();
       })
       .addCase(fetchUserOrders.rejected, (state, action) => {
-        state.loadingUser = false;
+        state.loading = false;
         state.error = action.payload;
       })
       
-      // Admin Orders
+      // Fetch All Orders (Admin)
       .addCase(fetchAllOrders.pending, (state) => {
-        state.loadingAdmin = true;
+        state.loading = true;
         state.error = null;
       })
       .addCase(fetchAllOrders.fulfilled, (state, action) => {
-        state.loadingAdmin = false;
-        state.adminOrders = action.payload;
+        state.loading = false;
+        state.adminOrders = action.payload.orders;
         state.lastUpdated = new Date().toISOString();
       })
       .addCase(fetchAllOrders.rejected, (state, action) => {
-        state.loadingAdmin = false;
+        state.loading = false;
         state.error = action.payload;
       })
       
-      // Order Status Update
+      // Update Order Status
       .addCase(updateOrderStatus.pending, (state) => {
-        state.updating = true;
-        state.error = null;
+        state.loading = true;
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
-        state.updating = false;
+        state.loading = false;
         const updatedOrder = action.payload;
         
-        // Update in userOrders if present
+        // Update in both user and admin orders if present
         state.userOrders = state.userOrders.map(order => 
           order._id === updatedOrder._id ? updatedOrder : order
         );
-        
-        // Update in adminOrders if present
         state.adminOrders = state.adminOrders.map(order => 
           order._id === updatedOrder._id ? updatedOrder : order
         );
       })
       .addCase(updateOrderStatus.rejected, (state, action) => {
-        state.updating = false;
+        state.loading = false;
         state.error = action.payload;
       });
   },

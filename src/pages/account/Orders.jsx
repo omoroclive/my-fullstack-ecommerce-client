@@ -15,9 +15,13 @@ import {
   StepLabel,
   Box,
   Chip,
+  Divider,
   useMediaQuery,
   useTheme
 } from "@mui/material";
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 const UserOrders = () => {
   const dispatch = useDispatch();
@@ -28,100 +32,152 @@ const UserOrders = () => {
 
   useEffect(() => {
     dispatch(fetchOrders());
-    const interval = setInterval(() => dispatch(fetchOrders()), 15000);
-    return () => clearInterval(interval);
   }, [dispatch]);
 
   const getStatusSteps = (order) => {
-    return [
+    const steps = [
       {
         label: "Order Placed",
-        date: order.createdAt,
+        icon: <ShoppingBagIcon />,
         completed: true,
-        active: false
+        active: false,
+        date: order.createdAt
       },
       {
         label: "Processing",
-        date: order.processedAt,
+        icon: <LocalShippingIcon />,
         completed: ["Processing", "Shipped", "Delivered"].includes(order.orderStatus),
-        active: order.orderStatus === "Processing"
+        active: order.orderStatus === "Processing",
+        date: order.processedAt
       },
       {
         label: "Shipped",
-        date: order.shippedAt,
+        icon: <LocalShippingIcon />,
         completed: ["Shipped", "Delivered"].includes(order.orderStatus),
-        active: order.orderStatus === "Shipped"
+        active: order.orderStatus === "Shipped",
+        date: order.shippedAt
       },
       {
         label: "Delivered",
-        date: order.deliveredAt,
+        icon: <CheckCircleIcon />,
         completed: order.orderStatus === "Delivered",
-        active: false
+        active: false,
+        date: order.deliveredAt
       }
     ];
+    
+    // Filter out steps that don't have dates if order hasn't reached that stage
+    return steps.filter(step => step.completed || step.active || step.label === "Order Placed");
   };
 
-  const formatDate = (date) => {
-    if (!date) return "Pending";
-    return new Date(date).toLocaleDateString("en-US", {
+  const formatDate = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      year: "numeric"
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
     });
   };
 
-  if (loading) return <Typography>Loading orders...</Typography>;
-  if (error) return <Typography color="error">{error}</Typography>;
+  const getStatusColor = (status) => {
+    switch(status) {
+      case "Delivered": return "success";
+      case "Shipped": return "primary";
+      case "Processing": return "warning";
+      case "Cancelled": return "error";
+      default: return "default";
+    }
+  };
+
+  if (loading) return (
+    <Container sx={{ py: 4, textAlign: 'center' }}>
+      <Typography variant="h6">Loading your orders...</Typography>
+    </Container>
+  );
+
+  if (error) return (
+    <Container sx={{ py: 4, textAlign: 'center' }}>
+      <Typography color="error">{error}</Typography>
+      <Button 
+        variant="outlined" 
+        onClick={() => dispatch(fetchOrders())}
+        sx={{ mt: 2 }}
+      >
+        Retry
+      </Button>
+    </Container>
+  );
 
   return (
-    <Container sx={{ py: 4 }}>
-      {orders.length > 0 && (
-        <Box sx={{ 
-          bgcolor: 'grey.100', 
-          py: 2, 
-          px: 3, 
-          mb: 4, 
-          borderRadius: 2,
-          boxShadow: 1
-        }}>
-          <Typography variant="h5" align="center" fontWeight="bold">
-            {orders[0]?.shippingAddress?.fullName || "Customer"}'s Orders
-          </Typography>
-        </Box>
-      )}
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: 'bold' }}>
+        My Orders
+      </Typography>
 
       {orders.length === 0 ? (
-        <Typography variant="body1" align="center">
-          No orders found.
-        </Typography>
+        <Box sx={{ 
+          textAlign: 'center', 
+          py: 8,
+          border: '1px dashed',
+          borderColor: 'divider',
+          borderRadius: 2
+        }}>
+          <Typography variant="h6" gutterBottom>
+            You haven't placed any orders yet
+          </Typography>
+          <Button 
+            variant="contained" 
+            onClick={() => navigate('/shop')}
+            sx={{ mt: 2 }}
+          >
+            Start Shopping
+          </Button>
+        </Box>
       ) : (
         <Grid container spacing={3}>
           {orders.map((order) => (
-            <Grid item xs={12} sm={6} md={4} key={order._id}>
+            <Grid item xs={12} key={order._id}>
               <Card sx={{ 
                 borderRadius: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column'
+                boxShadow: 3,
+                overflow: 'visible'
               }}>
-                <CardContent sx={{ flexGrow: 1 }}>
-                  {/* Order Status Section */}
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                      Order Tracking:
+                <CardContent>
+                  {/* Order Header */}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    mb: 2
+                  }}>
+                    <Box>
+                      <Typography variant="h6" fontWeight="bold">
+                        Order #{order._id.substring(order._id.length - 6).toUpperCase()}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Placed on {formatDate(order.createdAt)}
+                      </Typography>
+                    </Box>
+                    <Box>
                       <Chip 
                         label={order.orderStatus} 
-                        color={
-                          order.orderStatus === "Delivered" ? "success" :
-                          order.orderStatus === "Shipped" ? "primary" :
-                          order.orderStatus === "Processing" ? "warning" : "default"
-                        }
-                        sx={{ ml: 1 }}
+                        color={getStatusColor(order.orderStatus)}
+                        size="small"
+                        sx={{ 
+                          fontWeight: 'bold',
+                          textTransform: 'uppercase'
+                        }}
                       />
-                    </Typography>
-                    
+                    </Box>
+                  </Box>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  {/* Order Tracking */}
+                  <Box sx={{ mb: 3 }}>
                     <Stepper 
                       activeStep={getStatusSteps(order).findIndex(step => step.active)} 
                       alternativeLabel
@@ -129,54 +185,72 @@ const UserOrders = () => {
                     >
                       {getStatusSteps(order).map((step, index) => (
                         <Step key={step.label} completed={step.completed}>
-                          <StepLabel>
-                            {step.label}
-                            <Typography variant="caption" display="block">
-                              {formatDate(step.date)}
+                          <StepLabel 
+                            StepIconComponent={() => (
+                              <Box sx={{ 
+                                color: step.completed ? theme.palette.success.main : 
+                                      step.active ? theme.palette.primary.main : 
+                                      theme.palette.text.disabled
+                              }}>
+                                {step.icon}
+                              </Box>
+                            )}
+                          >
+                            <Typography variant="caption" fontWeight="bold">
+                              {step.label}
                             </Typography>
+                            {step.date && (
+                              <Typography variant="caption" display="block" color="text.secondary">
+                                {formatDate(step.date)}
+                              </Typography>
+                            )}
                           </StepLabel>
                         </Step>
                       ))}
                     </Stepper>
                   </Box>
 
-                  {/* Order ID */}
-                  <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                    Order ID: {order._id}
-                  </Typography>
-
-                  {/* Products Section */}
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                      Products:
+                  {/* Order Items */}
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                      Items Ordered
                     </Typography>
-                    <Grid container spacing={1}>
-                      {order.orderItems.map((item) => (
-                        <Grid item xs={12} key={item._id}>
+                    <Grid container spacing={2}>
+                      {order.products.map((item) => (
+                        <Grid item xs={12} sm={6} key={item._id}>
                           <Box sx={{ 
                             display: 'flex', 
-                            alignItems: 'center',
                             gap: 2,
-                            mb: 1
+                            alignItems: 'center'
                           }}>
                             <CardMedia
                               component="img"
-                              image={item.image?.url || '/placeholder-product.jpg'}
+                              image={item.image}
                               alt={item.name}
                               sx={{ 
-                                width: 60, 
-                                height: 60,
+                                width: 80, 
+                                height: 80,
                                 borderRadius: 1,
                                 objectFit: 'cover'
                               }}
                             />
                             <Box>
-                              <Typography variant="body2" fontWeight="medium">
+                              <Typography variant="body1" fontWeight="medium">
                                 {item.name}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
-                                Qty: {item.quantity} × ${item.price.toFixed(2)}
+                                KES {item.price.toFixed(2)} × {item.quantity}
                               </Typography>
+                              {item.size && (
+                                <Typography variant="caption">
+                                  Size: {item.size}
+                                </Typography>
+                              )}
+                              {item.color && (
+                                <Typography variant="caption" display="block">
+                                  Color: {item.color}
+                                </Typography>
+                              )}
                             </Box>
                           </Box>
                         </Grid>
@@ -184,78 +258,94 @@ const UserOrders = () => {
                     </Grid>
                   </Box>
 
-                  {/* Order Summary */}
-                  <Box sx={{ 
-                    bgcolor: 'grey.50',
-                    p: 2,
-                    borderRadius: 1,
-                    mb: 2
-                  }}>
-                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                      Order Summary:
-                    </Typography>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      mb: 0.5
-                    }}>
-                      <Typography variant="body2">Subtotal:</Typography>
-                      <Typography variant="body2">${order.itemsPrice.toFixed(2)}</Typography>
-                    </Box>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      mb: 0.5
-                    }}>
-                      <Typography variant="body2">Shipping:</Typography>
-                      <Typography variant="body2">${order.shippingPrice.toFixed(2)}</Typography>
-                    </Box>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      mb: 0.5
-                    }}>
-                      <Typography variant="body2">Tax:</Typography>
-                      <Typography variant="body2">${order.taxPrice.toFixed(2)}</Typography>
-                    </Box>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      fontWeight: 'bold'
-                    }}>
-                      <Typography variant="body2">Total:</Typography>
-                      <Typography variant="body2">${order.totalPrice.toFixed(2)}</Typography>
-                    </Box>
-                  </Box>
+                  <Divider sx={{ my: 2 }} />
 
-                  {/* Action Button */}
-                  {order.orderStatus === "Delivered" ? (
+                  {/* Order Summary */}
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                        Shipping Address
+                      </Typography>
+                      <Typography>
+                        {order.shippingAddress.fullName}
+                      </Typography>
+                      <Typography>
+                        {order.shippingAddress.streetAddress}
+                      </Typography>
+                      <Typography>
+                        {order.shippingAddress.city}, {order.shippingAddress.state}
+                      </Typography>
+                      <Typography>
+                        {order.shippingAddress.country}, {order.shippingAddress.zipCode}
+                      </Typography>
+                      <Typography>
+                        Phone: {order.shippingAddress.phoneNumber}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                        Order Summary
+                      </Typography>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between',
+                        mb: 1
+                      }}>
+                        <Typography>Subtotal:</Typography>
+                        <Typography>KES {order.totalAmount.toFixed(2)}</Typography>
+                      </Box>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between',
+                        mb: 1
+                      }}>
+                        <Typography>Payment Method:</Typography>
+                        <Typography>{order.paymentMethod}</Typography>
+                      </Box>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between',
+                        mb: 1
+                      }}>
+                        <Typography>Status:</Typography>
+                        <Typography color={getStatusColor(order.orderStatus)}>
+                          {order.orderStatus}
+                        </Typography>
+                      </Box>
+                      <Divider sx={{ my: 1 }} />
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between',
+                        fontWeight: 'bold'
+                      }}>
+                        <Typography>Total:</Typography>
+                        <Typography>KES {order.totalAmount.toFixed(2)}</Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+
+                  {/* Action Buttons */}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'flex-end',
+                    gap: 2,
+                    mt: 3
+                  }}>
                     <Button
-                      fullWidth
-                      variant="contained"
-                      onClick={() => navigate("/account/ratings")}
-                      sx={{ 
-                        mt: 2,
-                        bgcolor: 'warning.main',
-                        '&:hover': { bgcolor: 'warning.dark' }
-                      }}
-                    >
-                      Rate Product
-                    </Button>
-                  ) : (
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      onClick={() => navigate(`/shop/order-details/${order._id}`)}
-                      sx={{ 
-                        mt: 2,
-                        bgcolor: 'warning.main',
-                        '&:hover': { bgcolor: 'warning.dark' }
-                      }}
+                      variant="outlined"
+                      onClick={() => navigate(`/account/orders/${order._id}`)}
                     >
                       View Details
                     </Button>
-                  )}
+                    {order.orderStatus === "Delivered" && (
+                      <Button
+                        variant="contained"
+                        onClick={() => navigate(`/account/orders/${order._id}/review`)}
+                      >
+                        Leave Review
+                      </Button>
+                    )}
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>

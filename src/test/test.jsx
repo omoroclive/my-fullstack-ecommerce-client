@@ -1,1058 +1,1063 @@
-  
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Snackbar,
+  Alert,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  MenuItem,
+  Select,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import mpesaLogo from "../../assets/images/mpesaLogo.jpg";
+import paypalLogo from "../../assets/images/paypalLogo.jpg";
+import Footer from "../../components/Footer";
+import Payment from "./payment";
 
-// Initial state
-const initialState = {
-    isAuthenticated: false,
-    isLoading: false,
-    user: null,
-    error: null,
-};
+const Checkout = () => {
+  const navigate = useNavigate();
+  const cartItems = useSelector((state) => state.cart.items);
+  const cartTotal = useSelector((state) => state.cart.totalAmount);
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddress, setSelectedAddress] = useState("");
+  const [shippingCost, setShippingCost] = useState(0);
+  const [paymentGateway, setPaymentGateway] = useState("mpesa");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// Async thunk for user registration
-export const registerUser = createAsyncThunk(
-    "auth/register",
-    async (userData, { rejectWithValue }) => {
-        try {
-            const response = await axios.post("http://localhost:3000/auth/register", userData);
-            return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data.message || "Registration failed");
-        }
+  // Fetch user addresses
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("User not logged in");
+
+        const response = await axios.get(`${API_BASE_URL}/api/address`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setAddresses(response.data.addresses || []);
+      } catch (error) {
+        console.error("Error fetching addresses:", error);
+      }
+    };
+
+    fetchAddresses();
+  }, []);
+
+  // Update shipping cost based on the selected address
+  useEffect(() => {
+    if (selectedAddress) {
+      const address = addresses.find((addr) => addr._id === selectedAddress);
+      if (address?.country.toLowerCase() === "kenya") {
+        setShippingCost(5);
+      } else {
+        setShippingCost(10);
+      }
     }
-);
+  }, [selectedAddress, addresses]);
 
-// Async thunk for user login
-export const loginUser = createAsyncThunk(
-    "auth/login",
-    async (loginData, { rejectWithValue }) => {
-        try {
-            const response = await axios.post("http://localhost:3000/auth/login", loginData);
-            return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data.message || "Login failed");
-        }
-    }
-);
-
-// Auth slice
-const authSlice = createSlice({
-    name: "auth",
-    initialState,
-    reducers: {
-        logout: (state) => {
-            state.isAuthenticated = false;
-            state.user = null;
-        },
-    },
-    extraReducers: (builder) => {
-        // Handle registerUser
-        builder
-            .addCase(registerUser.pending, (state) => {
-                state.isLoading = true;
-                state.error = null;
-            })
-            .addCase(registerUser.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.user = action.payload;
-                state.isAuthenticated = true;
-            })
-            .addCase(registerUser.rejected, (state, action) => {
-                state.isLoading = false;
-                state.error = action.payload;
-            });
-
-        // Handle loginUser
-        builder
-            .addCase(loginUser.pending, (state) => {
-                state.isLoading = true;
-                state.error = null;
-            })
-            .addCase(loginUser.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.user = action.payload.user;  
-                state.isAuthenticated = true;
-              })
-              
-            .addCase(loginUser.rejected, (state, action) => {
-                state.isLoading = false;
-                state.error = action.payload;
-            });
-    },
-});
-
-// Actions
-export const { logout } = authSlice.actions;
-
-export default authSlice.reducer;
-
-
-/*
-.sidebar {
-    z-index: 40; 
-  }
-  
-  /*.header {
-    z-index: 50; /* Above everything else 
-  }
-  .overlay {
-    z-index: 30; /* Below sidebar 
-  }
-    
-  .content {
-    padding-left: 16rem; /* Sidebar width 
-  }
-  
-  @media (max-width: 768px) {
-    .content {
-      padding-left: 0;
-    }
-  }*/
-    import React from 'react'
-    import Header from './header'
-    import Sidebar from './sidebar'
-    import { Outlet } from 'react-router-dom'
-    
-    function AdminLayout() {
-      console.log('Layout rendered');
-      return (
-        <div className="admin-layout">
-          <Sidebar />
-          <div className="content">
-            <Header />
-            <main>
-              <Outlet /> {/* This is where nested routes will render */}
-            </main>
-          </div>
-        </div>
-      );
+  /* Commenting out payment processing for now - will be re-enabled when going live
+  const handlePayment = async () => {
+    if (!selectedAddress) {
+      setSnackbar({
+        open: true,
+        message: "Please select an address.",
+        severity: "error",
+      });
+      return;
     }
 
-    function AdminLayout() {
-        return (
-          <div className="flex h-screen">
-            {/* Sidebar */}
-            <Sidebar />
-      
-            {/* Main Content */}
-            <div className="flex flex-col flex-grow">
-              {/* Header */}
-              <Header />
-      
-              {/* Main Content Area */}
-              <main className="flex-grow p-4 bg-gray-100 overflow-y-auto">
-                <Outlet /> {/* This is where nested routes will render */}
-              </main>
-            </div>
-          </div>
+    if (paymentGateway === "mpesa" && !phoneNumber.match(/^2547\d{8}$/)) {
+      setSnackbar({
+        open: true,
+        message: "Please enter a valid Kenyan phone number (e.g., 254712345678).",
+        severity: "error",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("User not authenticated");
+
+      const totalAmount =
+        paymentGateway === "mpesa"
+          ? (cartTotal + shippingCost) * 140
+          : cartTotal + shippingCost;
+
+      if (paymentGateway === "mpesa") {
+        await axios.post(
+          `${API_BASE_URL}/api/mpesa/stkpush`,
+          { phone: phoneNumber, amount: totalAmount },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } else if (paymentGateway === "paypal") {
+        await axios.post(
+          `${API_BASE_URL}/api/paypal/create-order`,
+          { amount: totalAmount },
+          { headers: { Authorization: `Bearer ${token}` } }
         );
       }
-/*
-.content {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-  }
-  
-  main {
-    flex-grow: 1;
-    padding: 1rem;
-    background-color: #f3f4f6; /* Tailwind's bg-gray-100 
-    overflow-y: auto;
-  }
+
+      setSnackbar({
+        open: true,
+        message: "Payment successful! You can now place your order.",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      setSnackbar({
+        open: true,
+        message:
+          error?.response?.data?.message || error.message || "Failed to process payment.",
+        severity: "error",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   */
 
-  import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import Button from '@mui/material/Button';
-import LogoutIcon from '@mui/icons-material/Logout';
+  const handlePlaceOrder = async () => {
+    if (!selectedAddress) {
+      setSnackbar({
+        open: true,
+        message: "Please select an address before placing your order.",
+        severity: "error",
+      });
+      return;
+    }
 
-const Header = () => {
-  const navigate = useNavigate();
+    // Validate cart items
+    if (!cartItems || cartItems.length === 0) {
+      setSnackbar({
+        open: true,
+        message: "Your cart is empty. Please add items before placing an order.",
+        severity: "error",
+      });
+      return;
+    }
 
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    navigate('/auth/login');
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("User not logged in");
+
+      // Find the selected address
+      const address = addresses.find((addr) => addr._id === selectedAddress);
+      if (!address) {
+        setSnackbar({
+          open: true,
+          message: "Selected address not found. Please select a valid address.",
+          severity: "error",
+        });
+        return;
+      }
+
+      // Validate cart items have required fields
+      const validatedProducts = cartItems.map((item) => {
+        const productId = item._id || item.id || item.product;
+        const productName = item.title || item.name;
+        
+        if (!productId || !productName || !item.quantity || !item.price || !item.image) {
+          throw new Error(`Missing required product data for: ${productName || 'Unknown product'}`);
+        }
+
+        return {
+          product: productId,
+          name: productName,
+          quantity: item.quantity,
+          price: item.price,
+          image: item.image,
+          size: item.size || '', // Optional fields
+          color: item.color || '', // Optional fields
+          description: item.description || '', // Optional fields
+        };
+      });
+
+      // Prepare order details with all required fields
+      const orderDetails = {
+        shippingAddress: {
+          fullName: address.fullName,
+          streetAddress: address.streetAddress,
+          city: address.city,
+          state: address.state || '',
+          zipCode: address.zipCode || '',
+          country: address.country,
+          phoneNumber: address.phoneNumber || phoneNumber,
+        },
+        products: validatedProducts,
+        totalAmount: cartTotal + shippingCost,
+        // Commenting out payment method for now
+        // paymentMethod: paymentGateway === "mpesa" ? "Mpesa" : "PayPal",
+        paymentMethod: "Cash on Delivery", // Temporary solution
+      };
+
+      console.log("Order details being sent:", orderDetails);
+
+      // Send order details to the server
+      const response = await axios.post(`${API_BASE_URL}/api/orders`, orderDetails, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      console.log("Order response:", response.data);
+
+      setSnackbar({
+        open: true,
+        message: "Order placed successfully! Redirecting to orders page...",
+        severity: "success",
+      });
+
+      // Redirect to the orders page
+      setTimeout(() => {
+        navigate("/account/orders");
+      }, 2000);
+
+    } catch (error) {
+      console.error("Error placing order:", error.response?.data || error.message);
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          "Failed to place the order. Please try again.";
+      
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: "error",
+      });
+    }
   };
 
   return (
-    <header className="flex justify-between items-center p-4 bg-blue-600 text-white shadow-md z-50">
-      {/* Logo and Title */}
-      <div className="flex items-center">
-        <div className="bg-white rounded-full h-10 w-10 flex justify-center items-center text-blue-600 font-bold shadow">
-          A
-        </div>
-        <h1 className="ml-4 text-xl font-semibold">Dashboard</h1>
-      </div>
+    <Box sx={{ maxWidth: "600px", margin: "0 auto", padding: 4 }}>
+      <Typography
+        variant="h4"
+        textAlign="center"
+        marginBottom={4}
+        backgroundColor="#F3F4F6"
+        width="100vw"
+        position="relative"
+        left="calc(-50vw + 50%)"
+      >
+        Checkout
+      </Typography>
 
-      {/* Single Logout Button */}
+      {/* Address Selection */}
+      <Typography variant="h6" marginBottom={2}>
+        Select Address
+      </Typography>
+      {addresses.length > 0 ? (
+        <Select
+          value={selectedAddress}
+          onChange={(e) => setSelectedAddress(e.target.value)}
+          fullWidth
+          displayEmpty
+        >
+          <MenuItem value="" disabled>
+            Choose an address
+          </MenuItem>
+          {addresses.map((address) => (
+            <MenuItem key={address._id} value={address._id}>
+              {address.streetAddress}, {address.city}, {address.country}, {address.phoneNumber}
+            </MenuItem>
+          ))}
+        </Select>
+      ) : (
+        <Box>
+          <Typography color="error" marginBottom={2}>
+            No address found. Please add one.
+          </Typography>
+          <Button
+            variant="outlined"
+            fullWidth
+            onClick={() => navigate("/account/address")}
+          >
+            Add Address
+          </Button>
+        </Box>
+      )}
+
+      {/* Commenting out payment gateway selection for now
+      <Typography variant="h6" marginTop={4} textAlign="center" marginBottom={2}>
+        Payment Method
+      </Typography>
+      <RadioGroup
+        value={paymentGateway}
+        onChange={(e) => setPaymentGateway(e.target.value)}
+        row
+      >
+        <FormControlLabel
+          value="mpesa"
+          control={<Radio />}
+          label={
+            <Box display="flex" alignItems="center">
+              <img src={mpesaLogo} alt="Mpesa" style={{ width: 50 }} />
+              M-Pesa
+            </Box>
+          }
+        />
+        <FormControlLabel
+          value="paypal"
+          control={<Radio />}
+          label={
+            <Box display="flex" alignItems="center">
+              <img src={paypalLogo} alt="PayPal" style={{ width: 50 }} />
+              PayPal
+            </Box>
+          }
+        />
+      </RadioGroup>
+
+      {paymentGateway === "mpesa" && (
+        <TextField
+          label="Phone Number"
+          placeholder="254791150726"
+          fullWidth
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          margin="normal"
+          required
+        />
+      )}
+      */}
+
+      {/* Receipt */}
+      <Box marginTop={4} padding={2} border="1px solid #ddd" borderRadius={2}>
+        <Typography variant="h6" marginBottom={2} textAlign="center">
+          Receipt
+        </Typography>
+        <Typography>Cart Total: ${cartTotal.toFixed(2)}</Typography>
+        <Typography>Shipping: ${shippingCost.toFixed(2)}</Typography>
+        <Typography variant="h6" marginTop={2}>
+          Total: $ {(cartTotal + shippingCost).toFixed(2)}
+        </Typography>
+      </Box>
+
+      {/* Commenting out payment button for now
       <Button
         variant="contained"
-        color="error"
-        startIcon={<LogoutIcon />}
-        onClick={handleLogout}
-        className="capitalize"
+        color="primary"
+        fullWidth
+        disabled={isSubmitting}
+        sx={{
+          backgroundColor: "darkblue",
+          "&:hover": { backgroundColor: "blue" },
+          marginTop: 3,
+        }}
+        onClick={handlePayment}
       >
-        Logout
+        {isSubmitting ? "Processing..." : "Pay Now"}
       </Button>
-    </header>
-  );
-};
+      */}
 
-/*export default Header;}*/
-
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import MenuIcon from '@mui/icons-material/Menu';
-import CloseIcon from '@mui/icons-material/Close';
-
-const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
-
-  return (
-    <>
-      {/* Hamburger Menu */}
-      <div className="absolute top-4 left-4 md:hidden z-60">
-        <button
-          onClick={toggleSidebar}
-          className="hover:bg-blue-700 bg-black text-white p-2 rounded"
-        >
-          {isOpen ? <CloseIcon fontSize="large" /> : <MenuIcon fontSize="large" />}
-        </button>
-      </div>
-
-      {/* Sidebar */}
-      <div
-        className={`fixed top-0 left-0 h-full w-64 bg-blue-700 text-white transform ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        } transition-transform duration-300 z-40 md:relative md:translate-x-0`}
+      {/* Place Order Button */}
+      <Button
+        variant="contained" // Changed from outlined to contained for primary action
+        color="primary"
+        fullWidth
+        disabled={isSubmitting}
+        sx={{
+          backgroundColor: "darkblue",
+          "&:hover": { backgroundColor: "blue" },
+          marginTop: 3,
+        }}
+        onClick={handlePlaceOrder}
       >
-        <nav>
-          <ul className="space-y-4 p-4">
-            <li>
-              <Link to="/admin/dashboard" className="block hover:bg-blue-500 p-2 rounded">
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link to="/admin/dashboard/products" className="block hover:bg-blue-500 p-2 rounded">
-                Products
-              </Link>
-            </li>
-            <li>
-              <Link to="/admin/dashboard/invoices" className="block hover:bg-blue-500 p-2 rounded">
-                Invoices
-              </Link>
-            </li>
-            <li>
-              <Link to="/admin/dashboard/features" className="block hover:bg-blue-500 p-2 rounded">
-                Features
-              </Link>
-            </li>
-            <li>
-              <Link to="/admin/dashboard/orders" className="block hover:bg-blue-500 p-2 rounded">
-                Orders
-              </Link>
-            </li>
-          </ul>
-        </nav>
-      </div>
+        {isSubmitting ? "Placing Order..." : "Place Order"}
+      </Button>
 
-      {/* Overlay for Small Screens */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 overlay md:hidden"
-          onClick={toggleSidebar}
-        ></div>
-      )}
-    </>
+      {/* Snackbar Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+      {/* <Payment /> */}
+    </Box>
   );
 };
 
-/*export default Sidebar;*/
+export default Checkout;
 
-import React from 'react';
-/*import Header from './header';
-import Sidebar from './sidebar';*/
-import { Outlet } from 'react-router-dom';
+/*  
+const mongoose = require("mongoose");
 
-function AdminLayout() {
-      console.log('Layout rendered');
-      return (
-        <div className="admin-layout">
-          <Sidebar />
-          <div className="content">
-            <Header />
-            <main>
-              <Outlet /> {/* This is where nested routes will render */}
-            </main>
-          </div>
-        </div>
-      );
-    }
-/*export default AdminLayout;*/
+const orderItemSchema = new mongoose.Schema({
+  product: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Product",
+    required: true,
+  },
+  name: { type: String, required: true },
+  quantity: { type: Number, required: true, min: 1 },
+  price: { type: Number, required: true, min: 0 },
+  image: { type: String, required: true },
+  description: String, // Optional field for product description
+  size: String,
+  color: String
+});
 
+const orderSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    products: [orderItemSchema],
+    totalAmount: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    shippingAddress: {
+      phoneNumber: { type: String, required: true },
+      fullName: { type: String, required: true },
+      streetAddress: { type: String, required: true },
+      city: { type: String, required: true },
+      country: { type: String, required: true },
+      zipCode: { type: String },
+      state: { type: String },
+    },
+    paymentMethod: {
+      type: String,
+      required: true,
+      enum: ["Mpesa", "PayPal", "Cash on Delivery"],
+    },
+    orderStatus: {
+      type: String,
+      enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
+      default: "Pending",
+    },
+    statusHistory: [{
+      status: { type: String, required: true },
+      date: { type: Date, default: Date.now },
+      changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+    }],
+    isPaid: {
+      type: Boolean,
+      default: false
+    },
+    paidAt: Date,
+    processedAt: Date,
+    shippedAt: Date,
+    deliveredAt: Date,
+    cancelledAt: Date
+  },
+  { 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
+);
 
+// Indexes for better performance
+orderSchema.index({ user: 1 });
+orderSchema.index({ createdAt: -1 });
+orderSchema.index({ orderStatus: 1 });
 
-  
-    
-import React, { useState } from "react";
-import { Button } from "@mui/material";
+module.exports = mongoose.model("Order", orderSchema);
+*/
 
-function CommonForm({ formControls, onSubmit, submitButtonText = "Submit" }) {
-  const [formValues, setFormValues] = useState(
-    Object.fromEntries(formControls.map((control) => [control.name, ""]))
-  );
+/*
+const mongoose = require("mongoose");
 
-  const handleChange = (name) => (event) => {
-    const value = event.target.type === "file" ? event.target.files : event.target.value;
-    setFormValues({ ...formValues, [name]: value });
-  };
+const orderItemSchema = new mongoose.Schema({
+  product: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Product",
+    required: true,
+  },
+  name: { type: String, required: true },
+  quantity: { type: Number, required: true, min: 1 },
+  price: { type: Number, required: true, min: 0 },
+  image: { type: String, required: true },
+  description: String, // Optional field for product description
+  size: String,
+  color: String
+});
 
-  const renderInputsByComponentType = (control) => {
-    if (control.componentType === "file") {
-      return (
-        <div key={control.name} style={{ marginBottom: "16px" }}>
-          <label>{control.label}</label>
-          <input
-            type="file"
-            name={control.name}
-            multiple={control.multiple || false}
-            onChange={handleChange(control.name)}
-          />
-        </div>
-      );
-    }
+const paymentDetailsSchema = new mongoose.Schema({
+  paymentMethod: {
+    type: String,
+    required: true,
+    enum: ["Mpesa", "PayPal", "Cash on Delivery", "Credit Card", "Bank Transfer"],
+    default: "Cash on Delivery"
+  },
+  paymentStatus: {
+    type: String,
+    enum: ["Pending", "Completed", "Failed", "Refunded", "Partially Refunded"],
+    default: "Pending"
+  },
+  paymentGateway: String, // For storing which gateway was used
+  transactionId: String, // For storing gateway transaction ID
+  amountPaid: Number, // Actual amount paid (might differ from order total)
+  currency: {
+    type: String,
+    default: "KES" // Default currency for Mpesa
+  },
+  paymentMetadata: mongoose.Schema.Types.Mixed // For storing any gateway-specific data
+}, { _id: false });
 
-    const ComponentType = control.componentType;
-    return (
-      <div key={control.name} style={{ marginBottom: "16px" }}>
-        <ComponentType
-          label={control.label}
-          placeholder={control.placeholder}
-          type={control.type || "text"}
-          variant="outlined"
-          fullWidth
-          value={formValues[control.name]}
-          onChange={handleChange(control.name)}
-        />
-      </div>
-    );
-  };
+const orderSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    products: [orderItemSchema],
+    totalAmount: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    shippingAddress: {
+      phoneNumber: { type: String, required: true },
+      fullName: { type: String, required: true },
+      streetAddress: { type: String, required: true },
+      city: { type: String, required: true },
+      country: { type: String, required: true },
+      zipCode: { type: String },
+      state: { type: String },
+    },
+    payment: paymentDetailsSchema, // Replaced simple paymentMethod with comprehensive payment details
+    orderStatus: {
+      type: String,
+      enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"],
+      default: "Pending",
+    },
+    statusHistory: [{
+      status: { type: String, required: true },
+      date: { type: Date, default: Date.now },
+      changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      note: String // Optional note about status change
+    }],
+    // Timestamps for important events
+    processedAt: Date,
+    shippedAt: Date,
+    deliveredAt: Date,
+    cancelledAt: Date,
+    returnRequestedAt: Date,
+    notes: [{
+      content: String,
+      addedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      createdAt: { type: Date, default: Date.now }
+    }]
+  },
+  { 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
+);
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    if (onSubmit) {
-      // Prepare FormData for submission
-      const formData = new FormData();
-      for (const [key, value] of Object.entries(formValues)) {
-        if (key === "images") {
-          Array.from(value).forEach((file) => formData.append(key, file));
-        } else {
-          formData.append(key, value);
-        }
-      }
-      onSubmit(formData); // Pass FormData to the callback
-    }
-  };
+// Virtual property to check if order is paid
+orderSchema.virtual("isPaid").get(function() {
+  return this.payment.paymentStatus === "Completed";
+});
 
-  return (
-    <form onSubmit={handleSubmit}>
-      {/* Render form controls */}
-      {formControls.map((control) => renderInputsByComponentType(control))}
+// Indexes for better performance
+orderSchema.index({ user: 1 });
+orderSchema.index({ createdAt: -1 });
+orderSchema.index({ orderStatus: 1 });
+orderSchema.index({ "payment.paymentStatus": 1 });
+orderSchema.index({ "payment.transactionId": 1 }, { unique: true, sparse: true });
 
-      {/* Submit Button */}
-      <div className="flex justify-center">
-        <Button variant="contained" color="primary" type="submit">
-          {submitButtonText}
-        </Button>
-      </div>
-    </form>
-  );
-}
-
-/*export default CommonForm;*/
-
-const Product = require('../../config/model/product');
-const { uploadImage, deleteImage } = require('../../helpers/cloudinary');
-
-// Add Product Controller
-const addProduct = async (req, res) => {
-  try {
-    const {
-      title,
-      description,
-      category,
-      brand,
-      price,
-      salePrice,
-      totalStock,
-    } = req.body;
-
-    // Validate required fields
-    if (!title || !description || !category || !brand || !price || !totalStock) {
-      return res.status(400).json({ message: 'All required fields must be filled' });
-    }
-
-    // Handle image uploads
-    const imageFiles = req.files; // Assuming images are passed as "files" in the request
-    if (!imageFiles || imageFiles.length === 0) {
-      return res.status(400).json({ message: 'At least one product image is required' });
-    }
-
-    // Image upload logic to Cloudinary
-    const images = [];
-    for (const file of imageFiles) {
-      try {
-        const uploadResult = await uploadImage(file.path, 'products');
-        images.push({ url: uploadResult.url, publicId: uploadResult.publicId });
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        return res.status(500).json({ message: 'Error uploading image' });
-      }
-    }
-
-    // Create the product
-    const product = new Product({
-      title,
-      description,
-      category,
-      brand,
-      price,
-      salePrice,
-      totalStock,
-      images,
+// Pre-save hook to update status history
+orderSchema.pre("save", function(next) {
+  if (this.isModified("orderStatus")) {
+    this.statusHistory.push({
+      status: this.orderStatus,
+      changedBy: this.user // Assuming the user is changing their own order status
     });
+  }
+  next();
+});
 
-    // Save the product to the database
-    const savedProduct = await product.save();
-    res.status(201).json({ message: 'Product added successfully', product: savedProduct });
+module.exports = mongoose.model("Order", orderSchema);
+*/
+
+/* 
+const Order = require("../../config/model/orders");
+const Inventory = require("../../config/model/Inventory");
+const { sendOrderSMS } = require("../../helpers/smsService");
+const mongoose = require('mongoose');
+
+// Helper function to manage inventory changes
+const updateInventory = async (orderItems, action, session = null) => {
+  const ops = [];
+
+  for (const item of orderItems) {
+    const update = {
+      $inc: {
+        reservedItems: action === 'reserve' ? item.quantity :
+          action === 'release' ? -item.quantity : 0,
+        soldItems: action === 'confirm' ? item.quantity : 0,
+        amountSold: action === 'confirm' ? (item.price * item.quantity) : 0
+      }
+    };
+
+    ops.push(
+      Inventory.findOneAndUpdate(
+        { product: item.product },
+        update,
+        { session, new: true }
+      ).exec()
+    );
+  }
+
+  return Promise.all(ops);
+};
+
+// [NEW] Get all orders (admin) or user-specific orders
+const getOrders = async (req, res) => {
+  try {
+    const filter = req.user.role === "admin" ? {} : { user: req.user._id };
+    const orders = await Order.find(filter)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      orders
+    });
   } catch (error) {
-    console.error('Error adding product:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching orders:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching orders",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
-// Delete Product Controller
-const deleteProduct = async (req, res) => {
+// [NEW] Get a specific order by ID
+const getOrderById = async (req, res) => {
+  try {
+    const filter = req.user.role === "admin"
+      ? { _id: req.params.id }
+      : { _id: req.params.id, user: req.user._id };
+
+    const order = await Order.findOne(filter).lean();
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      order
+    });
+  } catch (error) {
+    console.error("Error fetching order:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching order",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// Create a new order (with inventory reservation)
+const createOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const userId = req.user._id;
+    const { shippingAddress, paymentMethod, totalAmount, products } = req.body;
+
+    // Validate input
+    if (!shippingAddress || !paymentMethod || !totalAmount || !products?.length) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Missing required order details."
+      });
+    }
+
+    // 1. Reserve inventory first
+    await updateInventory(products, 'reserve', session);
+
+    // 2. Create order
+    const orderItems = products.map(item => ({
+      product: item.product,
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+      image: item.image,
+      size: item.size,
+      color: item.color,
+      description: item.description 
+    }));
+
+    const newOrder = new Order({
+      user: userId,
+      products: orderItems,
+      totalAmount,
+      shippingAddress,
+      paymentMethod,
+      statusHistory: [{
+        status: "Pending",
+        changedBy: userId
+      }]
+    });
+
+    await newOrder.save({ session });
+    await session.commitTransaction();
+
+    // Send SMS notification to user
+   // After order creation, add:
+try {
+  // SMS Notification
+  const userPhone = req.user.phoneNumber || req.body.phoneNumber;
+  if (userPhone) {
+    const smsMessage = `Hi ${req.user.fullName || 'Customer'}, your order has been placed successfully. Total: KES ${totalAmount}. Thank you for shopping with us!`;
+    await sendOrderSMS(userPhone, smsMessage);
+  }
+  
+  // Email Notification
+  const userEmail = req.user.email || req.body.email;
+  if (userEmail) {
+    const emailSubject = 'Your Order Confirmation';
+    const emailText = `Hello ${req.user.fullName || 'Customer'},\n\nYour order #${newOrder._id} has been placed successfully.\n\nTotal Amount: KES ${totalAmount}\n\nThank you for your purchase!`;
+    await sendOrderEmail(userEmail, emailSubject, emailText);
+  }
+} catch (notificationError) {
+  console.error("Notification error:", notificationError);
+  // Consider logging this to a monitoring service
+}
+
+
+    res.status(201).json({
+      success: true,
+      message: "Order placed successfully!",
+      order: newOrder
+    });
+
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("Order creation error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message.includes('availableStock')
+        ? "Insufficient stock for some items"
+        : "Order creation failed",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
+// Confirm order payment (mark inventory as sold)
+const confirmOrderPayment = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const order = await Order.findById(req.params.id).session(session);
+    if (!order) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    // 1. Confirm inventory deduction
+    await updateInventory(order.products, 'confirm', session);
+
+    // 2. Update order status
+    order.isPaid = true;
+    order.paidAt = new Date();
+    order.orderStatus = "Processing";
+    order.statusHistory.push({
+      status: "Processing",
+      changedBy: req.user._id
+    });
+
+    await order.save({ session });
+    await session.commitTransaction();
+
+    // Send SMS notification to user
+    try {
+      const userPhone = req.user.phoneNumber || order.shippingAddress?.phoneNumber;
+      if (userPhone) {
+        const message = `Hi ${req.user.fullName || 'Customer'}, your payment was received successfully. Your order is now being processed.`;
+        await sendOrderSMS(userPhone, message);
+      }
+    } catch (smsError) {
+      console.warn("Failed to send payment confirmation SMS:", smsError.message);
+    }
+
+
+    res.status(200).json({
+      success: true,
+      message: "Payment confirmed successfully",
+      order
+    });
+
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("Payment confirmation error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Payment confirmation failed",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
+// Cancel order (release inventory)
+const cancelOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const order = await Order.findById(req.params.id).session(session);
+    if (!order) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    // Only allow cancellation for pending/processing orders
+    if (!["Pending", "Processing"].includes(order.orderStatus)) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Order cannot be cancelled at this stage"
+      });
+    }
+
+    // 1. Release reserved inventory
+    await updateInventory(order.products, 'release', session);
+
+    // 2. Update order status
+    order.orderStatus = "Cancelled";
+    order.cancelledAt = new Date();
+    order.statusHistory.push({
+      status: "Cancelled",
+      changedBy: req.user._id
+    });
+
+    await order.save({ session });
+    await session.commitTransaction();
+
+    // Send SMS notification to user
+    try {
+      const userPhone = req.user.phoneNumber || order.shippingAddress?.phoneNumber;
+      if (userPhone && ["Shipped", "Delivered"].includes(orderStatus)) {
+        const message =
+          orderStatus === "Shipped"
+            ? `Hi ${req.user.fullName || 'Customer'}, your order has been shipped.`
+            : `Hi ${req.user.fullName || 'Customer'}, your order has been delivered. Enjoy your purchase!`;
+
+        await sendOrderSMS(userPhone, message);
+      }
+    } catch (smsError) {
+      console.warn("Failed to send order status SMS:", smsError.message);
+    }
+
+
+    res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+      order
+    });
+
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("Order cancellation error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Order cancellation failed",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
+// Update order status (admin only)
+const updateOrderStatus = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { id } = req.params;
+    const { orderStatus } = req.body;
 
-    // Find the product by ID
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+    const validStatuses = ["Processing", "Shipped", "Delivered"];
+    if (!validStatuses.includes(orderStatus)) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order status"
+      });
     }
 
-    // Delete images from Cloudinary
-    for (const image of product.images) {
-      try {
-        await deleteImage(image.publicId);
-      } catch (error) {
-        console.error('Error deleting image:', error);
-        return res.status(500).json({ message: 'Error deleting images from Cloudinary' });
-      }
+    const order = await Order.findById(id).session(session);
+    if (!order) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
     }
 
-    // Delete the product from the database
-    await product.remove();
+    // Update status and timestamps
+    order.orderStatus = orderStatus;
+    order.statusHistory.push({
+      status: orderStatus,
+      changedBy: req.user._id
+    });
 
-    res.status(200).json({ message: 'Product deleted successfully' });
+    if (orderStatus === "Shipped") order.shippedAt = new Date();
+    if (orderStatus === "Delivered") order.deliveredAt = new Date();
+
+    await order.save({ session });
+    await session.commitTransaction();
+
+    res.status(200).json({
+      success: true,
+      message: `Order status updated to ${orderStatus}`,
+      order
+    });
+
   } catch (error) {
-    console.error('Error deleting product:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    await session.abortTransaction();
+    console.error("Status update error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Status update failed",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
+// Get delivered orders
+const getDeliveredOrders = async (req, res) => {
+  try {
+    const filter = {
+      user: req.user._id,
+      orderStatus: "Delivered"
+    };
+    const orders = await Order.find(filter)
+      .sort({ deliveredAt: -1 })
+      .lean();
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      orders
+    });
+  } catch (error) {
+    console.error("Error fetching delivered orders:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching delivered orders",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// User: Delete order (if still processing)
+const deleteOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const order = await Order.findOne({
+      _id: req.params.id,
+      user: req.user._id
+    }).session(session);
+
+    if (!order) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    if (order.orderStatus !== "Pending") {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Order cannot be deleted after it has been processed"
+      });
+    }
+
+    // Release any reserved inventory
+    await updateInventory(order.products, 'release', session);
+
+    await Order.deleteOne({ _id: req.params.id }).session(session);
+    await session.commitTransaction();
+
+    res.status(200).json({
+      success: true,
+      message: "Order deleted successfully"
+    });
+
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("Error deleting order:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting order",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    session.endSession();
   }
 };
 
 module.exports = {
-  addProduct,
-  deleteProduct,
+  createOrder,
+  getOrders,
+  getOrderById,
+  updateOrderStatus,
+  deleteOrder,
+  getDeliveredOrders,
+  confirmOrderPayment,
+  cancelOrder
 };
-
-
-import React, { useState } from "react";
-import {
-  Button,
-  TextField,
-  TextareaAutosize,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  CircularProgress,
-  Snackbar,
-  Alert,
-} from "@mui/material";
-import axios from "axios";
-import { addProductFormElements } from "../../config/addProductElement";
-
-const AddProductForm = () => {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    category: "",
-    brand: "",
-    price: "",
-    salePrice: "",
-    totalStock: "",
-    images: [],
-  });
-  const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
-
-  const handleChange = (e) => {
-    if (e.target.type === "file") {
-      setFormData({
-        ...formData,
-        [e.target.name]: e.target.files,
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [e.target.name]: e.target.value,
-      });
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const authToken = localStorage.getItem("token");
-    if (!authToken) {
-      setNotification({ open: true, message: "No authentication token found", severity: "error" });
-      return;
-    }
-
-    const formDataToSubmit = new FormData();
-    Object.keys(formData).forEach((key) => {
-      if (key === "images") {
-        for (let i = 0; i < formData.images.length; i++) {
-          formDataToSubmit.append("images", formData.images[i]);
-        }
-      } else {
-        formDataToSubmit.append(key, formData[key]);
-      }
-    });
-
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        "http://localhost:3000/api/products",
-        formDataToSubmit,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      setNotification({ open: true, message: "Product added successfully!", severity: "success" });
-      console.log(response.data);
-      setFormData({
-        title: "",
-        description: "",
-        category: "",
-        brand: "",
-        price: "",
-        salePrice: "",
-        totalStock: "",
-        images: [],
-      });
-    } catch (error) {
-      setNotification({ open: true, message: "Failed to add product. Please try again.", severity: "error" });
-      console.error("Error adding product:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleNotificationClose = () => {
-    setNotification({ ...notification, open: false });
-  };
-
-  return (
-    <>
-      <form onSubmit={handleSubmit}>
-        {addProductFormElements.map((field) => {
-          if (field.componentType === "input") {
-            return (
-              <TextField
-                key={field.name}
-                label={field.label}
-                name={field.name}
-                type={field.type}
-                value={formData[field.name]}
-                onChange={handleChange}
-                placeholder={field.placeholder}
-                fullWidth
-                margin="normal"
-              />
-            );
-          }
-          if (field.componentType === "textarea") {
-            return (
-              <TextareaAutosize
-                key={field.name}
-                name={field.name}
-                value={formData[field.name]}
-                onChange={handleChange}
-                placeholder={field.placeholder}
-                style={{ width: "100%", margin: "10px 0", padding: "8px" }}
-              />
-            );
-          }
-          if (field.componentType === "select") {
-            return (
-              <FormControl fullWidth margin="normal" key={field.name}>
-                <InputLabel>{field.label}</InputLabel>
-                <Select
-                  name={field.name}
-                  value={formData[field.name]}
-                  onChange={handleChange}
-                  fullWidth
-                >
-                  {field.options.map((option) => (
-                    <MenuItem key={option.id} value={option.id}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            );
-          }
-          if (field.componentType === "file") {
-            return (
-              <TextField
-                key={field.name}
-                label={field.label}
-                name={field.name}
-                type="file"
-                inputProps={{ multiple: true }}
-                onChange={handleChange}
-                fullWidth
-                margin="normal"
-              />
-            );
-          }
-          return null;
-        })}
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          disabled={loading}
-          fullWidth
-        >
-          {loading ? <CircularProgress size={24} color="inherit" /> : "Add Product"}
-        </Button>
-      </form>
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={6000}
-        onClose={handleNotificationClose}
-      >
-        <Alert onClose={handleNotificationClose} severity={notification.severity}>
-          {notification.message}
-        </Alert>
-      </Snackbar>
-    </>
-  );
-};
-
-/*export default AddProductForm;*/
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Drawer,
-  IconButton,
-} from "@mui/material";
-import {
-  Person as PersonIcon,
-  Star as StarIcon,
-  Favorite as FavoriteIcon,
-  History as HistoryIcon,
-  Search as SearchIcon,
-  ShoppingBag as ShoppingBagIcon,
-  Settings as SettingsIcon,
-  ExitToApp as ExitToAppIcon,
-  Home as HomeIcon,
-  Menu as MenuIcon,
-  Login as LoginIcon,
-} from "@mui/icons-material";
-
-const AccountMain = () => {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false); // Drawer state for mobile
-  const userEmail = localStorage.getItem("email") || "guest@example.com"; // Fallback to guest email
-  const userName = userEmail.split("@")[0]; // Extract name from email
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/auth/login");
-  };
-
-  const handleSignIn = () => {
-    navigate("/auth/login");
-  };
-
-  const menuItems = [
-    { text: "My Account", icon: <PersonIcon />, route: "/account" },
-    { text: "Ratings & Reviews", icon: <StarIcon />, route: "/account/ratings" },
-    { text: "Saved Items", icon: <FavoriteIcon />, route: "/account/saved" },
-    { text: "Recently Viewed", icon: <HistoryIcon />, route: "/account/viewed" },
-    { text: "Recently Searched", icon: <SearchIcon />, route: "/account/searched" },
-    { text: "My Orders", icon: <ShoppingBagIcon />, route: "/account/orders" },
-  ];
-
-  const settingsItems = [
-    { text: "Address Book", icon: <HomeIcon />, route: "/account/address" },
-    { text: "Account Management", icon: <SettingsIcon />, route: "/account/management" },
-  ];
-
-  return (
-    <div className="flex">
-      {/* Sidebar for Desktop */}
-      <aside className="hidden md:flex flex-col w-64 p-4 bg-gray-100 border-r shadow-lg">
-        {/* User Greeting */}
-        <div className="flex items-center mb-6">
-          <Avatar className="mr-4 bg-blue-500">{userName[0].toUpperCase()}</Avatar>
-          <div>
-            <h2 className="text-lg font-semibold">Welcome, {userName}</h2>
-            <p className="text-sm text-gray-500">{userEmail}</p>
-          </div>
-        </div>
-
-        {/* Menu Items */}
-        <List>
-          {menuItems.map((item) => (
-            <ListItem
-              button
-              key={item.text}
-              onClick={() => navigate(item.route)}
-              className="hover:bg-blue-100 rounded"
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItem>
-          ))}
-        </List>
-
-        {/* Divider */}
-        <hr className="my-4" />
-
-        {/* Settings Items */}
-        <List>
-          {settingsItems.map((item) => (
-            <ListItem
-              button
-              key={item.text}
-              onClick={() => navigate(item.route)}
-              className="hover:bg-blue-100 rounded"
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItem>
-          ))}
-          <ListItem
-            button
-            onClick={handleLogout}
-            className="hover:bg-blue-100 rounded text-red-600"
-          >
-            <ListItemIcon>
-              <ExitToAppIcon className="text-red-600" />
-            </ListItemIcon>
-            <ListItemText primary="Logout" />
-          </ListItem>
-          <ListItem
-            button
-            onClick={handleSignIn}
-            className="hover:bg-blue-100 rounded text-blue-600"
-          >
-            <ListItemIcon>
-              <LoginIcon className="text-blue-600" />
-            </ListItemIcon>
-            <ListItemText primary="Sign In" />
-          </ListItem>
-        </List>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-grow p-4">
-        <h1 className="text-2xl font-bold">My Account</h1>
-        <p className="text-gray-600 mt-2">Select an option from the sidebar.</p>
-      </main>
-
-      {/* Mobile Drawer */}
-      <Drawer
-        anchor="left"
-        open={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        PaperProps={{
-          style: {
-            width: "250px",
-            boxShadow: "rgba(0, 0, 0, 0.15) 0px 4px 12px",
-          },
-        }}
-      >
-        <div className="p-4">
-          {/* User Greeting */}
-          <div className="flex items-center mb-6">
-            <Avatar className="mr-4 bg-blue-500">{userName[0].toUpperCase()}</Avatar>
-            <div>
-              <h2 className="text-lg font-semibold">Welcome, {userName}</h2>
-              <p className="text-sm text-gray-500">{userEmail}</p>
-            </div>
-          </div>
-
-          {/* Menu Items */}
-          <List>
-            {menuItems.map((item) => (
-              <ListItem
-                button
-                key={item.text}
-                onClick={() => {
-                  navigate(item.route);
-                  setIsDrawerOpen(false);
-                }}
-                className="hover:bg-blue-100 rounded"
-              >
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItem>
-            ))}
-          </List>
-
-          {/* Divider */}
-          <hr className="my-4" />
-
-          {/* Settings Items */}
-          <List>
-            {settingsItems.map((item) => (
-              <ListItem
-                button
-                key={item.text}
-                onClick={() => {
-                  navigate(item.route);
-                  setIsDrawerOpen(false);
-                }}
-                className="hover:bg-blue-100 rounded"
-              >
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItem>
-            ))}
-            <ListItem
-              button
-              onClick={() => {
-                handleLogout();
-                setIsDrawerOpen(false);
-              }}
-              className="hover:bg-blue-100 rounded text-red-600"
-            >
-              <ListItemIcon>
-                <ExitToAppIcon className="text-red-600" />
-              </ListItemIcon>
-              <ListItemText primary="Logout" />
-            </ListItem>
-            <ListItem
-              button
-              onClick={() => {
-                handleSignIn();
-                setIsDrawerOpen(false);
-              }}
-              className="hover:bg-blue-100 rounded text-blue-600"
-            >
-              <ListItemIcon>
-                <LoginIcon className="text-blue-600" />
-              </ListItemIcon>
-              <ListItemText primary="Sign In" />
-            </ListItem>
-          </List>
-        </div>
-      </Drawer>
-
-      {/* Hamburger Menu for Mobile */}
-      <IconButton
-        className="fixed top-4 left-4 md:hidden"
-        onClick={() => setIsDrawerOpen(true)}
-      >
-        <MenuIcon />
-      </IconButton>
-    </div>
-  );
-};
-
-/*export default AccountMain;*/
-
-import React, { useState } from 'react';
-import { TextField, Button, Select, MenuItem } from '@mui/material';
-import TextareaAutosize from '@mui/material/TextareaAutosize';
-
-function CommonForm({ formControls, onSubmit, submitButtonText = 'Submit' }) {
-  const [formValues, setFormValues] = useState(
-    Object.fromEntries(formControls.map((control) => [control.name, '']))
-  );
-
-  const handleChange = (name) => (event) => {
-    const value =
-      event.target.type === 'file' ? event.target.files : event.target.value;
-    setFormValues({ ...formValues, [name]: value });
-  };
-
-  const renderInputsByComponentType = (control) => {
-    // Check if the control has a custom componentType (like TextField, Select, etc.)
-    const Component = control.componentType;
-    switch (control.componentType) {
-      case TextField:
-        return (
-          <Component
-            key={control.name}
-            label={control.label}
-            placeholder={control.placeholder}
-            type={control.type}
-            variant="outlined"
-            fullWidth
-            value={formValues[control.name]}
-            onChange={handleChange(control.name)}
-            style={{ marginBottom: '16px' }}
-          />
-        );
-      case 'textarea':
-        return (
-          <TextareaAutosize
-            key={control.name}
-            minRows={3}
-            placeholder={control.placeholder}
-            value={formValues[control.name]}
-            onChange={handleChange(control.name)}
-            style={{
-              width: '100%',
-              marginBottom: '16px',
-              padding: '8px',
-              borderColor: '#ccc',
-              borderRadius: '4px',
-            }}
-          />
-        );
-      case 'select':
-        return (
-          <Select
-            key={control.name}
-            value={formValues[control.name]}
-            onChange={handleChange(control.name)}
-            displayEmpty
-            fullWidth
-            variant="outlined"
-            style={{ marginBottom: '16px' }}
-          >
-            <MenuItem value="" disabled>
-              {control.placeholder}
-            </MenuItem>
-            {control.options.map((option) => (
-              <MenuItem key={option.id} value={option.id}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        );
-      case 'file':
-        return (
-          <input
-            key={control.name}
-            type="file"
-            multiple={control.multiple}
-            onChange={handleChange(control.name)}
-            style={{ marginBottom: '16px', display: 'block' }}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    if (onSubmit) {
-      onSubmit(formValues);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      {/* Render form controls */}
-      {formControls.map((control) => renderInputsByComponentType(control))}
-
-      {/* Submit Button */}
-      <div className="flex justify-center">
-        <Button variant="contained" color="primary" type="submit">
-          {submitButtonText}
-        </Button>
-      </div>
-    </form>
-  );
-}
-
-/*export default CommonForm;*/
-
-//MPESA_CALLBACK_URL=https://your-ngrok-url/callback
-
-//MPESA_CALLBACK_URL=http://localhost:3000/api/mpesa/callback
-
-const express = require("express");
-const router = express.Router();
-const { 
-    createOrder, 
-    getOrders, 
-    getOrderById, 
-    updateOrderStatus, 
-    deleteOrder 
-} = require("../../controllers/orders/orders-controller") ;
-const authMiddleware = require("../../middleware/authMiddleware"); 
-const Inventory = require("../../config/model/inventory");
-
-// Create a new order
-router.post("/", authMiddleware, createOrder);
-
-// Get all orders for the logged-in user
-router.get("/", authMiddleware, getOrders);
-
-// Get a single order by ID
-router.get("/:id", authMiddleware, getOrderById);
-
-// Update order status
-router.patch("/:id/status", authMiddleware, updateOrderStatus);
-
-// Delete an order
-router.delete("/:id", authMiddleware, deleteOrder);
-
-
-
-// Inside order creation route
-const updateInventory = async (orderItems) => {
-  for (const item of orderItems) {
-    const inventory = await Inventory.findOne({ brand: item.brand, category: item.category });
-
-    if (inventory) {
-      inventory.sold_items += item.quantity;
-      inventory.balance_stock -= item.quantity;
-      inventory.amount_sold += item.quantity * item.price;
-      await inventory.save();
-    }
-  }
-};
-
-
-module.exports = router;
-
-
-
-
+*/

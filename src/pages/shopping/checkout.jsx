@@ -20,12 +20,10 @@ import paypalLogo from "../../assets/images/paypalLogo.jpg";
 import Footer from "../../components/Footer";
 import Payment from "./payment";
 
-
-
 const Checkout = () => {
   const navigate = useNavigate();
-  const cartItems = useSelector((state) => state.cart.items); // Use Redux to get cart items
-  const cartTotal = useSelector((state) => state.cart.totalAmount); // Use Redux to track cart total
+  const cartItems = useSelector((state) => state.cart.items);
+  const cartTotal = useSelector((state) => state.cart.totalAmount);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState("");
   const [shippingCost, setShippingCost] = useState(0);
@@ -37,16 +35,14 @@ const Checkout = () => {
     message: "",
     severity: "success",
   });
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   // Fetch user addresses
   useEffect(() => {
-    
     const fetchAddresses = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("User not logged in");
-
-
 
         const response = await axios.get(`${API_BASE_URL}/api/address`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -63,8 +59,6 @@ const Checkout = () => {
 
   // Update shipping cost based on the selected address
   useEffect(() => {
-    ;
-
     if (selectedAddress) {
       const address = addresses.find((addr) => addr._id === selectedAddress);
       if (address?.country.toLowerCase() === "kenya") {
@@ -75,6 +69,7 @@ const Checkout = () => {
     }
   }, [selectedAddress, addresses]);
 
+  /* Commenting out payment processing for now - will be re-enabled when going live
   const handlePayment = async () => {
     if (!selectedAddress) {
       setSnackbar({
@@ -136,121 +131,119 @@ const Checkout = () => {
       setIsSubmitting(false);
     }
   };
+  */
 
-
-const handlePlaceOrder = async () => {
-  if (!selectedAddress) {
-    setSnackbar({
-      open: true,
-      message: "Please select an address before placing your order.",
-      severity: "error",
-    });
-    return;
-  }
-
-  // Validate cart items
-  if (!cartItems || cartItems.length === 0) {
-    setSnackbar({
-      open: true,
-      message: "Your cart is empty. Please add items before placing an order.",
-      severity: "error",
-    });
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) throw new Error("User not logged in");
-
-    // Find the selected address
-    const address = addresses.find((addr) => addr._id === selectedAddress);
-    if (!address) {
+  const handlePlaceOrder = async () => {
+    if (!selectedAddress) {
       setSnackbar({
         open: true,
-        message: "Selected address not found. Please select a valid address.",
+        message: "Please select an address before placing your order.",
         severity: "error",
       });
       return;
     }
 
-    // Validate cart items have required fields
-    const validatedProducts = cartItems.map((item) => {
-      const productId = item._id || item.id || item.product;
-      const productName = item.title || item.name;
-      
-      if (!productId || !productName || !item.quantity || !item.price || !item.image) {
-        throw new Error(`Missing required product data for: ${productName || 'Unknown product'}`);
+    // Validate cart items
+    if (!cartItems || cartItems.length === 0) {
+      setSnackbar({
+        open: true,
+        message: "Your cart is empty. Please add items before placing an order.",
+        severity: "error",
+      });
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("User not logged in");
+
+      // Find the selected address
+      const address = addresses.find((addr) => addr._id === selectedAddress);
+      if (!address) {
+        setSnackbar({
+          open: true,
+          message: "Selected address not found. Please select a valid address.",
+          severity: "error",
+        });
+        return;
       }
 
-      return {
-        product: productId,
-        name: productName,
-        quantity: item.quantity,
-        price: item.price,
-        image: item.image,
-        size: item.size || '', // Optional fields
-        color: item.color || '', // Optional fields
-        description: item.description || '', // Optional fields
+      // Validate cart items have required fields
+      const validatedProducts = cartItems.map((item) => {
+        const productId = item._id || item.id || item.product;
+        const productName = item.title || item.name;
+        
+        if (!productId || !productName || !item.quantity || !item.price || !item.image) {
+          throw new Error(`Missing required product data for: ${productName || 'Unknown product'}`);
+        }
+
+        return {
+          product: productId,
+          name: productName,
+          quantity: item.quantity,
+          price: item.price,
+          image: item.image,
+          size: item.size || '', // Optional fields
+          color: item.color || '', // Optional fields
+          description: item.description || '', // Optional fields
+        };
+      });
+
+      // Prepare order details with all required fields
+      const orderDetails = {
+        shippingAddress: {
+          fullName: address.fullName,
+          streetAddress: address.streetAddress,
+          city: address.city,
+          state: address.state || '',
+          zipCode: address.zipCode || '',
+          country: address.country,
+          phoneNumber: address.phoneNumber || phoneNumber,
+        },
+        products: validatedProducts,
+        totalAmount: cartTotal + shippingCost,
+        // Commenting out payment method for now
+        // paymentMethod: paymentGateway === "mpesa" ? "Mpesa" : "PayPal",
+        paymentMethod: "Cash on Delivery", // Temporary solution
       };
-    });
 
-    // Prepare order details with all required fields
-    const orderDetails = {
-      shippingAddress: {
-        fullName: address.fullName,
-        streetAddress: address.streetAddress,
-        city: address.city,
-        state: address.state || '',
-        zipCode: address.zipCode || '',
-        country: address.country,
-        phoneNumber: address.phoneNumber || phoneNumber, // Use phone number from address or input
-      },
-      products: validatedProducts,
-      totalAmount: cartTotal + shippingCost,
-      paymentMethod: paymentGateway === "mpesa" ? "Mpesa" : "PayPal",
-    };
+      console.log("Order details being sent:", orderDetails);
 
-    // Log the order details for debugging
-    console.log("Order details being sent:", orderDetails);
+      // Send order details to the server
+      const response = await axios.post(`${API_BASE_URL}/api/orders`, orderDetails, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
 
-    // Send order details to the server
-    const response = await axios.post(`${API_BASE_URL}/api/orders`, orderDetails, {
-      headers: { 
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-    });
+      console.log("Order response:", response.data);
 
-    console.log("Order response:", response.data);
+      setSnackbar({
+        open: true,
+        message: "Order placed successfully! Redirecting to orders page...",
+        severity: "success",
+      });
 
-    setSnackbar({
-      open: true,
-      message: "Order placed successfully! Redirecting to orders page...",
-      severity: "success",
-    });
+      // Redirect to the orders page
+      setTimeout(() => {
+        navigate("/account/orders");
+      }, 2000);
 
-    // Redirect to the orders page
-    setTimeout(() => {
-      navigate("/account/orders");
-    }, 2000);
-
-  } catch (error) {
-    console.error("Error placing order:", error.response?.data || error.message);
-    
-    // More specific error handling
-    const errorMessage = error.response?.data?.message || 
-                        error.message || 
-                        "Failed to place the order. Please try again.";
-    
-    setSnackbar({
-      open: true,
-      message: errorMessage,
-      severity: "error",
-    });
-  }
-};
-
-  
+    } catch (error) {
+      console.error("Error placing order:", error.response?.data || error.message);
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          "Failed to place the order. Please try again.";
+      
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: "error",
+      });
+    }
+  };
 
   return (
     <Box sx={{ maxWidth: "600px", margin: "0 auto", padding: 4 }}>
@@ -301,7 +294,7 @@ const handlePlaceOrder = async () => {
         </Box>
       )}
 
-      {/* Payment Gateway Selection */}
+      {/* Commenting out payment gateway selection for now
       <Typography variant="h6" marginTop={4} textAlign="center" marginBottom={2}>
         Payment Method
       </Typography>
@@ -332,7 +325,6 @@ const handlePlaceOrder = async () => {
         />
       </RadioGroup>
 
-      {/* Phone Number Input for M-Pesa */}
       {paymentGateway === "mpesa" && (
         <TextField
           label="Phone Number"
@@ -344,6 +336,7 @@ const handlePlaceOrder = async () => {
           required
         />
       )}
+      */}
 
       {/* Receipt */}
       <Box marginTop={4} padding={2} border="1px solid #ddd" borderRadius={2}>
@@ -353,12 +346,11 @@ const handlePlaceOrder = async () => {
         <Typography>Cart Total: ${cartTotal.toFixed(2)}</Typography>
         <Typography>Shipping: ${shippingCost.toFixed(2)}</Typography>
         <Typography variant="h6" marginTop={2}>
-          Total: $ {(cartTotal + shippingCost).toFixed(2)}{" "}
-          {paymentGateway === "mpesa" ? "(KES)" : "(USD)"}
+          Total: $ {(cartTotal + shippingCost).toFixed(2)}
         </Typography>
       </Box>
 
-      {/* Payment Button */}
+      {/* Commenting out payment button for now
       <Button
         variant="contained"
         color="primary"
@@ -373,16 +365,22 @@ const handlePlaceOrder = async () => {
       >
         {isSubmitting ? "Processing..." : "Pay Now"}
       </Button>
+      */}
 
       {/* Place Order Button */}
       <Button
-        variant="outlined"
+        variant="contained" // Changed from outlined to contained for primary action
+        color="primary"
         fullWidth
         disabled={isSubmitting}
-        sx={{ marginTop: 2 }}
+        sx={{
+          backgroundColor: "darkblue",
+          "&:hover": { backgroundColor: "blue" },
+          marginTop: 3,
+        }}
         onClick={handlePlaceOrder}
       >
-        Place Order
+        {isSubmitting ? "Placing Order..." : "Place Order"}
       </Button>
 
       {/* Snackbar Notifications */}
@@ -400,7 +398,7 @@ const handlePlaceOrder = async () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-      <Payment />
+      {/* <Payment /> */}
     </Box>
   );
 };

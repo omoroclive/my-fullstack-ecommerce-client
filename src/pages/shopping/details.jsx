@@ -113,17 +113,20 @@ const Details = () => {
   }, [product, dispatch]);
 
   const handleAddToCart = () => {
-    dispatch(addToCart({
-      _id: product._id,
-      title: product.title,
-      price: product.price,
-      quantity: quantity,
-      image: product.images[0]?.url || placeholderImage,
-      color: product.color,
-      size: product.size
-    }));
-    setSnackbar({ open: true, message: "Added to cart!", severity: "success" });
+  const cartItem = {
+    _id: product._id,
+    title: product.title,
+    price: product.price,
+    quantity: quantity,
+    image: product.images[0]?.url || placeholderImage,
+    description: product.description || "", // Include description
+    ...(product.color && { color: product.color }), // Include color if it exists
+    ...(product.size && { size: product.size }) // Include size if it exists
   };
+  
+  dispatch(addToCart(cartItem));
+  setSnackbar({ open: true, message: "Added to cart!", severity: "success" });
+};
 
   const handleAddToWishlist = () => {
     dispatch(

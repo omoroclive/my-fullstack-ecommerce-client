@@ -29,7 +29,7 @@ export const fetchAllOrders = createAsyncThunk(
   'orders/fetchAllOrders',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/orders/all`, getAuthHeaders());
+      const response = await axios.get(`${BASE_URL}/api/orders`, getAuthHeaders());
       return { orders: response.data.orders, type: 'admin' };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch all orders');

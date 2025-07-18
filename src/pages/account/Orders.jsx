@@ -261,11 +261,11 @@ const OrderCard = ({ order, isMobile, theme, navigate }) => (
       <OrderSummary order={order} />
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 3 }}>
-        <Button variant="outlined" onClick={() => navigate(`/account/orders/${order._id}`)}>
+        <Button variant="outlined" onClick={() => navigate(`/shop/details/${order._id}`)}>
           View Details
         </Button>
         {order.orderStatus === "Delivered" && (
-          <Button variant="contained" onClick={() => navigate(`/account/orders/${order._id}/review`)}>
+          <Button variant="contained" onClick={() => navigate(`/account/ratings/${order._id}/review`)}>
             Leave Review
           </Button>
         )}

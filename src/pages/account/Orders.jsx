@@ -1,86 +1,75 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchOrders } from "../../store/order/orderSlice";
+import { fetchAllOrders, updateOrderStatus } from "../../store/order/orderSlice";
 import {
   Button,
   Typography,
   Card,
   CardContent,
-  CardMedia,
   Grid,
   Container,
-  Stepper,
-  Step,
-  StepLabel,
   Box,
   Chip,
   Divider,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Tooltip,
   useMediaQuery,
   useTheme
 } from "@mui/material";
-import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import {
+  ShoppingBag as ShoppingBagIcon,
+  LocalShipping as LocalShippingIcon,
+  CheckCircle as CheckCircleIcon,
+  Edit as EditIcon,
+  Visibility as VisibilityIcon,
+  FilterList as FilterIcon,
+  Refresh as RefreshIcon
+} from '@mui/icons-material';
 
-const UserOrders = () => {
+const AdminOrders = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { orders, loading, error } = useSelector((state) => state.orders);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
-    dispatch(fetchOrders());
+    dispatch(fetchAllOrders());
   }, [dispatch]);
 
-  const getStatusSteps = (order) => {
-    const steps = [
-      {
-        label: "Order Placed",
-        icon: <ShoppingBagIcon />,
-        completed: true,
-        active: false,
-        date: order.createdAt
-      },
-      {
-        label: "Processing",
-        icon: <LocalShippingIcon />,
-        completed: ["Processing", "Shipped", "Delivered"].includes(order.orderStatus),
-        active: order.orderStatus === "Processing",
-        date: order.processedAt
-      },
-      {
-        label: "Shipped",
-        icon: <LocalShippingIcon />,
-        completed: ["Shipped", "Delivered"].includes(order.orderStatus),
-        active: order.orderStatus === "Shipped",
-        date: order.shippedAt
-      },
-      {
-        label: "Delivered",
-        icon: <CheckCircleIcon />,
-        completed: order.orderStatus === "Delivered",
-        active: false,
-        date: order.deliveredAt
-      }
-    ];
-    
-    // Filter out steps that don't have dates if order hasn't reached that stage
-    return steps.filter(step => step.completed || step.active || step.label === "Order Placed");
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await dispatch(updateOrderStatus({ orderId, orderStatus: newStatus })).unwrap();
+    } catch (error) {
+      console.error("Failed to update order status:", error);
+    }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  };
+  const filteredOrders = orders.filter(order => 
+    statusFilter === 'all' || order.orderStatus === statusFilter
+  );
+
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
+    if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+    if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+    if (sortBy === 'highest') return b.totalAmount - a.totalAmount;
+    if (sortBy === 'lowest') return a.totalAmount - b.totalAmount;
+    return 0;
+  });
 
   const getStatusColor = (status) => {
     switch(status) {
@@ -88,13 +77,31 @@ const UserOrders = () => {
       case "Shipped": return "primary";
       case "Processing": return "warning";
       case "Cancelled": return "error";
-      default: return "default";
+      case "Pending": return "default";
+      default: return "info";
     }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
+    });
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency: 'KES'
+    }).format(amount);
   };
 
   if (loading) return (
     <Container sx={{ py: 4, textAlign: 'center' }}>
-      <Typography variant="h6">Loading your orders...</Typography>
+      <Typography variant="h6">Loading orders...</Typography>
     </Container>
   );
 
@@ -103,7 +110,7 @@ const UserOrders = () => {
       <Typography color="error">{error}</Typography>
       <Button 
         variant="outlined" 
-        onClick={() => dispatch(fetchOrders())}
+        onClick={() => dispatch(fetchAllOrders())}
         sx={{ mt: 2 }}
       >
         Retry
@@ -112,12 +119,60 @@ const UserOrders = () => {
   );
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: 'bold' }}>
-        My Orders
-      </Typography>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mb: 4,
+        flexWrap: 'wrap',
+        gap: 2
+      }}>
+        <Typography variant="h4" fontWeight="bold">
+          Orders Management
+        </Typography>
+        
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel>Filter by Status</InputLabel>
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              label="Filter by Status"
+              startAdornment={<FilterIcon color="action" sx={{ mr: 1 }} />}
+            >
+              <MenuItem value="all">All Orders</MenuItem>
+              <MenuItem value="Pending">Pending</MenuItem>
+              <MenuItem value="Processing">Processing</MenuItem>
+              <MenuItem value="Shipped">Shipped</MenuItem>
+              <MenuItem value="Delivered">Delivered</MenuItem>
+              <MenuItem value="Cancelled">Cancelled</MenuItem>
+            </Select>
+          </FormControl>
 
-      {orders.length === 0 ? (
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel>Sort By</InputLabel>
+            <Select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              label="Sort By"
+            >
+              <MenuItem value="newest">Newest First</MenuItem>
+              <MenuItem value="oldest">Oldest First</MenuItem>
+              <MenuItem value="highest">Highest Amount</MenuItem>
+              <MenuItem value="lowest">Lowest Amount</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Tooltip title="Refresh Orders">
+            <IconButton onClick={() => dispatch(fetchAllOrders())}>
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
+
+      {sortedOrders.length === 0 ? (
         <Box sx={{ 
           textAlign: 'center', 
           py: 8,
@@ -126,234 +181,176 @@ const UserOrders = () => {
           borderRadius: 2
         }}>
           <Typography variant="h6" gutterBottom>
-            You haven't placed any orders yet
+            No orders found
           </Typography>
-          <Button 
-            variant="contained" 
-            onClick={() => navigate('/shop')}
-            sx={{ mt: 2 }}
-          >
-            Start Shopping
-          </Button>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {statusFilter !== 'all' ? `No ${statusFilter} orders` : 'No orders have been placed yet'}
+          </Typography>
         </Box>
-      ) : (
+      ) : isMobile ? (
         <Grid container spacing={3}>
-          {orders.map((order) => (
+          {sortedOrders.map((order) => (
             <Grid item xs={12} key={order._id}>
-              <Card sx={{ 
-                borderRadius: 2,
-                boxShadow: 3,
-                overflow: 'visible'
-              }}>
+              <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
                 <CardContent>
-                  {/* Order Header */}
                   <Box sx={{ 
                     display: 'flex', 
                     justifyContent: 'space-between',
-                    flexWrap: 'wrap',
+                    alignItems: 'center',
                     mb: 2
                   }}>
-                    <Box>
-                      <Typography variant="h6" fontWeight="bold">
-                        Order #{order._id.substring(order._id.length - 6).toUpperCase()}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Placed on {formatDate(order.createdAt)}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Chip 
-                        label={order.orderStatus} 
-                        color={getStatusColor(order.orderStatus)}
-                        size="small"
-                        sx={{ 
-                          fontWeight: 'bold',
-                          textTransform: 'uppercase'
-                        }}
-                      />
-                    </Box>
-                  </Box>
-
-                  <Divider sx={{ my: 2 }} />
-
-                  {/* Order Tracking */}
-                  <Box sx={{ mb: 3 }}>
-                    <Stepper 
-                      activeStep={getStatusSteps(order).findIndex(step => step.active)} 
-                      alternativeLabel
-                      orientation={isMobile ? "vertical" : "horizontal"}
-                    >
-                      {getStatusSteps(order).map((step, index) => (
-                        <Step key={step.label} completed={step.completed}>
-                          <StepLabel 
-                            StepIconComponent={() => (
-                              <Box sx={{ 
-                                color: step.completed ? theme.palette.success.main : 
-                                      step.active ? theme.palette.primary.main : 
-                                      theme.palette.text.disabled
-                              }}>
-                                {step.icon}
-                              </Box>
-                            )}
-                          >
-                            <Typography variant="caption" fontWeight="bold">
-                              {step.label}
-                            </Typography>
-                            {step.date && (
-                              <Typography variant="caption" display="block" color="text.secondary">
-                                {formatDate(step.date)}
-                              </Typography>
-                            )}
-                          </StepLabel>
-                        </Step>
-                      ))}
-                    </Stepper>
-                  </Box>
-
-                  {/* Order Items */}
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                      Items Ordered
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      #{order._id.substring(order._id.length - 6).toUpperCase()}
                     </Typography>
-                    <Grid container spacing={2}>
-                      {order.products.map((item) => (
-                        <Grid item xs={12} sm={6} key={item._id}>
-                          <Box sx={{ 
-                            display: 'flex', 
-                            gap: 2,
-                            alignItems: 'center'
-                          }}>
-                            <CardMedia
-                              component="img"
-                              image={item.image}
-                              alt={item.name}
-                              sx={{ 
-                                width: 80, 
-                                height: 80,
-                                borderRadius: 1,
-                                objectFit: 'cover'
-                              }}
-                            />
-                            <Box>
-                              <Typography variant="body1" fontWeight="medium">
-                                {item.name}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                KES {item.price.toFixed(2)} × {item.quantity}
-                              </Typography>
-                              {item.size && (
-                                <Typography variant="caption">
-                                  Size: {item.size}
-                                </Typography>
-                              )}
-                              {item.color && (
-                                <Typography variant="caption" display="block">
-                                  Color: {item.color}
-                                </Typography>
-                              )}
-                            </Box>
-                          </Box>
-                        </Grid>
-                      ))}
-                    </Grid>
+                    <Chip 
+                      label={order.orderStatus} 
+                      color={getStatusColor(order.orderStatus)}
+                      size="small"
+                    />
                   </Box>
 
-                  <Divider sx={{ my: 2 }} />
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    {formatDate(order.createdAt)} • {order.products.length} item(s)
+                  </Typography>
 
-                  {/* Order Summary */}
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                        Shipping Address
-                      </Typography>
-                      <Typography>
-                        {order.shippingAddress.fullName}
-                      </Typography>
-                      <Typography>
-                        {order.shippingAddress.streetAddress}
-                      </Typography>
-                      <Typography>
-                        {order.shippingAddress.city}, {order.shippingAddress.state}
-                      </Typography>
-                      <Typography>
-                        {order.shippingAddress.country}, {order.shippingAddress.zipCode}
-                      </Typography>
-                      <Typography>
-                        Phone: {order.shippingAddress.phoneNumber}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                        Order Summary
-                      </Typography>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between',
-                        mb: 1
-                      }}>
-                        <Typography>Subtotal:</Typography>
-                        <Typography>KES {order.totalAmount.toFixed(2)}</Typography>
-                      </Box>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between',
-                        mb: 1
-                      }}>
-                        <Typography>Payment Method:</Typography>
-                        <Typography>{order.paymentMethod}</Typography>
-                      </Box>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between',
-                        mb: 1
-                      }}>
-                        <Typography>Status:</Typography>
-                        <Typography color={getStatusColor(order.orderStatus)}>
-                          {order.orderStatus}
-                        </Typography>
-                      </Box>
-                      <Divider sx={{ my: 1 }} />
-                      <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between',
-                        fontWeight: 'bold'
-                      }}>
-                        <Typography>Total:</Typography>
-                        <Typography>KES {order.totalAmount.toFixed(2)}</Typography>
-                      </Box>
-                    </Grid>
-                  </Grid>
+                  <Typography variant="body1" fontWeight="medium" gutterBottom>
+                    {formatCurrency(order.totalAmount)}
+                  </Typography>
 
-                  {/* Action Buttons */}
+                  <Typography variant="body2" gutterBottom>
+                    Customer: {order.shippingAddress.fullName}
+                  </Typography>
+
                   <Box sx={{ 
                     display: 'flex', 
-                    justifyContent: 'flex-end',
-                    gap: 2,
-                    mt: 3
+                    justifyContent: 'space-between',
+                    mt: 2,
+                    gap: 1
                   }}>
-                    <Button
-                      variant="outlined"
-                      onClick={() => navigate(`/account/orders/${order._id}`)}
-                    >
-                      View Details
-                    </Button>
-                    {order.orderStatus === "Delivered" && (
-                      <Button
-                        variant="contained"
-                        onClick={() => navigate(`/account/orders/${order._id}/review`)}
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Update Status</InputLabel>
+                      <Select
+                        value={order.orderStatus}
+                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                        label="Update Status"
                       >
-                        Leave Review
-                      </Button>
-                    )}
+                        <MenuItem value="Pending">Pending</MenuItem>
+                        <MenuItem value="Processing">Processing</MenuItem>
+                        <MenuItem value="Shipped">Shipped</MenuItem>
+                        <MenuItem value="Delivered">Delivered</MenuItem>
+                        <MenuItem value="Cancelled">Cancelled</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <Tooltip title="View Details">
+                      <IconButton 
+                        onClick={() => navigate(`/admin/orders/${order._id}`)}
+                        color="primary"
+                      >
+                        <VisibilityIcon />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
           ))}
         </Grid>
+      ) : (
+        <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ bgcolor: theme.palette.grey[100] }}>
+                <TableCell>Order ID</TableCell>
+                <TableCell>Date</TableCell>
+                <TableCell>Customer</TableCell>
+                <TableCell>Items</TableCell>
+                <TableCell>Total</TableCell>
+                <TableCell>Payment</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sortedOrders.map((order) => (
+                <TableRow key={order._id} hover>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="medium">
+                      #{order._id.substring(order._id.length - 6).toUpperCase()}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>{formatDate(order.createdAt)}</TableCell>
+                  <TableCell>{order.shippingAddress.fullName}</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {order.products.slice(0, 2).map((item, idx) => (
+                        <Tooltip key={idx} title={item.name}>
+                          <Box
+                            component="img"
+                            src={item.image}
+                            alt={item.name}
+                            sx={{ 
+                              width: 40, 
+                              height: 40,
+                              borderRadius: 1,
+                              objectFit: 'cover'
+                            }}
+                          />
+                        </Tooltip>
+                      ))}
+                      {order.products.length > 2 && (
+                        <Chip 
+                          label={`+${order.products.length - 2}`} 
+                          size="small"
+                        />
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>{formatCurrency(order.totalAmount)}</TableCell>
+                  <TableCell>{order.paymentMethod}</TableCell>
+                  <TableCell>
+                    <FormControl fullWidth size="small">
+                      <Select
+                        value={order.orderStatus}
+                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                        sx={{
+                          '& .MuiSelect-select': {
+                            color: theme.palette[getStatusColor(order.orderStatus)].main,
+                            fontWeight: 'bold'
+                          }
+                        }}
+                      >
+                        <MenuItem value="Pending">Pending</MenuItem>
+                        <MenuItem value="Processing">Processing</MenuItem>
+                        <MenuItem value="Shipped">Shipped</MenuItem>
+                        <MenuItem value="Delivered">Delivered</MenuItem>
+                        <MenuItem value="Cancelled">Cancelled</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="View Details">
+                      <IconButton 
+                        onClick={() => navigate(`/admin/orders/${order._id}`)}
+                        color="primary"
+                      >
+                        <VisibilityIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Edit Order">
+                      <IconButton color="secondary">
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
     </Container>
   );
 };
 
-export default UserOrders;
+export default AdminOrders;

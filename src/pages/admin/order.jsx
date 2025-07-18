@@ -237,10 +237,10 @@ const AdminOrder = () => {
                                             return (
                                                 <div key={index} className="product-item">
                                                     <div className="product-main">
-                                                        {productDetail?.images?.[0] ? (
+                                                        {productDetail?.image?.[0] ? (
                                                             <div className="product-image">
                                                                 <img
-                                                                    src={product.images}
+                                                                    src={product.image}
                                                                     alt={product.name}
                                                                     onError={(e) => {
                                                                         e.target.style.display = 'none';
@@ -257,7 +257,7 @@ const AdminOrder = () => {
                                                             <div className="product-name">{product.name}</div>
                                                             <div className="product-details">
                                                                 <span className="product-quantity">Qty: {product.quantity}</span>
-                                                                <span className="product-price">${product.price}</span>
+                                                                <span className="product-price">Ksh{product.price}</span>
                                                                 <span className="product-description"> Description{product.description} </span>
                                                             </div>
                                                             {loadingProducts[product.productId] ? (

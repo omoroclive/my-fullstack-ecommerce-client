@@ -38,7 +38,7 @@ import {
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 
-const AdminOrders = () => {
+const userOrders = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { orders, loading, error } = useSelector((state) => state.orders);
@@ -244,7 +244,7 @@ const AdminOrders = () => {
 
                     <Tooltip title="View Details">
                       <IconButton 
-                        onClick={() => navigate(`/admin/orders/${order._id}`)}
+                        onClick={() => navigate(`/shop/details/${order._id}`)}
                         color="primary"
                       >
                         <VisibilityIcon />
@@ -353,4 +353,4 @@ const AdminOrders = () => {
   );
 };
 
-export default AdminOrders;
+export default userOrders;

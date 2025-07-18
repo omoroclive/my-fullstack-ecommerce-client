@@ -18,9 +18,22 @@ export const fetchOrders = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${BASE_URL}/api/orders`, getAuthHeaders());
-      return response.data.orders; // Assuming backend returns array of orders directly
+      return response.data.orders;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch orders');
+    }
+  }
+);
+
+// New thunk for admin to fetch all orders
+export const fetchAllOrders = createAsyncThunk(
+  'orders/fetchAllOrders',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/orders/all`, getAuthHeaders());
+      return response.data.orders;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch all orders');
     }
   }
 );
@@ -34,7 +47,7 @@ export const updateOrderStatus = createAsyncThunk(
         { orderStatus },
         getAuthHeaders()
       );
-      return response.data.order; // Return the updated order
+      return response.data.order;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update order status');
     }
@@ -70,6 +83,19 @@ const orderSlice = createSlice({
         state.lastUpdated = new Date().toISOString();
       })
       .addCase(fetchOrders.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchAllOrders.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllOrders.fulfilled, (state, action) => {
+        state.loading = false;
+        state.orders = action.payload;
+        state.lastUpdated = new Date().toISOString();
+      })
+      .addCase(fetchAllOrders.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

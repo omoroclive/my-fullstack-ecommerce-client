@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllOrders, updateOrderStatus } from "../../store/order/orderSlice";
+import { 
+  fetchUserOrders, 
+  fetchAllOrders, 
+  updateOrderStatus 
+} from "../../store/order/orderSlice";
 import {
   Button,
   Typography,
@@ -38,22 +42,49 @@ import {
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 
-const userOrders = () => {
+const OrdersManagement = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { orders, loading, error } = useSelector((state) => state.orders);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+  
+  // Get user role from Redux state (assuming you have auth state)
+  const { user } = useSelector((state) => state.auth);
+  const isAdmin = user?.isAdmin;
+  
+  // Get orders from Redux state
+  const { 
+    userOrders, 
+    adminOrders, 
+    loadingUser, 
+    loadingAdmin,
+    updating,
+    error 
+  } = useSelector((state) => state.orders);
+  
+  // Determine which orders to display
+  const orders = isAdmin ? adminOrders : userOrders;
+  const loading = isAdmin ? loadingAdmin : loadingUser;
 
   useEffect(() => {
-    dispatch(fetchAllOrders());
-  }, [dispatch]);
+    if (isAdmin) {
+      dispatch(fetchAllOrders());
+    } else {
+      dispatch(fetchUserOrders());
+    }
+  }, [dispatch, isAdmin]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       await dispatch(updateOrderStatus({ orderId, orderStatus: newStatus })).unwrap();
+      // Refresh orders after update
+      if (isAdmin) {
+        dispatch(fetchAllOrders());
+      } else {
+        dispatch(fetchUserOrders());
+      }
     } catch (error) {
       console.error("Failed to update order status:", error);
     }
@@ -110,7 +141,7 @@ const userOrders = () => {
       <Typography color="error">{error}</Typography>
       <Button 
         variant="outlined" 
-        onClick={() => dispatch(fetchAllOrders())}
+        onClick={() => isAdmin ? dispatch(fetchAllOrders()) : dispatch(fetchUserOrders())}
         sx={{ mt: 2 }}
       >
         Retry
@@ -129,7 +160,7 @@ const userOrders = () => {
         gap: 2
       }}>
         <Typography variant="h4" fontWeight="bold">
-          Orders Management
+          {isAdmin ? 'Orders Management' : 'My Orders'}
         </Typography>
         
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
@@ -165,7 +196,10 @@ const userOrders = () => {
           </FormControl>
 
           <Tooltip title="Refresh Orders">
-            <IconButton onClick={() => dispatch(fetchAllOrders())}>
+            <IconButton 
+              onClick={() => isAdmin ? dispatch(fetchAllOrders()) : dispatch(fetchUserOrders())}
+              disabled={updating}
+            >
               <RefreshIcon />
             </IconButton>
           </Tooltip>
@@ -186,6 +220,15 @@ const userOrders = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             {statusFilter !== 'all' ? `No ${statusFilter} orders` : 'No orders have been placed yet'}
           </Typography>
+          {!isAdmin && (
+            <Button 
+              variant="contained" 
+              onClick={() => navigate('/shop')}
+              startIcon={<ShoppingBagIcon />}
+            >
+              Continue Shopping
+            </Button>
+          )}
         </Box>
       ) : isMobile ? (
         <Grid container spacing={3}>
@@ -217,9 +260,11 @@ const userOrders = () => {
                     {formatCurrency(order.totalAmount)}
                   </Typography>
 
-                  <Typography variant="body2" gutterBottom>
-                    Customer: {order.shippingAddress.fullName}
-                  </Typography>
+                  {isAdmin && (
+                    <Typography variant="body2" gutterBottom>
+                      Customer: {order.shippingAddress.fullName}
+                    </Typography>
+                  )}
 
                   <Box sx={{ 
                     display: 'flex', 
@@ -227,24 +272,27 @@ const userOrders = () => {
                     mt: 2,
                     gap: 1
                   }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Update Status</InputLabel>
-                      <Select
-                        value={order.orderStatus}
-                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                        label="Update Status"
-                      >
-                        <MenuItem value="Pending">Pending</MenuItem>
-                        <MenuItem value="Processing">Processing</MenuItem>
-                        <MenuItem value="Shipped">Shipped</MenuItem>
-                        <MenuItem value="Delivered">Delivered</MenuItem>
-                        <MenuItem value="Cancelled">Cancelled</MenuItem>
-                      </Select>
-                    </FormControl>
+                    {isAdmin && (
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Update Status</InputLabel>
+                        <Select
+                          value={order.orderStatus}
+                          onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                          label="Update Status"
+                          disabled={updating}
+                        >
+                          <MenuItem value="Pending">Pending</MenuItem>
+                          <MenuItem value="Processing">Processing</MenuItem>
+                          <MenuItem value="Shipped">Shipped</MenuItem>
+                          <MenuItem value="Delivered">Delivered</MenuItem>
+                          <MenuItem value="Cancelled">Cancelled</MenuItem>
+                        </Select>
+                      </FormControl>
+                    )}
 
                     <Tooltip title="View Details">
                       <IconButton 
-                        onClick={() => navigate(`/shop/details/${order._id}`)}
+                        onClick={() => navigate(isAdmin ? `/admin/orders/${order._id}` : `/orders/${order._id}`)}
                         color="primary"
                       >
                         <VisibilityIcon />
@@ -263,10 +311,10 @@ const userOrders = () => {
               <TableRow sx={{ bgcolor: theme.palette.grey[100] }}>
                 <TableCell>Order ID</TableCell>
                 <TableCell>Date</TableCell>
-                <TableCell>Customer</TableCell>
+                {isAdmin && <TableCell>Customer</TableCell>}
                 <TableCell>Items</TableCell>
                 <TableCell>Total</TableCell>
-                <TableCell>Payment</TableCell>
+                {isAdmin && <TableCell>Payment</TableCell>}
                 <TableCell>Status</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
@@ -280,7 +328,18 @@ const userOrders = () => {
                     </Typography>
                   </TableCell>
                   <TableCell>{formatDate(order.createdAt)}</TableCell>
-                  <TableCell>{order.shippingAddress.fullName}</TableCell>
+                  
+                  {isAdmin && (
+                    <TableCell>
+                      {order.shippingAddress.fullName}
+                      {order.user && (
+                        <Typography variant="body2" color="text.secondary">
+                          {order.user.email}
+                        </Typography>
+                      )}
+                    </TableCell>
+                  )}
+
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       {order.products.slice(0, 2).map((item, idx) => (
@@ -307,41 +366,66 @@ const userOrders = () => {
                     </Box>
                   </TableCell>
                   <TableCell>{formatCurrency(order.totalAmount)}</TableCell>
-                  <TableCell>{order.paymentMethod}</TableCell>
+                  
+                  {isAdmin && (
+                    <TableCell>
+                      <Chip 
+                        label={order.paymentMethod} 
+                        size="small"
+                        color={order.isPaid ? 'success' : 'default'}
+                      />
+                      {order.isPaid && (
+                        <Typography variant="body2" color="text.secondary">
+                          Paid on {formatDate(order.paidAt)}
+                        </Typography>
+                      )}
+                    </TableCell>
+                  )}
+
                   <TableCell>
-                    <FormControl fullWidth size="small">
-                      <Select
-                        value={order.orderStatus}
-                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                        sx={{
-                          '& .MuiSelect-select': {
-                            color: theme.palette[getStatusColor(order.orderStatus)].main,
-                            fontWeight: 'bold'
-                          }
-                        }}
-                      >
-                        <MenuItem value="Pending">Pending</MenuItem>
-                        <MenuItem value="Processing">Processing</MenuItem>
-                        <MenuItem value="Shipped">Shipped</MenuItem>
-                        <MenuItem value="Delivered">Delivered</MenuItem>
-                        <MenuItem value="Cancelled">Cancelled</MenuItem>
-                      </Select>
-                    </FormControl>
+                    {isAdmin ? (
+                      <FormControl fullWidth size="small">
+                        <Select
+                          value={order.orderStatus}
+                          onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                          disabled={updating}
+                          sx={{
+                            '& .MuiSelect-select': {
+                              color: theme.palette[getStatusColor(order.orderStatus)].main,
+                              fontWeight: 'bold'
+                            }
+                          }}
+                        >
+                          <MenuItem value="Pending">Pending</MenuItem>
+                          <MenuItem value="Processing">Processing</MenuItem>
+                          <MenuItem value="Shipped">Shipped</MenuItem>
+                          <MenuItem value="Delivered">Delivered</MenuItem>
+                          <MenuItem value="Cancelled">Cancelled</MenuItem>
+                        </Select>
+                      </FormControl>
+                    ) : (
+                      <Chip 
+                        label={order.orderStatus} 
+                        color={getStatusColor(order.orderStatus)}
+                      />
+                    )}
                   </TableCell>
                   <TableCell align="right">
                     <Tooltip title="View Details">
                       <IconButton 
-                        onClick={() => navigate(`/admin/orders/${order._id}`)}
+                        onClick={() => navigate(isAdmin ? `/admin/orders/${order._id}` : `/orders/${order._id}`)}
                         color="primary"
                       >
                         <VisibilityIcon />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Edit Order">
-                      <IconButton color="secondary">
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
+                    {isAdmin && (
+                      <Tooltip title="Edit Order">
+                        <IconButton color="secondary">
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -353,4 +437,4 @@ const userOrders = () => {
   );
 };
 
-export default userOrders;
+export default OrdersManagement;

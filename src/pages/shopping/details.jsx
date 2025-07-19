@@ -167,6 +167,17 @@ const Details = () => {
     window.location.href = "tel:+254791150726";
   };
 
+  const handleWhatsApp = () => {
+    const message = `Check out this product: ${product?.title} - Ksh ${product?.price}`;
+    const url = `https://wa.me/+254791150726?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+    setSnackbar({
+      open: true,
+      message: "WhatsApp link opened!",
+      severity: "success",
+    });
+  };
+
   const incrementQuantity = () => setQuantity((prev) => prev + 1);
   const decrementQuantity = () =>
     setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
@@ -374,7 +385,9 @@ const Details = () => {
                   <PhoneIcon />
                 </IconButton>
                 <IconButton 
-                  sx={{ color: 'green.600', '&:hover': { color: 'green.800' } }}
+                  onClick={handleWhatsApp}
+                  color="success"
+                  sx={{ color: 'green.800', '&:hover': { color: 'green.800' } }}
                 >
                   <WhatsAppIcon />
                 </IconButton>

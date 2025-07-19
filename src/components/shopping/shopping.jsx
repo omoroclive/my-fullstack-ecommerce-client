@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import FilterDrawer from "./FilterDrawer";
 import ProductGrid from "./ProductGrid";
 import RecentlyViewed from "../../pages/account/RecentlyViewed";
+import Footer from "../Footer";
 
 
 
@@ -112,6 +113,7 @@ const Shopping = () => {
         </p>
       )}
       <RecentlyViewed />
+      <Footer />
     </div>
   );
 };

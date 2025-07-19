@@ -165,7 +165,7 @@ const Details = () => {
   };
 
   const handleCall = () => {
-    window.location.href = "tel:+254791150726";
+    window.location.href = "tel:+254727476868";
   };
 
   const handleWhatsApp = () => {

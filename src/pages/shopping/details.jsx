@@ -149,6 +149,7 @@ const Details = () => {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
+        image: product?.images[0]?.url || placeholderImage,
         title: product?.title,
         text: product?.description,
         url: window.location.href,
@@ -168,7 +169,8 @@ const Details = () => {
   };
 
   const handleWhatsApp = () => {
-    const message = `Check out this product: ${product?.title} - Ksh ${product?.price}`;
+    const message = `Check out this product: ${product?.title} - Ksh ${product?.price}
+     ${product?.images[0]?.url ? `\nImage: ${product.images[0].url}` : ""}\n\nLink: ${window.location.href}`;
     const url = `https://wa.me/+254791150726?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
     setSnackbar({
@@ -387,7 +389,7 @@ const Details = () => {
                 <IconButton 
                   onClick={handleWhatsApp}
                   color="success"
-                  sx={{ color: 'green.800', '&:hover': { color: 'green.800' } }}
+                  sx={{ color: 'green.900', '&:hover': { color: 'green.800' } }}
                 >
                   <WhatsAppIcon />
                 </IconButton>

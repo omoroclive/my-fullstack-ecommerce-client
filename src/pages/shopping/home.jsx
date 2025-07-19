@@ -77,7 +77,7 @@ const LazyImage = ({ src, alt, className, style, onLoad, placeholder = true }) =
         src={src}
         alt={alt}
         className={`${className} ${loading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-        style={style}
+        style={{ ...style, width: '100%', height: '100%', objectFit: 'contain' }}
         loading="lazy"
         onLoad={handleLoad}
         onError={handleError}
@@ -134,11 +134,12 @@ const Home = () => {
   const ImageWithArrow = ({ src, alt, onClick }) => (
     <div className="cursor-pointer relative group transform hover:scale-105 transition-all duration-300" onClick={onClick}>
       <div className="relative">
-        <div className="w-28 h-28 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow duration-300 p-2 border-2 border-gray-100 hover:border-orange-200">
+        <div className="w-32 h-32 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 border-2 border-gray-100 hover:border-orange-200">
           <LazyImage
             src={src}
             alt={alt}
-            className="w-full h-full object-contain rounded-full"
+            className="w-full h-full rounded-full"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
           />
         </div>
         <IconButton
@@ -188,11 +189,12 @@ const Home = () => {
       onClick={() => navigate(`/shop/details/${product._id}`)}
     >
       <div className="relative overflow-hidden">
-        <div className="h-52 bg-gray-50">
+        <div className="h-64 bg-gray-50 flex items-center justify-center">
           <LazyImage
             src={product.images[0]?.url || "/placeholder.png"}
             alt={product.title}
-            className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
+            className="w-full h-full"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
           />
         </div>
         <div className="absolute top-3 right-3">
@@ -291,7 +293,7 @@ const Home = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {[...Array(6)].map((_, index) => (
                 <Card key={index} sx={{ borderRadius: '16px' }}>
-                  <Skeleton variant="rectangular" height={208} />
+                  <Skeleton variant="rectangular" height={256} />
                   <CardContent>
                     <Skeleton variant="text" height={32} />
                     <Skeleton variant="text" height={24} />

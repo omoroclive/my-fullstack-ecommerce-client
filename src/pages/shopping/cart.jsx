@@ -153,7 +153,7 @@ const Cart = () => {
                       {item.title}
                     </Typography>
                     <Typography variant="body2" className="text-gray-500">
-                      ${item.price.toFixed(2)}
+                      Ksh {item.price.toFixed(2)}
                     </Typography>
                   </Box>
                 </Stack>
@@ -181,7 +181,7 @@ const Cart = () => {
                     variant="body2"
                     className="text-gray-500 min-w-[100px] text-right"
                   >
-                    ${item.totalPrice.toFixed(2)}
+                    Ksh {item.totalPrice.toFixed(2)}
                   </Typography>
                   <IconButton
                     color="error"
@@ -207,7 +207,7 @@ const Cart = () => {
           className="mt-4"
         >
           <Typography variant="h6" className="font-bold text-center sm:text-left">
-            Total: ${cart.totalAmount.toFixed(2)}
+            Total: Ksh {cart.totalAmount.toFixed(2)}
           </Typography>
 
           <Stack

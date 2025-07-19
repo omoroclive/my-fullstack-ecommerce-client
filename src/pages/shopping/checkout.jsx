@@ -61,10 +61,10 @@ const Checkout = () => {
   useEffect(() => {
     if (selectedAddress) {
       const address = addresses.find((addr) => addr._id === selectedAddress);
-      if (address?.country.toLowerCase() === "kenya") {
-        setShippingCost(5);
+      if (address?.city.toLowerCase() === "nairobi") {
+        setShippingCost(150);
       } else {
-        setShippingCost(10);
+        setShippingCost(300);
       }
     }
   }, [selectedAddress, addresses]);
@@ -343,10 +343,10 @@ const Checkout = () => {
         <Typography variant="h6" marginBottom={2} textAlign="center">
           Receipt
         </Typography>
-        <Typography>Cart Total: ${cartTotal.toFixed(2)}</Typography>
-        <Typography>Shipping: ${shippingCost.toFixed(2)}</Typography>
+        <Typography>Cart Total: Ksh {cartTotal.toFixed(2)}</Typography>
+        <Typography>Shipping: Ksh {shippingCost.toFixed(2)}</Typography>
         <Typography variant="h6" marginTop={2}>
-          Total: $ {(cartTotal + shippingCost).toFixed(2)}
+          Total: Ksh {(cartTotal + shippingCost).toFixed(2)}
         </Typography>
       </Box>
 

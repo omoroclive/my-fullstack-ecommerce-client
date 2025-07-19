@@ -113,13 +113,13 @@ function Footer() {
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <LocationOn sx={{ color: "primary.main", fontSize: 20 }} />
                   <Typography variant="body2" sx={{ color: "grey.400" }}>
-                    Smartshop Fashion Streets, Nairobi, Kenya 00100
+                    Smartshop Fashion Streets, Witeithie, Thika Road 
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Phone sx={{ color: "primary.main", fontSize: 20 }} />
                   <Typography variant="body2" sx={{ color: "grey.400" }}>
-                    +254 791 150 726
+                    +254 727 476 868
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

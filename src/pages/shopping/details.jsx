@@ -171,7 +171,7 @@ const Details = () => {
   const handleWhatsApp = () => {
     const message = `Check out this product: ${product?.title} - Ksh ${product?.price}
      ${product?.images[0]?.url ? `\nImage: ${product.images[0].url}` : ""}\n\nLink: ${window.location.href}`;
-    const url = `https://wa.me/+254791150726?text=${encodeURIComponent(message)}`;
+    const url = `https://wa.me/+254727476868?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
     setSnackbar({
       open: true,

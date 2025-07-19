@@ -100,7 +100,7 @@ const ShopCategory = () => {
                     {product.title}
                   </Typography>
                   <Typography variant="body1" className="text-black font-bold">
-                    ${product.price}
+                    Ksh {product.price}
                   </Typography>
                 </div>
               </div>

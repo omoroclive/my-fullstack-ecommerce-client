@@ -91,7 +91,7 @@ const handleReviewSubmit = useCallback(async (productId) => {
 
     // Use the actual product ID from the product field, not the order item ID
     const actualProductId = orderItem.product?._id || orderItem.product;
-    
+    const productId = orderItem._id || actualProductId;
     
     console.log('Order item ID:', productId);
     console.log('Actual product ID:', actualProductId);

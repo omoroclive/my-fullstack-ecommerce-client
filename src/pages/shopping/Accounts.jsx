@@ -75,9 +75,7 @@ const Accounts = () => {
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
             borderRadius: '0 24px 24px 0',
             overflow: 'hidden',
-            backdropFilter: 'blur(10px)',
-            position: 'relative',
-            zIndex: 1200, // Ensure it appears above other content
+            
           },
         }}
         ModalProps={{
@@ -391,7 +389,7 @@ const Accounts = () => {
 
       {/* Hamburger Menu for Small Screens */}
       {!isSidebarOpen && (
-        <div className="fixed top-6 left-6 z-50">
+        <div className="fixed top-10 left-6 z-[1000]">
           <IconButton
             onClick={handleDrawerToggle}
             sx={{

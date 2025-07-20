@@ -132,7 +132,7 @@ const Home = () => {
   };
 
   const ImageWithArrow = ({ src, alt, onClick }) => (
-    <div className="cursor-pointer relative group transform hover:scale-105 transition-all duration-300" onClick={onClick}>
+    <div className="cursor-pointer relative group transform hover:scale-105 transition-all duration-300 flex-shrink-0" onClick={onClick}>
       <div className="relative">
         <div className="w-32 h-32 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 border-2 border-gray-100 hover:border-orange-200">
           <LazyImage
@@ -166,7 +166,7 @@ const Home = () => {
       </div>
       <Typography 
         variant="body2" 
-        className="mt-3 font-medium text-gray-700 capitalize group-hover:text-orange-500 transition-colors duration-300"
+        className="mt-3 font-medium text-gray-700 capitalize group-hover:text-orange-500 transition-colors duration-300 text-center"
       >
         {alt}
       </Typography>
@@ -264,7 +264,21 @@ const Home = () => {
             <div className="w-24 h-1 bg-orange-500 mx-auto rounded-full"></div>
           </div>
           <div className="bg-white rounded-2xl shadow-lg p-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 place-items-center">
+            {/* Mobile: Horizontal scroll */}
+            <div className="md:hidden">
+              <div className="flex gap-8 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {BRANDS.map(({ logo, brand }) => (
+                  <ImageWithArrow
+                    key={brand}
+                    src={logo}
+                    alt={brand}
+                    onClick={() => handleBrandClick(brand)}
+                  />
+                ))}
+              </div>
+            </div>
+            {/* Desktop: Grid */}
+            <div className="hidden md:grid md:grid-cols-4 gap-8 place-items-center">
               {BRANDS.map(({ logo, brand }) => (
                 <ImageWithArrow
                   key={brand}
@@ -355,7 +369,21 @@ const Home = () => {
             <div className="w-24 h-1 bg-orange-500 mx-auto rounded-full"></div>
           </div>
           <div className="bg-white rounded-2xl shadow-lg p-8">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 place-items-center">
+            {/* Mobile: Horizontal scroll */}
+            <div className="md:hidden">
+              <div className="flex gap-8 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {CATEGORIES.map(({ logo, category }) => (
+                  <ImageWithArrow
+                    key={category}
+                    src={logo}
+                    alt={category}
+                    onClick={() => handleCategoryClick(category)}
+                  />
+                ))}
+              </div>
+            </div>
+            {/* Desktop: Grid */}
+            <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-8 place-items-center">
               {CATEGORIES.map(({ logo, category }) => (
                 <ImageWithArrow
                   key={category}

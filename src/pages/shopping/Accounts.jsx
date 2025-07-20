@@ -76,7 +76,8 @@ const Accounts = () => {
             borderRadius: '0 24px 24px 0',
             overflow: 'hidden',
             backdropFilter: 'blur(10px)',
-            marginTop: '64px', // Adjust for fixed header
+            position: 'relative',
+            zIndex: 1200, // Ensure it appears above other content
           },
         }}
         ModalProps={{

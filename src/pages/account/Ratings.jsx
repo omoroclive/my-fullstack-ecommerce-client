@@ -25,34 +25,36 @@ const Ratings = () => {
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState({ type: "", message: "" });
 
-  // Fetch delivered products (no changes needed here)
-  const fetchDeliveredProducts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const token = getToken();
-      if (!token) throw new Error("No authentication token found");
+ const fetchDeliveredProducts = useCallback(async () => {
+  setLoading(true);
+  try {
+    const token = getToken();
+    if (!token) throw new Error("No authentication token found");
 
-      const response = await axios.get(`${API_BASE_URL}/api/orders/delivered`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    const response = await axios.get(`${API_BASE_URL}/api/orders/delivered`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      const productsWithOrder = response.data.flatMap(order =>
-        (order.products || []).map(product => ({
-          ...product,
-          orderId: order._id
-        }))
-      );
+    // The backend now returns properly formatted data
+    const productsWithOrder = response.data.orders.flatMap(order => 
+      order.products.map(product => ({
+        ...product,
+        _id: product.product?._id || product._id, // Use product ID
+        orderId: order._id
+      }))
+    );
 
-      setDeliveredProducts(productsWithOrder);
-    } catch (error) {
-      setAlert({
-        type: "error",
-        message: error.response?.data?.message || "Failed to fetch delivered products"
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    setDeliveredProducts(productsWithOrder);
+  } catch (error) {
+    console.error("Fetch error details:", error.response?.data || error.message);
+    setAlert({
+      type: "error",
+      message: error.response?.data?.message || "Failed to fetch delivered products"
+    });
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => {
     fetchDeliveredProducts();
@@ -88,7 +90,8 @@ const handleReviewSubmit = useCallback(async (productId) => {
     }
 
     // Use the actual product ID from the product field, not the order item ID
-    const actualProductId = orderItem.product;
+    const actualProductId = orderItem.product?._id || orderItem.product;
+    
     
     console.log('Order item ID:', productId);
     console.log('Actual product ID:', actualProductId);

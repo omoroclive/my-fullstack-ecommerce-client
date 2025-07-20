@@ -75,6 +75,8 @@ const Accounts = () => {
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
             borderRadius: '0 24px 24px 0',
             overflow: 'hidden',
+            backdropFilter: 'blur(10px)',
+            marginTop: '64px', // Adjust for fixed header
           },
         }}
         ModalProps={{

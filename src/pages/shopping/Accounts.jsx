@@ -389,7 +389,7 @@ const Accounts = () => {
 
       {/* Hamburger Menu for Small Screens */}
       {!isSidebarOpen && (
-        <div className="fixed top-10 left-6 z-[1000]">
+        <div className="fixed top-30 left-6 z-[1000]">
           <IconButton
             onClick={handleDrawerToggle}
             sx={{

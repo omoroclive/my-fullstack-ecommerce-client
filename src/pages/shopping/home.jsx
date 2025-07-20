@@ -14,6 +14,8 @@ import {
   Skeleton
 } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 // Components
 import Chatbot from "./Chatbot";
@@ -98,6 +100,10 @@ const Home = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  // Refs for scrollable containers
+  const brandScrollRef = React.useRef(null);
+  const categoryScrollRef = React.useRef(null);
+
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       try {
@@ -129,6 +135,19 @@ const Home = () => {
   const handleCategoryClick = (category) => {
     dispatch(setCategoryFilter(category));
     navigate(`/shop/categories/${category}`);
+  };
+
+  // Scroll functions
+  const scrollLeft = (ref) => {
+    if (ref.current) {
+      ref.current.scrollBy({ left: -200, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = (ref) => {
+    if (ref.current) {
+      ref.current.scrollBy({ left: 200, behavior: 'smooth' });
+    }
   };
 
   const ImageWithArrow = ({ src, alt, onClick }) => (
@@ -264,17 +283,37 @@ const Home = () => {
             <div className="w-24 h-1 bg-orange-500 mx-auto rounded-full"></div>
           </div>
           <div className="bg-white rounded-2xl shadow-lg p-8">
-            {/* Mobile: Horizontal scroll */}
+            {/* Mobile: Horizontal scroll with arrows */}
             <div className="md:hidden">
-              <div className="flex gap-8 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                {BRANDS.map(({ logo, brand }) => (
-                  <ImageWithArrow
-                    key={brand}
-                    src={logo}
-                    alt={brand}
-                    onClick={() => handleBrandClick(brand)}
-                  />
-                ))}
+              <div className="relative">
+                <button 
+                  onClick={() => scrollLeft(brandScrollRef)}
+                  className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:shadow-xl transition-all duration-300"
+                  style={{ marginLeft: '-16px' }}
+                >
+                  <ChevronLeftIcon className="text-gray-600" />
+                </button>
+                <div 
+                  ref={brandScrollRef}
+                  className="flex gap-8 overflow-x-auto pb-4 scrollbar-hide px-4" 
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {BRANDS.map(({ logo, brand }) => (
+                    <ImageWithArrow
+                      key={brand}
+                      src={logo}
+                      alt={brand}
+                      onClick={() => handleBrandClick(brand)}
+                    />
+                  ))}
+                </div>
+                <button 
+                  onClick={() => scrollRight(brandScrollRef)}
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:shadow-xl transition-all duration-300"
+                  style={{ marginRight: '-16px' }}
+                >
+                  <ChevronRightIcon className="text-gray-600" />
+                </button>
               </div>
             </div>
             {/* Desktop: Grid */}
@@ -369,17 +408,37 @@ const Home = () => {
             <div className="w-24 h-1 bg-orange-500 mx-auto rounded-full"></div>
           </div>
           <div className="bg-white rounded-2xl shadow-lg p-8">
-            {/* Mobile: Horizontal scroll */}
+            {/* Mobile: Horizontal scroll with arrows */}
             <div className="md:hidden">
-              <div className="flex gap-8 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                {CATEGORIES.map(({ logo, category }) => (
-                  <ImageWithArrow
-                    key={category}
-                    src={logo}
-                    alt={category}
-                    onClick={() => handleCategoryClick(category)}
-                  />
-                ))}
+              <div className="relative">
+                <button 
+                  onClick={() => scrollLeft(categoryScrollRef)}
+                  className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:shadow-xl transition-all duration-300"
+                  style={{ marginLeft: '-16px' }}
+                >
+                  <ChevronLeftIcon className="text-gray-600" />
+                </button>
+                <div 
+                  ref={categoryScrollRef}
+                  className="flex gap-8 overflow-x-auto pb-4 scrollbar-hide px-4" 
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {CATEGORIES.map(({ logo, category }) => (
+                    <ImageWithArrow
+                      key={category}
+                      src={logo}
+                      alt={category}
+                      onClick={() => handleCategoryClick(category)}
+                    />
+                  ))}
+                </div>
+                <button 
+                  onClick={() => scrollRight(categoryScrollRef)}
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:shadow-xl transition-all duration-300"
+                  style={{ marginRight: '-16px' }}
+                >
+                  <ChevronRightIcon className="text-gray-600" />
+                </button>
               </div>
             </div>
             {/* Desktop: Grid */}

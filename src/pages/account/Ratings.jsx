@@ -35,18 +35,27 @@ const Ratings = () => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    // The backend now returns properly formatted data
+    // Transform the order data to properly include product details
     const productsWithOrder = response.data.orders.flatMap(order => 
-      order.products.map(product => ({
-        ...product,
-        _id: product.product?._id || product._id, // Use product ID
+      order.products.map(item => ({
+        // Use the product details from the order item
+        ...item,
+        // Include the product ID (from either the reference or the embedded data)
+        _id: item.product || item._id,
+        // Use the image directly from the order item (which already has the full URL)
+        image: item.image,
+        // Include other product details
+        name: item.name,
+        price: item.price,
+        // Include order context
         orderId: order._id
       }))
     );
 
+    console.log("Transformed products:", productsWithOrder); // Debug log
     setDeliveredProducts(productsWithOrder);
   } catch (error) {
-    console.error("Fetch error details:", error.response?.data || error.message);
+    console.error("Fetch error:", error.response?.data || error.message);
     setAlert({
       type: "error",
       message: error.response?.data?.message || "Failed to fetch delivered products"

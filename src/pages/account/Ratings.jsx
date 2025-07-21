@@ -78,7 +78,7 @@ const Ratings = () => {
             name: item.product?.name || item.name,
             price: item.product?.price || item.price,
             description: item.product?.description || item.description,
-            image: imageUrl,
+            //image: imageUrl,
             // Include order context
             orderId: order._id,
             // Keep original product reference for review submission

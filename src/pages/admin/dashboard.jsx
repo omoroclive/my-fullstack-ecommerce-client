@@ -22,7 +22,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
+        const token = localStorage.getItem("token");
         if (!token) {
           throw new Error("No token found");
         }

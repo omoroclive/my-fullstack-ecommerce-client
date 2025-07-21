@@ -9,18 +9,15 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import IconButton from '@mui/material/IconButton';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
+import { Box, AppBar, Toolbar, Typography } from '@mui/material';
 
 const Header = ({ toggleSidebar, isSidebarOpen }) => {
   const navigate = useNavigate();
   const [openSnackbar, setOpenSnackbar] = React.useState(false);
-
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  
-
-
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
+    localStorage.removeItem("token");
     navigate("/auth/login");
   };
 
@@ -29,7 +26,7 @@ const Header = ({ toggleSidebar, isSidebarOpen }) => {
       setOpenSnackbar(true);
       setTimeout(() => navigate("/auth/login"), 1500);
     } else {
-      navigate("/account"); // or wherever the user dashboard is
+      navigate("/account");
     }
   };
 
@@ -38,53 +35,95 @@ const Header = ({ toggleSidebar, isSidebarOpen }) => {
   });
 
   return (
-    <header className="flex justify-between items-center p-4 bg-gray-900 text-white shadow-md z-50">
+    <AppBar position="static" sx={{ backgroundColor: 'white', color: 'black', boxShadow: 'none' }}>
+      <Toolbar sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between',
+        padding: { xs: '0 8px', sm: '0 16px' }
+      }}>
+        {/* Left side - Hamburger and Logo */}
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <IconButton
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            onClick={toggleSidebar}
+            sx={{ mr: 1, display: { sm: 'none' } }}
+          >
+            {isSidebarOpen ? <CloseIcon /> : <MenuIcon />}
+          </IconButton>
+
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            cursor: 'pointer',
+            marginLeft: { xs: '8px', sm: '0' }
+          }} onClick={() => navigate("/")}>
+            <Box sx={{
+              backgroundColor: '#ea580c',
+              color: 'white',
+              width: '32px',
+              height: '32px',
+              borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 'bold',
+              marginRight: '8px'
+            }}>
+              A
+            </Box>
+            <Typography variant="h6" sx={{ 
+              fontWeight: 'bold',
+              display: { xs: 'none', sm: 'block' }
+            }}>
+              Dashboard
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Right side - User and Logout */}
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <IconButton
+            color="inherit"
+            onClick={handleUserClick}
+            sx={{ marginRight: { xs: '4px', sm: '8px' } }}
+          >
+            <AccountCircleIcon />
+          </IconButton>
+
+          {isAuthenticated && (
+            <Button
+              variant="text"
+              startIcon={<LogoutIcon />}
+              onClick={handleLogout}
+              sx={{
+                color: 'inherit',
+                textTransform: 'capitalize',
+                display: { xs: 'none', sm: 'flex' }
+              }}
+            >
+              Logout
+            </Button>
+          )}
+        </Box>
+      </Toolbar>
+
       <Snackbar
         open={openSnackbar}
-        autoHideDuration={3000}
+        autoHideDuration={1500}
         onClose={() => setOpenSnackbar(false)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert severity="warning" onClose={() => setOpenSnackbar(false)} sx={{ width: '100%', backgroundColor: '#ea580c', color: '#fff' }}>
+        <Alert 
+          onClose={() => setOpenSnackbar(false)} 
+          severity="warning"
+          sx={{ width: '100%' }}
+        >
           You must be logged in to access your account.
         </Alert>
       </Snackbar>
-
-      {/* Hamburger Menu */}
-      <button
-        onClick={toggleSidebar}
-        className="block md:hidden p-2 text-white bg-black rounded"
-      >
-        {isSidebarOpen ? <CloseIcon fontSize="large" /> : <MenuIcon fontSize="large" />}
-      </button>
-
-      {/* Logo and Title */}
-      <div className="flex items-center">
-        <div className="bg-white rounded-full h-10 w-10 flex justify-center items-center text-blue-600 font-bold shadow">
-          A
-        </div>
-        <h1 className="ml-4 text-xl font-semibold">Dashboard</h1>
-      </div>
-
-      {/* Right-side icons */}
-      <div className="flex items-center gap-4">
-        {/* User Icon */}
-        <IconButton onClick={handleUserClick} sx={{ color: 'white' }}>
-          <AccountCircleIcon fontSize="large" />
-        </IconButton>
-
-        {/* Logout Button */}
-        <Button
-          variant="contained"
-          color="error"
-          startIcon={<LogoutIcon />}
-          onClick={handleLogout}
-          className="capitalize"
-        >
-          Logout
-        </Button>
-      </div>
-    </header>
+    </AppBar>
   );
 };
 

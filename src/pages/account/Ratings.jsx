@@ -45,25 +45,27 @@ const Ratings = () => {
           // Handle image from multiple possible sources
           let imageUrl = null;
           
-          // Check if there's a populated product with images
+          // Check if there's a populated product with images array
           if (item.product && item.product.images && item.product.images.length > 0) {
-            imageUrl = item.product.images[0];
+            const firstImage = item.product.images[0];
+            imageUrl = typeof firstImage === 'object' ? firstImage.url : firstImage;
           }
           // Check if there's a populated product with single image
           else if (item.product && item.product.image) {
-            imageUrl = item.product.image;
+            imageUrl = typeof item.product.image === 'object' ? item.product.image.url : item.product.image;
           }
           // Check if the item itself has an image property
           else if (item.image) {
-            imageUrl = item.image;
+            imageUrl = typeof item.image === 'object' ? item.image.url : item.image;
           }
           // Check if item has images array
           else if (item.images && item.images.length > 0) {
-            imageUrl = item.images[0];
+            const firstImage = item.images[0];
+            imageUrl = typeof firstImage === 'object' ? firstImage.url : firstImage;
           }
 
-          // Ensure the image URL is complete
-          if (imageUrl && !imageUrl.startsWith('http')) {
+          // Only process string URLs for completion check
+          if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('http')) {
             // If it's a relative path, prepend your base URL
             imageUrl = `${API_BASE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
           }

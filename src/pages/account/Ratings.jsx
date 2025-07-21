@@ -67,7 +67,7 @@ const Ratings = () => {
           // Only process string URLs for completion check
           if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('http')) {
             // If it's a relative path, prepend your base URL
-            imageUrl = `${API_BASE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+            //imageUrl = `${API_BASE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
           }
 
           console.log("Final image URL:", imageUrl); // Debug log
@@ -78,7 +78,7 @@ const Ratings = () => {
             name: item.product?.name || item.name,
             price: item.product?.price || item.price,
             description: item.product?.description || item.description,
-            //image: imageUrl,
+            image: imageUrl,
             // Include order context
             orderId: order._id,
             // Keep original product reference for review submission

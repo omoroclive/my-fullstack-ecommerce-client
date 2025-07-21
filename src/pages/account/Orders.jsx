@@ -265,7 +265,7 @@ const OrderCard = ({ order, isMobile, theme, navigate }) => (
           View Details
         </Button>
         {order.orderStatus === "Delivered" && (
-          <Button variant="contained" onClick={() => navigate(`/account/ratings/${order._id}/review`)}>
+          <Button variant="contained" onClick={() => navigate(`/account/ratings/${order._id}`)}>
             Leave Review
           </Button>
         )}
@@ -295,7 +295,7 @@ const UserOrders = () => {
       </Typography>
 
       {orders.length === 0 ? (
-        <EmptyState onNavigate={() => navigate('/shop')} />
+        <EmptyState onNavigate={() => navigate('/shop/home')} />
       ) : (
         <Grid container spacing={3}>
           {orders.map((order) => (

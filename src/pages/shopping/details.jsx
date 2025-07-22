@@ -200,10 +200,10 @@ const Details = () => {
       <Box sx={{ px: isMobile ? 2 : 6, py: 4 }}>
         {/* Breadcrumbs */}
         <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
-          <Link underline="hover" color="inherit" href="/">
+          <Link underline="hover" color="inherit" href="/shop/home">
             Home
           </Link>
-          <Link underline="hover" color="inherit" href="/shop">
+          <Link underline="hover" color="inherit" href="/shop/shopping">
             Shop
           </Link>
           <Typography color="text.primary">{product?.title}</Typography>
